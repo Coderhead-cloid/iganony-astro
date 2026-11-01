@@ -95,7 +95,7 @@ const isMutuals = currentPath.startsWith('/toolkit/mutual-checker') || currentPa
 
   <!-- Main Navigation Header -->
   <header class="border-b border-white/5 bg-[#0B0D17]/90 backdrop-blur-xl sticky top-[29px] sm:top-[37px] z-40 transition-all">
-    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-15 sm:h-20 flex items-center justify-between gap-2 sm:gap-4">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-2 sm:gap-4">
       
       <!-- Logo with user-provided icon.svg -->
       <a href="/" class="flex items-center gap-2 sm:gap-3 group shrink-0 min-w-0">
@@ -218,19 +218,19 @@ const isMutuals = currentPath.startsWith('/toolkit/mutual-checker') || currentPa
 
   <!-- Mobile Sticky Bottom Navigation Bar (md:hidden) -->
   <nav class="md:hidden fixed bottom-0 inset-x-0 z-40 mobile-bottom-nav px-2 py-1.5 flex items-center justify-around text-[10px] font-medium safe-area-pb select-none">
-    <a href="/" data-nav="home" class={`flex flex-col items-center gap-1 py-1.5 px-3 rounded-xl transition ${isHome ? 'text-[#725CFF] bg-[#725CFF]/15 font-bold shadow-sm' : 'text-gray-400 hover:text-white'}`}>
+    <a href="/" data-nav="home" class="flex flex-col items-center gap-1 py-1.5 px-3 rounded-xl transition text-gray-400">
       <i class="fa-solid fa-house text-sm"></i>
       <span>Home</span>
     </a>
-    <a href="/stories" data-nav="stories" class={`flex flex-col items-center gap-1 py-1.5 px-3 rounded-xl transition ${isStories ? 'text-[#EC4899] bg-[#EC4899]/15 font-bold shadow-sm' : 'text-gray-400 hover:text-[#EC4899]'}`}>
+    <a href="/stories" data-nav="stories" class="flex flex-col items-center gap-1 py-1.5 px-3 rounded-xl transition text-gray-400">
       <i class="fa-solid fa-circle-play text-sm"></i>
       <span>Stories</span>
     </a>
-    <a href="/toolkit/post-viewer" data-nav="reels" class={`flex flex-col items-center gap-1 py-1.5 px-3 rounded-xl transition ${isReels ? 'text-[#00F0FF] bg-[#00F0FF]/15 font-bold shadow-sm' : 'text-gray-400 hover:text-[#00F0FF]'}`}>
+    <a href="/toolkit/post-viewer" data-nav="reels" class="flex flex-col items-center gap-1 py-1.5 px-3 rounded-xl transition text-gray-400">
       <i class="fa-solid fa-film text-sm"></i>
       <span>Reels</span>
     </a>
-    <a href="/toolkit/mutual-checker" data-nav="mutuals" class={`flex flex-col items-center gap-1 py-1.5 px-3 rounded-xl transition ${isMutuals ? 'text-[#725CFF] bg-[#725CFF]/15 font-bold shadow-sm' : 'text-gray-400 hover:text-[#725CFF]'}`}>
+    <a href="/toolkit/mutual-checker" data-nav="mutuals" class="flex flex-col items-center gap-1 py-1.5 px-3 rounded-xl transition text-gray-400">
       <i class="fa-solid fa-users-viewfinder text-sm"></i>
       <span>Mutuals</span>
     </a>
@@ -416,6 +416,10 @@ const isMutuals = currentPath.startsWith('/toolkit/mutual-checker') || currentPa
       // Sync active mobile footer nav highlighting from path
       const path = window.location.pathname.toLowerCase();
       const navLinks = document.querySelectorAll('.mobile-bottom-nav a[data-nav]');
+      // Reset all nav links first
+      navLinks.forEach(l => {
+        l.className = 'flex flex-col items-center gap-1 py-1.5 px-3 rounded-xl transition text-gray-400';
+      });
       navLinks.forEach(link => {
         const nav = link.getAttribute('data-nav');
         let isActive = false;
@@ -425,7 +429,6 @@ const isMutuals = currentPath.startsWith('/toolkit/mutual-checker') || currentPa
         else if (nav === 'mutuals' && (path.startsWith('/toolkit/mutual-checker') || path.startsWith('/mutual-checker'))) isActive = true;
 
         if (isActive) {
-          link.classList.remove('text-gray-400');
           if (nav === 'stories') link.className = 'flex flex-col items-center gap-1 py-1.5 px-3 rounded-xl transition text-[#EC4899] bg-[#EC4899]/15 font-bold shadow-sm';
           else if (nav === 'reels') link.className = 'flex flex-col items-center gap-1 py-1.5 px-3 rounded-xl transition text-[#00F0FF] bg-[#00F0FF]/15 font-bold shadow-sm';
           else if (nav === 'mutuals') link.className = 'flex flex-col items-center gap-1 py-1.5 px-3 rounded-xl transition text-[#725CFF] bg-[#725CFF]/15 font-bold shadow-sm';
