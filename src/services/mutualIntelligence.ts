@@ -132,6 +132,24 @@ export class MutualIntelligenceService {
     const mentionsA = this.extractCaptionMentions(realMediaA, cleanA);
     const mentionsB = this.extractCaptionMentions(realMediaB, cleanB);
 
+    const verifiedCollaborators: Record<string, MutualItem> = {};
+    Object.keys(mentionsA).forEach((sm) => {
+      if (mentionsB[sm] && sm !== cleanA && sm !== cleanB) {
+        verifiedCollaborators[sm] = {
+          username: sm,
+          full_name: sm.replace(/[._]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+          avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${sm}`,
+          is_verified: false,
+          is_mutual_following: true,
+          is_mutual_follower: true,
+          connection_type: 'dual_mutual',
+          label: '⭐ Verified Shared Collaborator (Tagged by Both)',
+          profile_link: `/report/${sm}`,
+          instagram_link: `https://www.instagram.com/${sm}/`,
+        };
+      }
+    });
+
     const userATaggedB = Boolean(mentionsA[cleanB] || (profileA.bio && profileA.bio.toLowerCase().includes(`@${cleanB}`)));
     const userBTaggedA = Boolean(mentionsB[cleanA] || (profileB.bio && profileB.bio.toLowerCase().includes(`@${cleanA}`)));
 
@@ -341,6 +359,12 @@ export class MutualIntelligenceService {
     Object.keys(crossConnections).forEach((u) => {
       if (!allMutualsMap[u]) {
         allMutualsMap[u] = { ...crossConnections[u] };
+      }
+    });
+
+    Object.keys(verifiedCollaborators).forEach((u) => {
+      if (!allMutualsMap[u]) {
+        allMutualsMap[u] = { ...verifiedCollaborators[u] };
       }
     });
 

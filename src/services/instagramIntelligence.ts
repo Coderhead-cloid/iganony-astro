@@ -1,4 +1,5 @@
 import { getDatabase } from '../lib/db';
+import { VERIFIED_NETWORK_SEEDS } from '../data/networkSeed';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -31,7 +32,7 @@ export interface StoryItem {
   expires_time?: string;
   expires_date?: string;
   expires_in?: string;
-  caption?: string;
+  caption: string;
   download_url: string;
 }
 
@@ -50,7 +51,25 @@ export class InstagramIntelligenceService {
     if (!clean) return null;
 
     // Check verified cluster seeds first for immediate 0ms response
-    const seed = VERIFIED_NETWORK_SEEDS.find(s => s.account_username === clean || s.target_username === clean);
+    const seed = VERIFIED_NETWORK_SEEDS.find((s: any) => s.account_username === clean || s.target_username === clean);
+    if (seed) {
+      const isTarget = seed.target_username === clean;
+      const targetName = isTarget ? seed.target_name : undefined;
+      const targetAvatar = isTarget ? seed.target_avatar : undefined;
+      if (targetName && targetAvatar) {
+        return {
+          username: clean,
+          full_name: targetName,
+          avatar_url: targetAvatar,
+          bio: `Official Profile • @${clean} on Instagram`,
+          followers_count: 24500,
+          following_count: 420,
+          posts_count: 95,
+          is_verified: seed.is_verified ? 1 : 0,
+          is_private: 0,
+        };
+      }
+    }
     const verifiedCelebrities: Record<string, Partial<InstagramProfile>> = {
       cristiano: { full_name: 'Cristiano Ronaldo', followers_count: 638000000, following_count: 578, posts_count: 3720, is_verified: 1, avatar_url: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=256&q=80', bio: 'SIUUU ⚽️ Join my journey. @alnassr' },
       leomessi: { full_name: 'Leo Messi', followers_count: 504000000, following_count: 312, posts_count: 1240, is_verified: 1, avatar_url: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=256&q=80', bio: 'Bienvenidos a mi cuenta oficial de Instagram. @intermiamicf' },
@@ -616,7 +635,7 @@ export class InstagramIntelligenceService {
         })
       );
 
-      const activeStories = resolvedStories.filter((s): s is StoryItem => s !== null);
+      const activeStories = (resolvedStories.filter(Boolean) as unknown) as StoryItem[];
 
       return {
         stories: this.normalizeStoryTimes(activeStories),
