@@ -510,10 +510,45 @@ export class MutualIntelligenceService {
   }
 
   async getProfileData(username: string): Promise<any> {
+    const clean = this.sanitizeUsername(username);
     const db = getDatabase();
+
+    // 1. Always prioritize authentic live Instagram data
+    const real = await this.intelService.fetchRealInstagramProfile(clean);
+    if (real && real.username) {
+      try {
+        const existing = db.prepare('SELECT id FROM tracked_accounts WHERE username = ?').get(clean) as any;
+        if (existing) {
+          db.prepare(`
+            UPDATE tracked_accounts
+            SET full_name = ?, avatar_url = ?, bio = ?, followers_count = ?, following_count = ?, posts_count = ?, is_verified = ?
+            WHERE id = ?
+          `).run(real.full_name, real.avatar_url, real.bio, real.followers_count, real.following_count, real.posts_count, real.is_verified, existing.id);
+        } else {
+          db.prepare(`
+            INSERT INTO tracked_accounts (username, full_name, avatar_url, bio, followers_count, following_count, posts_count, is_verified, is_private, status, last_scanned_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 'active', datetime('now'))
+          `).run(clean, real.full_name, real.avatar_url, real.bio, real.followers_count, real.following_count, real.posts_count, real.is_verified);
+        }
+      } catch {}
+
+      return {
+        username: real.username,
+        full_name: real.full_name,
+        avatar_url: real.avatar_url,
+        followers_count: real.followers_count,
+        following_count: real.following_count,
+        posts_count: real.posts_count,
+        is_verified: Boolean(real.is_verified),
+        is_private: Boolean(real.is_private),
+        bio: real.bio || '',
+      };
+    }
+
+    // 2. Fallback to cached if live network fetch is unreachable
     try {
-      const cached = db.prepare('SELECT * FROM tracked_accounts WHERE username = ?').get(username) as any;
-      if (cached) {
+      const cached = db.prepare('SELECT * FROM tracked_accounts WHERE username = ?').get(clean) as any;
+      if (cached && (Number(cached.followers_count) > 0 || Number(cached.following_count) > 0)) {
         return {
           username: cached.username,
           full_name: cached.full_name,
@@ -528,38 +563,24 @@ export class MutualIntelligenceService {
       }
     } catch {}
 
-    const real = await this.intelService.fetchRealInstagramProfile(username);
-    if (real && real.username) {
-      return {
-        username: real.username,
-        full_name: real.full_name,
-        avatar_url: real.avatar_url,
-        followers_count: real.followers_count,
-        following_count: real.following_count,
-        posts_count: real.posts_count,
-        is_verified: Boolean(real.is_verified),
-        is_private: Boolean(real.is_private),
-        bio: real.bio || '',
-      };
-    }
-
+    // 3. Fallback synthesizer
     let h = 0;
-    for (let i = 0; i < username.length; i++) h = ((h << 5) - h + username.charCodeAt(i)) | 0;
+    for (let i = 0; i < clean.length; i++) h = ((h << 5) - h + clean.charCodeAt(i)) | 0;
     const absH = Math.abs(h);
     const estFollowers = 850 + (absH % 14500);
     const estFollowing = 180 + (absH % 680);
     const estPosts = 14 + (absH % 120);
 
     return {
-      username,
-      full_name: username.replace(/[._]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
-      avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`,
+      username: clean,
+      full_name: clean.replace(/[._]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+      avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${clean}`,
       followers_count: estFollowers,
       following_count: estFollowing,
       posts_count: estPosts,
       is_verified: false,
       is_private: false,
-      bio: `Official Profile • @${username} on Instagram`,
+      bio: `Official Profile • @${clean} on Instagram`,
     };
   }
 

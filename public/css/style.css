@@ -10,13 +10,14 @@
   --primary-hover: #8A77FF;
   --primary-dark: #5842ED;
   --primary-glow: rgba(114, 92, 255, 0.35);
-  
+
   --secondary: #00F0FF;
   --secondary-glow: rgba(0, 240, 255, 0.25);
-  
+
   --accent-pink: #EC4899;
   --accent-emerald: #10B981;
   --accent-amber: #F59E0B;
+
   --accent-rose: #F43F5E;
 
   /* Dark Theme Surfaces */
@@ -24,7 +25,7 @@
   --bg-card: #131627;
   --bg-card-hover: #1A1F36;
   --bg-card-glass: rgba(19, 22, 39, 0.75);
-  
+
   --border-subtle: rgba(255, 255, 255, 0.08);
   --border-focus: rgba(114, 92, 255, 0.6);
   --border-glow: rgba(114, 92, 255, 0.25);
@@ -53,13 +54,18 @@ body {
   line-height: 1.6;
   min-height: 100vh;
   overflow-x: hidden;
-  background-image: 
+  background-image:
     radial-gradient(circle at 15% 15%, rgba(114, 92, 255, 0.12) 0%, transparent 40%),
     radial-gradient(circle at 85% 65%, rgba(0, 240, 255, 0.08) 0%, transparent 40%);
   background-attachment: fixed;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: var(--font-display);
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -72,7 +78,7 @@ html.light {
   --bg-card: #FFFFFF;
   --bg-card-hover: #F1F5F9;
   --bg-card-glass: rgba(255, 255, 255, 0.85);
-  
+
   --border-subtle: rgba(0, 0, 0, 0.08);
   --border-focus: rgba(114, 92, 255, 0.6);
   --border-glow: rgba(114, 92, 255, 0.2);
@@ -90,7 +96,7 @@ html.light {
 html.light body {
   background-color: #F8FAFC !important;
   color: #0F172A !important;
-  background-image: 
+  background-image:
     radial-gradient(circle at 15% 15%, rgba(114, 92, 255, 0.07) 0%, transparent 40%),
     radial-gradient(circle at 85% 65%, rgba(0, 240, 255, 0.05) 0%, transparent 40%) !important;
 }
@@ -111,13 +117,15 @@ html.light .mobile-bottom-nav {
   border-top-color: rgba(0, 0, 0, 0.08) !important;
 }
 
-html.light input, html.light textarea {
+html.light input,
+html.light textarea {
   background-color: #F1F5F9 !important;
   color: #0F172A !important;
   border-color: rgba(0, 0, 0, 0.12) !important;
 }
 
-html.light input::placeholder, html.light textarea::placeholder {
+html.light input::placeholder,
+html.light textarea::placeholder {
   color: #94A3B8 !important;
 }
 
@@ -125,7 +133,8 @@ html.light .text-white {
   color: #0F172A !important;
 }
 
-html.light .text-gray-300, html.light .text-gray-400 {
+html.light .text-gray-300,
+html.light .text-gray-400 {
   color: #475569 !important;
 }
 
@@ -133,7 +142,10 @@ html.light .text-gray-500 {
   color: #64748B !important;
 }
 
-html.light .bg-black\/20, html.light .bg-black\/25, html.light .bg-black\/30, html.light .bg-black\/40 {
+html.light .bg-black\/20,
+html.light .bg-black\/25,
+html.light .bg-black\/30,
+html.light .bg-black\/40 {
   background-color: rgba(241, 245, 249, 0.8) !important;
   border-color: rgba(0, 0, 0, 0.08) !important;
 }
@@ -163,11 +175,17 @@ html.light .bg-\[\#131627\] {
   border-color: rgba(0, 0, 0, 0.1) !important;
 }
 
-html.light .border-white\/5, html.light .border-white\/10, html.light .border-white\/20 {
+html.light .border-white\/5,
+html.light .border-white\/10,
+html.light .border-white\/20 {
   border-color: rgba(0, 0, 0, 0.08) !important;
 }
 
-html.light .bg-white\/5, html.light .bg-white\/\[0\.02\], html.light .bg-white\/\[0\.03\], html.light .bg-white\/\[0\.04\], html.light .bg-white\/\[0\.08\] {
+html.light .bg-white\/5,
+html.light .bg-white\/\[0\.02\],
+html.light .bg-white\/\[0\.03\],
+html.light .bg-white\/\[0\.04\],
+html.light .bg-white\/\[0\.08\] {
   background-color: rgba(0, 0, 0, 0.03) !important;
 }
 
@@ -313,9 +331,12 @@ html.light .theme-toggle-btn {
 
 /* Pulse animation */
 @keyframes pulseGlow {
-  0%, 100% {
+
+  0%,
+  100% {
     box-shadow: 0 0 15px rgba(114, 92, 255, 0.3);
   }
+
   50% {
     box-shadow: 0 0 25px rgba(114, 92, 255, 0.6);
   }
@@ -330,6 +351,7 @@ html.light .theme-toggle-btn {
   0% {
     transform: rotate(0deg);
   }
+
   100% {
     transform: rotate(360deg);
   }
@@ -391,11 +413,26 @@ html.light .theme-toggle-btn {
   transition: all 0.2s;
 }
 
-.heatmap-lvl-0 { background: rgba(255, 255, 255, 0.04); }
-.heatmap-lvl-1 { background: rgba(114, 92, 255, 0.25); }
-.heatmap-lvl-2 { background: rgba(114, 92, 255, 0.50); }
-.heatmap-lvl-3 { background: rgba(114, 92, 255, 0.75); }
-.heatmap-lvl-4 { background: #725CFF; box-shadow: 0 0 8px rgba(114, 92, 255, 0.8); }
+.heatmap-lvl-0 {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.heatmap-lvl-1 {
+  background: rgba(114, 92, 255, 0.25);
+}
+
+.heatmap-lvl-2 {
+  background: rgba(114, 92, 255, 0.50);
+}
+
+.heatmap-lvl-3 {
+  background: rgba(114, 92, 255, 0.75);
+}
+
+.heatmap-lvl-4 {
+  background: #725CFF;
+  box-shadow: 0 0 8px rgba(114, 92, 255, 0.8);
+}
 
 /* Custom scrollbars */
 ::-webkit-scrollbar {
@@ -417,7 +454,8 @@ html.light .theme-toggle-btn {
 }
 
 /* Mobile-First Responsive Utilities */
-html, body {
+html,
+body {
   max-width: 100%;
   overflow-x: hidden;
   -webkit-tap-highlight-color: transparent;
@@ -431,15 +469,20 @@ html, body {
 
 /* Mobile Touch Targets */
 @media (max-width: 768px) {
-  input, button, select, a {
+
+  input,
+  button,
+  select,
+  a {
     touch-action: manipulation;
   }
-  
+
   .search-glow-container {
     border-radius: 20px;
   }
 
-  .btn-primary, .btn-secondary {
+  .btn-primary,
+  .btn-secondary {
     min-height: 44px;
   }
 }
@@ -458,7 +501,8 @@ html, body {
   #story-modal {
     padding: 0 !important;
   }
-  #story-modal > div {
+
+  #story-modal>div {
     max-width: 100% !important;
     height: 100% !important;
     border-radius: 0 !important;
@@ -480,25 +524,34 @@ html {
 html.light .text-gray-200 {
   color: #334155 !important;
 }
+
 html.light .text-white\/60 {
   color: #64748B !important;
 }
+
 html.light #scanning-state {
-  background: rgba(255,255,255,0.95) !important;
+  background: rgba(255, 255, 255, 0.95) !important;
   border-color: rgba(114, 92, 255, 0.2) !important;
 }
-html.light .bg-black\/60, html.light .bg-black\/70, html.light .bg-black\/85, html.light .bg-black\/90 {
-  background-color: rgba(241,245,249,0.8) !important;
+
+html.light .bg-black\/60,
+html.light .bg-black\/70,
+html.light .bg-black\/85,
+html.light .bg-black\/90 {
+  background-color: rgba(241, 245, 249, 0.8) !important;
 }
-html.light #modal-media-viewer > div {
+
+html.light #modal-media-viewer>div {
   background-color: #ffffff !important;
 }
+
 html.light .modal-container .bg-black\/90 {
-  background-color: rgba(0,0,0,0.6) !important;
+  background-color: rgba(0, 0, 0, 0.6) !important;
 }
+
 html.light #toast-container .bg-\[\#131627\] {
   background-color: #fff !important;
-  border-color: rgba(114,92,255,0.3) !important;
+  border-color: rgba(114, 92, 255, 0.3) !important;
   color: #0F172A !important;
 }
 
@@ -509,7 +562,9 @@ html.light #toast-container .bg-\[\#131627\] {
 
 /* Better tap targets on mobile */
 @media (max-width: 640px) {
-  .mobile-bottom-nav a, .mobile-bottom-nav button {
+
+  .mobile-bottom-nav a,
+  .mobile-bottom-nav button {
     min-width: 56px;
     min-height: 52px;
   }
@@ -563,6 +618,7 @@ html {
   scroll-behavior: smooth;
 }
 
-button, a {
+button,
+a {
   touch-action: manipulation;
 }
