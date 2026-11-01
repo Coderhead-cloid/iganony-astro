@@ -57,37 +57,37 @@ export class MutualIntelligenceService {
       throw new Error('Please provide two different Instagram usernames to compare mutual connections.');
     }
 
+    let u1FollowingCustom: string[] = [];
+    let u1FollowersCustom: string[] = [];
+    let u2FollowingCustom: string[] = [];
+    let u2FollowersCustom: string[] = [];
+
     if (customLists) {
       const parseTargets = (input?: string[] | string): string[] => {
         if (!input) return [];
-        if (Array.isArray(input)) return input.map((s) => this.sanitizeUsername(s)).filter(Boolean);
-        return String(input)
-          .split(/[\r\n,;\s]+/)
-          .map((s) => this.sanitizeUsername(s))
-          .filter(Boolean);
+        if (Array.isArray(input)) return Array.from(new Set(input.map((s) => this.sanitizeUsername(s)).filter(Boolean)));
+        return Array.from(new Set(
+          String(input)
+            .split(/[\r\n,;\s]+/)
+            .map((s) => this.sanitizeUsername(s))
+            .filter(Boolean)
+        ));
       };
 
-      const u1Following = parseTargets(customLists.user1_following);
-      const u1Followers = parseTargets(customLists.user1_followers);
-      const u2Following = parseTargets(customLists.user2_following);
-      const u2Followers = parseTargets(customLists.user2_followers);
+      u1FollowingCustom = parseTargets(customLists.user1_following);
+      u1FollowersCustom = parseTargets(customLists.user1_followers);
+      u2FollowingCustom = parseTargets(customLists.user2_following);
+      u2FollowersCustom = parseTargets(customLists.user2_followers);
 
-      if (u1Following.length > 0) {
-        this.importConnections(cleanA, 'following', u1Following);
-        forceFresh = true;
+      try {
+        if (u1FollowingCustom.length > 0) this.importConnections(cleanA, 'following', u1FollowingCustom);
+        if (u1FollowersCustom.length > 0) this.importConnections(cleanA, 'follower', u1FollowersCustom);
+        if (u2FollowingCustom.length > 0) this.importConnections(cleanB, 'following', u2FollowingCustom);
+        if (u2FollowersCustom.length > 0) this.importConnections(cleanB, 'follower', u2FollowersCustom);
+      } catch (e) {
+        console.warn('Could not persist connections to DB (using in-memory):', e);
       }
-      if (u1Followers.length > 0) {
-        this.importConnections(cleanA, 'follower', u1Followers);
-        forceFresh = true;
-      }
-      if (u2Following.length > 0) {
-        this.importConnections(cleanB, 'following', u2Following);
-        forceFresh = true;
-      }
-      if (u2Followers.length > 0) {
-        this.importConnections(cleanB, 'follower', u2Followers);
-        forceFresh = true;
-      }
+      forceFresh = true;
     }
 
     const cacheDir = this.getStorageCacheDir();
@@ -136,9 +136,18 @@ export class MutualIntelligenceService {
       }
     } catch {}
 
-    const userAFollowsB = dbAFollowsB || userATaggedB;
-    const userBFollowsA = dbBFollowsA || userBTaggedA;
+    const userAFollowsB = dbAFollowsB || userATaggedB || u1FollowingCustom.includes(cleanB) || u2FollowersCustom.includes(cleanA);
+    const userBFollowsA = dbBFollowsA || userBTaggedA || u2FollowingCustom.includes(cleanA) || u1FollowersCustom.includes(cleanB);
     const isMutualFollow = userAFollowsB && userBFollowsA;
+
+    const createItem = (u: string, isVerified = false): MutualItem => ({
+      username: u,
+      full_name: u.replace(/[._]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+      avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${u}`,
+      is_verified: isVerified || ['cristiano', 'leomessi', 'nike', 'apple', 'instagram', 'natgeo'].includes(u),
+      profile_link: `/report/${u}`,
+      instagram_link: `https://www.instagram.com/${u}/`,
+    });
 
     const verifiedCollaborators: Record<string, MutualItem> = {};
     Object.keys(mentionsA).forEach((sm) => {
@@ -160,6 +169,43 @@ export class MutualIntelligenceService {
 
     const networkA = this.getAuthenticRealNetwork(profileA, mentionsA);
     const networkB = this.getAuthenticRealNetwork(profileB, mentionsB);
+
+    // Merge custom lists directly into networks (in-memory guaranteed)
+    const networkAFollowingMap = new Map(networkA.following.map((i) => [i.username, i]));
+    u1FollowingCustom.forEach((u) => {
+      if (!networkAFollowingMap.has(u) && u !== cleanA) {
+        const item = createItem(u);
+        networkA.following.push(item);
+        networkAFollowingMap.set(u, item);
+      }
+    });
+
+    const networkAFollowersMap = new Map(networkA.followers.map((i) => [i.username, i]));
+    u1FollowersCustom.forEach((u) => {
+      if (!networkAFollowersMap.has(u) && u !== cleanA) {
+        const item = createItem(u);
+        networkA.followers.push(item);
+        networkAFollowersMap.set(u, item);
+      }
+    });
+
+    const networkBFollowingMap = new Map(networkB.following.map((i) => [i.username, i]));
+    u2FollowingCustom.forEach((u) => {
+      if (!networkBFollowingMap.has(u) && u !== cleanB) {
+        const item = createItem(u);
+        networkB.following.push(item);
+        networkBFollowingMap.set(u, item);
+      }
+    });
+
+    const networkBFollowersMap = new Map(networkB.followers.map((i) => [i.username, i]));
+    u2FollowersCustom.forEach((u) => {
+      if (!networkBFollowersMap.has(u) && u !== cleanB) {
+        const item = createItem(u);
+        networkB.followers.push(item);
+        networkBFollowersMap.set(u, item);
+      }
+    });
 
     const followingMapB = new Map(networkB.following.map((i) => [i.username, i]));
     const mutualFollowing: Record<string, MutualItem> = {};
@@ -191,6 +237,31 @@ export class MutualIntelligenceService {
       }
     });
 
+    // Cross connections
+    const crossConnections: Record<string, MutualItem> = {};
+    networkA.following.forEach((item) => {
+      const u = item.username;
+      if (networkBFollowersMap.has(u) && u !== cleanA && u !== cleanB) {
+        crossConnections[u] = {
+          ...item,
+          connection_type: 'cross_connection',
+          label: `@${cleanA} follows & follows @${cleanB}`,
+        };
+      }
+    });
+    networkB.following.forEach((item) => {
+      const u = item.username;
+      if (networkAFollowersMap.has(u) && u !== cleanA && u !== cleanB) {
+        if (!crossConnections[u]) {
+          crossConnections[u] = {
+            ...item,
+            connection_type: 'cross_connection',
+            label: `@${cleanB} follows & follows @${cleanA}`,
+          };
+        }
+      }
+    });
+
     const allMutualsMap: Record<string, MutualItem> = { ...verifiedCollaborators };
     Object.keys(mutualFollowing).forEach((u) => {
       if (!allMutualsMap[u]) {
@@ -206,10 +277,16 @@ export class MutualIntelligenceService {
         allMutualsMap[u] = mutualFollowers[u];
       }
     });
+    Object.keys(crossConnections).forEach((u) => {
+      if (!allMutualsMap[u]) {
+        allMutualsMap[u] = crossConnections[u];
+      }
+    });
 
     const allMutuals = Object.values(allMutualsMap);
     const mutualFollowingList = Object.values(mutualFollowing);
     const mutualFollowersList = Object.values(mutualFollowers);
+    const crossConnectionsList = Object.values(crossConnections);
 
     const totalUniqueMutuals = allMutuals.length;
     const verifiedCount = allMutuals.filter((m) => m.is_verified).length;
@@ -270,6 +347,7 @@ export class MutualIntelligenceService {
       metrics: {
         mutual_following_count: mutualFollowingList.length,
         mutual_followers_count: mutualFollowersList.length,
+        cross_connections_count: crossConnectionsList.length,
         total_unique_mutuals: totalUniqueMutuals,
         verified_collaborators_count: Object.keys(verifiedCollaborators).length,
         verified_mutuals_count: verifiedCount,
@@ -284,6 +362,7 @@ export class MutualIntelligenceService {
       verified_collaborators: Object.values(verifiedCollaborators),
       mutual_following: mutualFollowingList,
       mutual_followers: mutualFollowersList,
+      cross_connections: crossConnectionsList,
       all_mutuals: allMutuals,
     };
 

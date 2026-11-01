@@ -71,6 +71,8 @@ async function handleMutuals(request: Request, pUserA?: string, pUserB?: string)
       data.results = data.mutual_following;
     } else if (filter === 'followers') {
       data.results = data.mutual_followers;
+    } else if (filter === 'cross') {
+      data.results = data.cross_connections || [];
     } else {
       data.results = data.all_mutuals;
     }
