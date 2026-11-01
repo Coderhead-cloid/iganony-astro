@@ -36,7 +36,7 @@ export const POST: APIRoute = async ({ request }) => {
 
   return new Response(JSON.stringify({
     success: true,
-    message: `Stripe simulation checkout completed! Welcome to DolphinRadar Pro (${plan} plan).`,
+    message: `Stripe simulation checkout completed! Welcome to IGAnony Pro (${plan} plan).`,
     email,
     plan,
   }), {

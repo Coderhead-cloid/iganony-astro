@@ -1,5 +1,5 @@
 /**
- * DolphinRadar Pro Dynamic JavaScript Engine
+ * IGAnony Pro Dynamic JavaScript Engine
  */
 
 document.addEventListener('DOMContentLoaded', () => {

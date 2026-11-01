@@ -14,7 +14,7 @@ export class ExportService {
     const comments = db.prepare('SELECT * FROM comment_events WHERE account_id = ? ORDER BY interaction_count DESC').all(accountId) as any[];
 
     const timestamp = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 15);
-    const filename = `dolphinradar_report_${account.username}_${timestamp}.csv`;
+    const filename = `iganony_report_${account.username}_${timestamp}.csv`;
 
     const headers = ['Activity Type', 'Target/Author Username', 'Name / Details', 'Media Type', 'Caption / Comment', 'Confidence / Count', 'Detected At'];
     const rows: string[][] = [];
