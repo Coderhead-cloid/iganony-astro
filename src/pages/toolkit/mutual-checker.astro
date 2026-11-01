@@ -36,196 +36,132 @@ if (hasSSRSubmit) {
 }
 ---
 
-<Layout title="Find Mutual Followers & Following | IGAnony Pro">
+<Layout title="Find Mutual Friends & Followers | IGAnony Pro">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
     
     <!-- Hero Header -->
-    <div class="text-center max-w-3xl mx-auto mb-8 sm:mb-12">
-      <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#725CFF]/15 border border-[#725CFF]/30 text-purple-300 text-xs font-semibold mb-3">
+    <div class="text-center max-w-3xl mx-auto mb-8 sm:mb-10">
+      <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#725CFF]/15 border border-[#725CFF]/30 text-purple-300 text-xs font-semibold mb-3 shadow-sm">
         <i class="fa-solid fa-users-viewfinder text-[#725CFF] animate-pulse"></i>
-        <span>Mutual Relationship & Tally Telemetry</span>
+        <span>Automatic Mutual Friends & Network Telemetry</span>
       </div>
       <h1 class="text-3xl sm:text-5xl font-extrabold text-white mb-3 font-display tracking-tight">
-        Find Mutual Followers & Following
+        Find Mutual Friends on Instagram
       </h1>
-      <p class="text-xs sm:text-sm text-gray-400 max-w-2xl mx-auto leading-relaxed">
-        Cross-reference and tally between two Instagram accounts side-by-side. Our engine compares their follower and following networks to calculate exact mutual IDs, direct follow reciprocity, and shared connections.
+      <p class="text-xs sm:text-sm text-gray-400 max-w-xl mx-auto leading-relaxed">
+        Just enter two Instagram usernames. Our engine automatically cross-references their profiles, tagged collaborations, and networks to uncover their common mutual friends and relationship.
       </p>
     </div>
 
-    <!-- Tally Engine Control Card -->
-    <div class="glass-panel p-5 sm:p-8 max-w-4xl mx-auto mb-10 relative overflow-hidden border border-white/10 shadow-2xl rounded-2xl">
-      <div class="absolute -right-24 -top-24 w-72 h-72 bg-[#725CFF]/20 rounded-full blur-3xl pointer-events-none"></div>
-      <div class="absolute -left-24 -bottom-24 w-72 h-72 bg-[#00F0FF]/15 rounded-full blur-3xl pointer-events-none"></div>
+    <!-- 2-ID Search Card (Clean, Simple, Zero-Effort) -->
+    <div class="glass-panel p-6 sm:p-8 max-w-3xl mx-auto mb-10 relative overflow-hidden border border-white/10 shadow-2xl rounded-2xl">
+      <div class="absolute -right-20 -top-20 w-64 h-64 bg-[#725CFF]/20 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="absolute -left-20 -bottom-20 w-64 h-64 bg-[#00F0FF]/15 rounded-full blur-3xl pointer-events-none"></div>
 
-      <!-- Mode Switcher Tabs -->
-      <div class="flex items-center justify-between border-b border-white/10 pb-4 mb-6 relative z-10 flex-wrap gap-3">
-        <div class="flex items-center gap-2 p-1 bg-black/40 rounded-xl border border-white/5">
-          <button type="button" id="tab-btn-lists" onclick="setTallyMode('lists')"
-                  class="mode-toggle-btn px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2 bg-[#725CFF] text-white shadow-md">
-            <i class="fa-solid fa-list-check"></i>
-            <span>Deep Follower & Following Tally</span>
-          </button>
-          <button type="button" id="tab-btn-quick" onclick="setTallyMode('quick')"
-                  class="mode-toggle-btn px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2 text-gray-400 hover:text-white">
-            <i class="fa-solid fa-satellite-dish"></i>
-            <span>Quick Profile Compare</span>
-          </button>
-        </div>
-
-        <!-- Quick Helper Actions -->
-        <div class="flex items-center gap-2">
-          <button type="button" onclick="loadSampleScenario()" class="px-2.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-purple-300 hover:text-white text-[11px] font-medium transition flex items-center gap-1.5" title="Load sample usernames and lists to test tallying">
-            <i class="fa-solid fa-wand-magic-sparkles text-[#725CFF]"></i>
-            <span>Try Sample</span>
-          </button>
-          <button type="button" onclick="swapAccounts()" class="px-2.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 hover:text-white text-[11px] font-medium transition flex items-center gap-1.5" title="Swap Account A and Account B">
-            <i class="fa-solid fa-arrow-right-arrow-left"></i>
-            <span>Swap</span>
-          </button>
-          <button type="button" onclick="clearTallyInputs()" class="px-2.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-gray-400 hover:text-rose-400 text-[11px] font-medium transition flex items-center gap-1.5" title="Clear all input boxes">
-            <i class="fa-solid fa-trash-can"></i>
-            <span>Clear</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Primary Form Container -->
-      <form id="tally-form" onsubmit="executeMutualTally(event)" class="relative z-10 space-y-6">
+      <form id="mutuals-form" onsubmit="handleMutualsSubmit(event)" class="relative z-10 space-y-5">
         
-        <!-- Account Names Grid -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <!-- Account A Header -->
-          <div class="bg-black/30 p-3.5 rounded-xl border border-[#725CFF]/30">
-            <label class="block text-xs font-bold text-purple-300 mb-1.5 uppercase tracking-wider flex items-center justify-between">
-              <span>Account A</span>
-              <span class="text-[10px] text-gray-400 font-normal">First Profile</span>
+        <!-- Two Input Fields Side-by-Side with Center Swap Button -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 relative items-center">
+          
+          <!-- First Profile (Account A) -->
+          <div class="bg-black/40 p-3.5 rounded-xl border border-white/10 focus-within:border-[#725CFF] transition">
+            <label class="block text-[11px] font-bold text-purple-300 mb-1.5 uppercase tracking-wider flex items-center justify-between">
+              <span>First Account</span>
+              <span class="text-[10px] text-gray-500 font-normal">Profile A</span>
             </label>
             <div class="relative">
               <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-[#725CFF] font-bold text-sm">@</span>
-              <input type="text" id="input-acc-a" name="user1" value={initialUserA} placeholder="e.g. gaurav_rathi83" required
+              <input type="text" id="user1-input" name="user1" value={initialUserA} required
+                     placeholder="e.g. gaurav_rathi83"
                      class="w-full bg-[#0B0D17] border border-white/10 rounded-lg pl-8 pr-3 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#725CFF] transition">
             </div>
           </div>
 
-          <!-- Account B Header -->
-          <div class="bg-black/30 p-3.5 rounded-xl border border-[#00F0FF]/30">
-            <label class="block text-xs font-bold text-cyan-300 mb-1.5 uppercase tracking-wider flex items-center justify-between">
-              <span>Account B</span>
-              <span class="text-[10px] text-gray-400 font-normal">Second Profile</span>
-            </label>
-            <div class="relative">
-              <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-[#00F0FF] font-bold text-sm">@</span>
-              <input type="text" id="input-acc-b" name="user2" value={initialUserB} placeholder="e.g. __naman.sharma__0.1" required
-                     class="w-full bg-[#0B0D17] border border-white/10 rounded-lg pl-8 pr-3 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#00F0FF] transition">
-            </div>
-          </div>
-        </div>
+          <!-- Swap Button (Desktop Center Float) -->
+          <button type="button" onclick="swapUserInputs()" title="Swap accounts" 
+                  class="hidden sm:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-[#131627] border border-white/20 hover:border-[#725CFF] text-gray-300 hover:text-white items-center justify-center text-xs shadow-xl hover:scale-110 active:scale-95 transition duration-200 z-20">
+            <i class="fa-solid fa-arrow-right-arrow-left"></i>
+          </button>
 
-        <!-- Deep Tally Section: Follower & Following Textareas -->
-        <div id="deep-tally-section" class="space-y-4">
-          
-          <div class="flex items-center justify-between">
-            <span class="text-xs text-gray-400 flex items-center gap-1.5">
-              <i class="fa-solid fa-circle-info text-[#725CFF]"></i>
-              Paste usernames (one per line, comma or space separated). Our engine tallies them seamlessly.
-            </span>
-            <!-- Simple vs 4-Box Switcher -->
-            <button type="button" onclick="toggleLayoutMode()" id="btn-layout-toggle" class="text-[11px] text-[#00F0FF] hover:underline font-semibold">
-              Switch to Simple 2-List Matcher
+          <!-- Swap Button (Mobile) -->
+          <div class="sm:hidden flex justify-center -my-2 relative z-20">
+            <button type="button" onclick="swapUserInputs()" title="Swap accounts" 
+                    class="w-8 h-8 rounded-full bg-[#131627] border border-white/20 text-gray-300 flex items-center justify-center text-xs shadow-lg active:scale-95 transition">
+              <i class="fa-solid fa-arrow-up-down"></i>
             </button>
           </div>
 
-          <!-- 4-Box Layout (Following & Followers for each) -->
-          <div id="layout-4box" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            
-            <!-- Column A -->
-            <div class="space-y-3 p-4 rounded-xl bg-purple-950/10 border border-[#725CFF]/20">
-              <div class="flex items-center justify-between">
-                <span class="text-xs font-bold text-purple-300 flex items-center gap-1.5">
-                  <i class="fa-solid fa-user-plus text-[#725CFF]"></i> Account A: Following
-                </span>
-                <span id="count-a-following" class="text-[10px] px-2 py-0.5 rounded-full bg-[#725CFF]/20 text-[#C4B5FD] font-mono">0 loaded</span>
-              </div>
-              <textarea id="list-a-following" name="user1_following" rows="3" oninput="updateLiveCounters()"
-                        placeholder="Paste whom Account A follows (e.g. @user1, @user2, user3...)"
-                        class="w-full bg-[#0B0D17] border border-white/10 rounded-lg p-2.5 text-xs font-mono text-white placeholder-gray-600 focus:outline-none focus:border-[#725CFF] transition resize-y">{initialU1Following}</textarea>
-
-              <div class="flex items-center justify-between pt-1">
-                <span class="text-xs font-bold text-purple-300 flex items-center gap-1.5">
-                  <i class="fa-solid fa-users text-[#725CFF]"></i> Account A: Followers
-                </span>
-                <span id="count-a-followers" class="text-[10px] px-2 py-0.5 rounded-full bg-[#725CFF]/20 text-[#C4B5FD] font-mono">0 loaded</span>
-              </div>
-              <textarea id="list-a-followers" name="user1_followers" rows="3" oninput="updateLiveCounters()"
-                        placeholder="Paste who follows Account A (optional)"
-                        class="w-full bg-[#0B0D17] border border-white/10 rounded-lg p-2.5 text-xs font-mono text-white placeholder-gray-600 focus:outline-none focus:border-[#725CFF] transition resize-y">{initialU1Followers}</textarea>
-            </div>
-
-            <!-- Column B -->
-            <div class="space-y-3 p-4 rounded-xl bg-cyan-950/10 border border-[#00F0FF]/20">
-              <div class="flex items-center justify-between">
-                <span class="text-xs font-bold text-cyan-300 flex items-center gap-1.5">
-                  <i class="fa-solid fa-user-plus text-[#00F0FF]"></i> Account B: Following
-                </span>
-                <span id="count-b-following" class="text-[10px] px-2 py-0.5 rounded-full bg-[#00F0FF]/20 text-[#00F0FF] font-mono">0 loaded</span>
-              </div>
-              <textarea id="list-b-following" name="user2_following" rows="3" oninput="updateLiveCounters()"
-                        placeholder="Paste whom Account B follows (e.g. @user2, @user4, user5...)"
-                        class="w-full bg-[#0B0D17] border border-white/10 rounded-lg p-2.5 text-xs font-mono text-white placeholder-gray-600 focus:outline-none focus:border-[#00F0FF] transition resize-y">{initialU2Following}</textarea>
-
-              <div class="flex items-center justify-between pt-1">
-                <span class="text-xs font-bold text-cyan-300 flex items-center gap-1.5">
-                  <i class="fa-solid fa-users text-[#00F0FF]"></i> Account B: Followers
-                </span>
-                <span id="count-b-followers" class="text-[10px] px-2 py-0.5 rounded-full bg-[#00F0FF]/20 text-[#00F0FF] font-mono">0 loaded</span>
-              </div>
-              <textarea id="list-b-followers" name="user2_followers" rows="3" oninput="updateLiveCounters()"
-                        placeholder="Paste who follows Account B (optional)"
-                        class="w-full bg-[#0B0D17] border border-white/10 rounded-lg p-2.5 text-xs font-mono text-white placeholder-gray-600 focus:outline-none focus:border-[#00F0FF] transition resize-y">{initialU2Followers}</textarea>
-            </div>
-
-          </div>
-
-          <!-- Simple 2-List Matcher (Hidden by default) -->
-          <div id="layout-2box" class="hidden grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="p-4 rounded-xl bg-purple-950/10 border border-[#725CFF]/20 space-y-2">
-              <div class="flex items-center justify-between">
-                <span class="text-xs font-bold text-purple-300">Account A Follower/Following List:</span>
-                <span id="count-simple-a" class="text-[10px] px-2 py-0.5 rounded-full bg-[#725CFF]/20 text-[#C4B5FD] font-mono">0 loaded</span>
-              </div>
-              <textarea id="list-simple-a" rows="5" oninput="syncSimpleToLists()" placeholder="Paste Account A usernames here..."
-                        class="w-full bg-[#0B0D17] border border-white/10 rounded-lg p-2.5 text-xs font-mono text-white focus:outline-none focus:border-[#725CFF]"></textarea>
-            </div>
-
-            <div class="p-4 rounded-xl bg-cyan-950/10 border border-[#00F0FF]/20 space-y-2">
-              <div class="flex items-center justify-between">
-                <span class="text-xs font-bold text-cyan-300">Account B Follower/Following List:</span>
-                <span id="count-simple-b" class="text-[10px] px-2 py-0.5 rounded-full bg-[#00F0FF]/20 text-[#00F0FF] font-mono">0 loaded</span>
-              </div>
-              <textarea id="list-simple-b" rows="5" oninput="syncSimpleToLists()" placeholder="Paste Account B usernames here..."
-                        class="w-full bg-[#0B0D17] border border-white/10 rounded-lg p-2.5 text-xs font-mono text-white focus:outline-none focus:border-[#00F0FF]"></textarea>
+          <!-- Second Profile (Account B) -->
+          <div class="bg-black/40 p-3.5 rounded-xl border border-white/10 focus-within:border-[#00F0FF] transition">
+            <label class="block text-[11px] font-bold text-cyan-300 mb-1.5 uppercase tracking-wider flex items-center justify-between">
+              <span>Second Account</span>
+              <span class="text-[10px] text-gray-500 font-normal">Profile B</span>
+            </label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-[#00F0FF] font-bold text-sm">@</span>
+              <input type="text" id="user2-input" name="user2" value={initialUserB} required
+                     placeholder="e.g. __naman.sharma__0.1"
+                     class="w-full bg-[#0B0D17] border border-white/10 rounded-lg pl-8 pr-3 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#00F0FF] transition">
             </div>
           </div>
 
         </div>
 
-        <!-- Submit Button -->
-        <div class="pt-2">
-          <button type="submit" id="btn-tally-submit" 
-                  class="w-full btn-primary py-3.5 text-sm font-bold flex items-center justify-center gap-2.5 shadow-xl shadow-[#725CFF]/25 hover:shadow-[#725CFF]/45 transition transform active:scale-[0.99]">
-            <i class="fa-solid fa-satellite-dish text-base"></i>
-            <span id="btn-tally-label">Cross-Reference & Tally Connections Now</span>
+        <!-- Big Primary Action Button -->
+        <button type="submit" id="btn-find-mutuals"
+                class="w-full btn-primary py-3.5 text-sm font-bold flex items-center justify-center gap-2.5 shadow-xl shadow-[#725CFF]/25 hover:shadow-[#725CFF]/45 transition transform active:scale-[0.99]">
+          <i class="fa-solid fa-satellite-dish text-base"></i>
+          <span id="btn-find-label">Find Mutual Friends Now</span>
+        </button>
+
+        <!-- Optional Collapsed Manual Lists Section (For Power Users) -->
+        <div class="pt-2 border-t border-white/5">
+          <button type="button" onclick="toggleAdvancedLists()" id="btn-toggle-advanced"
+                  class="text-[11px] text-gray-400 hover:text-purple-300 transition flex items-center gap-1.5 mx-auto">
+            <i class="fa-solid fa-sliders text-[#725CFF]"></i>
+            <span id="label-toggle-advanced">Optional: Paste follower/following lists directly &darr;</span>
           </button>
+
+          <div id="advanced-lists-panel" class="hidden mt-3 p-4 rounded-xl bg-black/40 border border-white/5 space-y-3">
+            <p class="text-[11px] text-gray-400">
+              Have exported follower lists? Paste them below to cross-reference with 100% precision:
+            </p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-[10px] font-bold text-purple-300 mb-1">Account A Follow List:</label>
+                <textarea id="adv-list-a" rows="3" placeholder="Paste Account A's following or followers..."
+                          class="w-full bg-[#0B0D17] border border-white/10 rounded-lg p-2 text-white font-mono text-[11px] focus:outline-none focus:border-[#725CFF]">{initialU1Following}</textarea>
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold text-cyan-300 mb-1">Account B Follow List:</label>
+                <textarea id="adv-list-b" rows="3" placeholder="Paste Account B's following or followers..."
+                          class="w-full bg-[#0B0D17] border border-white/10 rounded-lg p-2 text-white font-mono text-[11px] focus:outline-none focus:border-[#00F0FF]">{initialU2Following}</textarea>
+              </div>
+            </div>
+          </div>
         </div>
 
       </form>
     </div>
 
-    <!-- Error Toast Notification -->
-    <div id="tally-error-box" class="hidden max-w-3xl mx-auto mb-8 p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-3 shadow-lg">
+    <!-- Scanning State Animation (Shown during search) -->
+    <div id="scanning-state" class="hidden max-w-xl mx-auto my-8 p-8 glass-panel text-center border border-[#725CFF]/30 rounded-2xl shadow-2xl relative overflow-hidden">
+      <div class="w-16 h-16 rounded-full bg-[#725CFF]/15 border border-[#725CFF]/40 flex items-center justify-center text-2xl text-[#725CFF] mx-auto mb-4 animate-spin">
+        <i class="fa-solid fa-compass"></i>
+      </div>
+      <h3 class="text-lg font-bold text-white mb-2 font-display">Cross-Referencing Profiles...</h3>
+      <p id="scanning-step-text" class="text-xs text-gray-400 animate-pulse">
+        Retrieving Instagram profiles and analyzing shared connections...
+      </p>
+      <div class="w-48 h-1 bg-white/10 rounded-full mx-auto mt-4 overflow-hidden">
+        <div class="w-full h-full bg-gradient-to-r from-[#725CFF] to-[#00F0FF] animate-pulse"></div>
+      </div>
+    </div>
+
+    <!-- Error State Box -->
+    <div id="mutual-error-box" class="hidden max-w-3xl mx-auto mb-8 p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-3">
       <i class="fa-solid fa-circle-exclamation text-base shrink-0 text-rose-400"></i>
-      <span id="tally-error-msg"></span>
+      <span id="mutual-error-msg"></span>
     </div>
 
     <!-- Toast Notification (Copied to Clipboard) -->
@@ -234,7 +170,7 @@ if (hasSSRSubmit) {
       <span id="copy-toast-msg">Copied to clipboard!</span>
     </div>
 
-    <!-- Live Results Dashboard (Container populated dynamically or from SSR) -->
+    <!-- Results Dashboard (Displayed once mutuals are found) -->
     <div id="results-dashboard" class={ssrMutuals ? 'block' : 'hidden'}>
       
       <!-- Comparison Overview Card -->
@@ -247,7 +183,7 @@ if (hasSSRSubmit) {
           <div class="lg:col-span-3 flex items-center gap-4 bg-black/40 p-4 rounded-2xl border border-white/5">
             <img id="res-avatar-a" src={ssrMutuals?.profile1?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=userA`} 
                  alt="avatar A" referrerpolicy="no-referrer"
-                 class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border-2 border-[#725CFF]/40 shadow-lg shrink-0" />
+                 class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border-2 border-[#725CFF]/40 shadow-lg shrink-0 bg-white/5" />
             <div class="min-w-0 flex-grow">
               <div class="flex items-center gap-1.5 flex-wrap">
                 <h3 id="res-user-a" class="font-extrabold text-white text-base sm:text-lg font-display truncate">
@@ -280,7 +216,7 @@ if (hasSSRSubmit) {
           <div class="lg:col-span-3 flex items-center gap-4 bg-black/40 p-4 rounded-2xl border border-white/5">
             <img id="res-avatar-b" src={ssrMutuals?.profile2?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=userB`} 
                  alt="avatar B" referrerpolicy="no-referrer"
-                 class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border-2 border-[#00F0FF]/40 shadow-lg shrink-0" />
+                 class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border-2 border-[#00F0FF]/40 shadow-lg shrink-0 bg-white/5" />
             <div class="min-w-0 flex-grow">
               <div class="flex items-center gap-1.5 flex-wrap">
                 <h3 id="res-user-b" class="font-extrabold text-white text-base sm:text-lg font-display truncate">
@@ -320,7 +256,7 @@ if (hasSSRSubmit) {
           </div>
 
           <div class="flex items-center gap-2 flex-wrap">
-            <button type="button" onclick="copyAllMutualUsernames()" class="btn-secondary py-2 px-3 text-xs font-semibold flex items-center gap-1.5 text-purple-300 hover:text-white border border-[#725CFF]/30 hover:border-[#725CFF]" title="Copy all common mutual usernames to clipboard">
+            <button type="button" onclick="copyAllMutualUsernames()" class="btn-secondary py-2 px-3 text-xs font-semibold flex items-center gap-1.5 text-purple-300 hover:text-white border border-[#725CFF]/30 hover:border-[#725CFF]" title="Copy all common mutual usernames">
               <i class="fa-solid fa-copy text-[#725CFF]"></i>
               <span>Copy All IDs</span>
             </button>
@@ -333,7 +269,7 @@ if (hasSSRSubmit) {
 
       </div>
 
-      <!-- 4 Metric Cards with Animated Counters -->
+      <!-- 4 Metric Cards with Fluid Counter Animations -->
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
         
         <div class="glass-panel p-4 flex items-center gap-3 border border-white/5 hover:border-[#725CFF]/40 transition rounded-xl">
@@ -361,7 +297,7 @@ if (hasSSRSubmit) {
             <i class="fa-solid fa-network-wired"></i>
           </div>
           <div>
-            <span class="text-[10px] uppercase text-gray-400 block font-bold tracking-wider">Unique Mutuals</span>
+            <span class="text-[10px] uppercase text-gray-400 block font-bold tracking-wider">Mutual Friends</span>
             <span id="metric-total-mutuals" class="text-xl font-extrabold text-[#10B981] counter-num">0</span>
           </div>
         </div>
@@ -371,17 +307,16 @@ if (hasSSRSubmit) {
             <i class="fa-solid fa-arrows-split-up-and-left"></i>
           </div>
           <div>
-            <span class="text-[10px] uppercase text-gray-400 block font-bold tracking-wider">Cross Matches</span>
+            <span class="text-[10px] uppercase text-gray-400 block font-bold tracking-wider">Cross Overlaps</span>
             <span id="metric-cross-matches" class="text-xl font-extrabold text-[#F59E0B] counter-num">0</span>
           </div>
         </div>
 
       </div>
 
-      <!-- Filter, Tabs & Search Bar -->
+      <!-- Filter Tabs & Search Bar -->
       <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 border-b border-white/10 pb-4 mb-6">
         
-        <!-- Category Filter Tabs -->
         <div class="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
           <button type="button" onclick="filterResultsTab('all')" id="tab-res-all" 
                   class="mutual-tab-pill px-4 py-2 rounded-xl text-xs font-bold bg-[#725CFF] text-white flex items-center gap-2 transition shrink-0 shadow-md">
@@ -400,12 +335,6 @@ if (hasSSRSubmit) {
             <i class="fa-solid fa-users text-[#00F0FF]"></i>
             <span>Follow Both (<span id="tab-cnt-followers">0</span>)</span>
           </button>
-
-          <button type="button" onclick="filterResultsTab('cross')" id="tab-res-cross" 
-                  class="mutual-tab-pill px-4 py-2 rounded-xl text-xs font-bold text-gray-400 hover:text-white bg-white/[0.03] hover:bg-white/[0.08] flex items-center gap-2 transition shrink-0">
-            <i class="fa-solid fa-arrows-split-up-and-left text-[#F59E0B]"></i>
-            <span>Cross (<span id="tab-cnt-cross">0</span>)</span>
-          </button>
         </div>
 
         <!-- Live Instant Search Bar -->
@@ -419,23 +348,20 @@ if (hasSSRSubmit) {
 
       </div>
 
-      <!-- Zero Mutual State (Polished Empty State) -->
+      <!-- Zero Mutuals State (Honest, clean empty-state) -->
       <div id="zero-mutuals-view" class="hidden glass-panel p-10 text-center max-w-2xl mx-auto my-6 border border-white/10 rounded-2xl relative overflow-hidden">
         <div class="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-2xl text-gray-400 mx-auto mb-4">
           <i class="fa-solid fa-users-slash"></i>
         </div>
-        <h3 class="text-xl font-bold text-white mb-2 font-display">No Mutual Connections Found</h3>
+        <h3 class="text-xl font-bold text-white mb-2 font-display">No Mutual Friends Detected</h3>
         <p id="zero-state-details" class="text-xs sm:text-sm text-gray-400 max-w-md mx-auto mb-5 leading-relaxed">
-          The two accounts do not share any common followers or followed accounts in the scanned lists.
+          The two accounts do not share any public mutual friends, shared following, or tagged collaborations.
         </p>
-        <div class="pt-4 border-t border-white/5 text-[11px] text-gray-500">
-          Tip: Make sure you have pasted the complete followers and following lists into both Account A and Account B textareas above.
-        </div>
       </div>
 
-      <!-- Cards Grid Container -->
+      <!-- Mutual Profile Cards Grid -->
       <div id="mutual-cards-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        <!-- Generated Cards with Fluid Animations will appear here -->
+        <!-- Rendered dynamically -->
       </div>
 
     </div>
@@ -461,186 +387,41 @@ if (hasSSRSubmit) {
   </style>
 
   <script is:inline>
-    // State storage
-    window.tallyData = {
+    window.mutualState = {
       userA: '',
       userB: '',
-      profileA: null,
-      profileB: null,
+      allMutuals: [],
       mutualFollowing: [],
       mutualFollowers: [],
       crossConnections: [],
-      allMutuals: [],
       currentTab: 'all',
-      isSimpleLayout: false,
     };
 
-    // Helper: Parse text input into clean list of usernames
-    window.parseUsernamesFromText = function(text) {
-      if (!text || typeof text !== 'string') return [];
-      const parts = text.split(/[\r\n,;\s]+/);
-      const set = new Set();
-      parts.forEach(p => {
-        let clean = p.trim().toLowerCase();
-        // remove URL prefix if present
-        clean = clean.replace(/^https?:\/\/(www\.)?instagram\.com\//, '').replace(/\/.*$/, '');
-        // remove @
-        clean = clean.replace(/^@/, '');
-        // remove non-alphanumeric/period/underscore
-        clean = clean.replace(/[^a-z0-9._]/g, '');
-        if (clean.length > 0 && !['instagram', 'explore', 'reels', 'p'].includes(clean)) {
-          set.add(clean);
+    window.toggleAdvancedLists = function() {
+      const panel = document.getElementById('advanced-lists-panel');
+      const label = document.getElementById('label-toggle-advanced');
+      if (panel) {
+        if (panel.classList.contains('hidden')) {
+          panel.classList.remove('hidden');
+          if (label) label.innerText = 'Hide manual list importer &uarr;';
+        } else {
+          panel.classList.add('hidden');
+          if (label) label.innerText = 'Optional: Paste follower/following lists directly &darr;';
         }
-      });
-      return Array.from(set);
-    };
-
-    // Live counter updater
-    window.updateLiveCounters = function() {
-      const aFing = parseUsernamesFromText(document.getElementById('list-a-following')?.value || '');
-      const aFers = parseUsernamesFromText(document.getElementById('list-a-followers')?.value || '');
-      const bFing = parseUsernamesFromText(document.getElementById('list-b-following')?.value || '');
-      const bFers = parseUsernamesFromText(document.getElementById('list-b-followers')?.value || '');
-
-      const elAFing = document.getElementById('count-a-following');
-      const elAFers = document.getElementById('count-a-followers');
-      const elBFing = document.getElementById('count-b-following');
-      const elBFers = document.getElementById('count-b-followers');
-
-      if (elAFing) elAFing.innerText = `${aFing.length} loaded`;
-      if (elAFers) elAFers.innerText = `${aFers.length} loaded`;
-      if (elBFing) elBFing.innerText = `${bFing.length} loaded`;
-      if (elBFers) elBFers.innerText = `${bFers.length} loaded`;
-    };
-
-    // Simple vs 4-box layout toggle
-    window.toggleLayoutMode = function() {
-      const b4 = document.getElementById('layout-4box');
-      const b2 = document.getElementById('layout-2box');
-      const btn = document.getElementById('btn-layout-toggle');
-      window.tallyData.isSimpleLayout = !window.tallyData.isSimpleLayout;
-
-      if (window.tallyData.isSimpleLayout) {
-        b4.classList.add('hidden');
-        b2.classList.remove('hidden');
-        b2.classList.add('grid');
-        btn.innerText = 'Switch to Advanced 4-Box Tally (Following & Followers)';
-        // sync content
-        const sa = document.getElementById('list-simple-a');
-        const sb = document.getElementById('list-simple-b');
-        if (sa) sa.value = document.getElementById('list-a-following')?.value || '';
-        if (sb) sb.value = document.getElementById('list-b-following')?.value || '';
-        syncSimpleToLists();
-      } else {
-        b2.classList.add('hidden');
-        b2.classList.remove('grid');
-        b4.classList.remove('hidden');
-        btn.innerText = 'Switch to Simple 2-List Matcher';
-        updateLiveCounters();
       }
     };
 
-    window.syncSimpleToLists = function() {
-      const saVal = document.getElementById('list-simple-a')?.value || '';
-      const sbVal = document.getElementById('list-simple-b')?.value || '';
-      const la = document.getElementById('list-a-following');
-      const lb = document.getElementById('list-b-following');
-      if (la) la.value = saVal;
-      if (lb) lb.value = sbVal;
-
-      const saCount = parseUsernamesFromText(saVal).length;
-      const sbCount = parseUsernamesFromText(sbVal).length;
-      const elA = document.getElementById('count-simple-a');
-      const elB = document.getElementById('count-simple-b');
-      if (elA) elA.innerText = `${saCount} loaded`;
-      if (elB) elB.innerText = `${sbCount} loaded`;
-      updateLiveCounters();
-    };
-
-    // Swap Accounts
-    window.swapAccounts = function() {
-      const inA = document.getElementById('input-acc-a');
-      const inB = document.getElementById('input-acc-b');
-      if (inA && inB) {
-        const t = inA.value;
-        inA.value = inB.value;
-        inB.value = t;
-      }
-      const laFing = document.getElementById('list-a-following');
-      const lbFing = document.getElementById('list-b-following');
-      if (laFing && lbFing) {
-        const t = laFing.value;
-        laFing.value = lbFing.value;
-        lbFing.value = t;
-      }
-      const laFers = document.getElementById('list-a-followers');
-      const lbFers = document.getElementById('list-b-followers');
-      if (laFers && lbFers) {
-        const t = laFers.value;
-        laFers.value = lbFers.value;
-        lbFers.value = t;
-      }
-      updateLiveCounters();
-    };
-
-    // Clear Inputs
-    window.clearTallyInputs = function() {
-      ['input-acc-a', 'input-acc-b', 'list-a-following', 'list-a-followers', 'list-b-following', 'list-b-followers', 'list-simple-a', 'list-simple-b'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.value = '';
-      });
-      updateLiveCounters();
-    };
-
-    // Load Sample Test Scenario
-    window.loadSampleScenario = function() {
-      const inA = document.getElementById('input-acc-a');
-      const inB = document.getElementById('input-acc-b');
-      if (inA) inA.value = 'gaurav_rathi83';
-      if (inB) inB.value = '__naman.sharma__0.1';
-
-      const sampleAFing = ['cristiano', 'leomessi', 'rohit_sharma', 'virat.kohli', 'gswebit', 'tech_insider', '__naman.sharma__0.1', 'natgeo', 'spacex'];
-      const sampleAFers = ['priya_designer', 'alex_travels', 'gswebit', 'natgeo', 'dev_craft', 'rohit_sharma'];
-      const sampleBFing = ['virat.kohli', 'rohit_sharma', 'gswebit', 'natgeo', 'gaurav_rathi83', 'photoholic', 'elonmusk'];
-      const sampleBFers = ['gaurav_rathi83', 'gswebit', 'alex_travels', 'natgeo', 'crypto_guru'];
-
-      const elAFing = document.getElementById('list-a-following');
-      const elAFers = document.getElementById('list-a-followers');
-      const elBFing = document.getElementById('list-b-following');
-      const elBFers = document.getElementById('list-b-followers');
-
-      if (elAFing) elAFing.value = sampleAFing.map(u => `@${u}`).join('\n');
-      if (elAFers) elAFers.value = sampleAFers.map(u => `@${u}`).join('\n');
-      if (elBFing) elBFing.value = sampleBFing.map(u => `@${u}`).join('\n');
-      if (elBFers) elBFers.value = sampleBFers.map(u => `@${u}`).join('\n');
-
-      updateLiveCounters();
-      // Auto-trigger tally for immediate gratification
-      executeMutualTally();
-    };
-
-    // Mode Toggle (Lists vs Quick)
-    window.setTallyMode = function(mode) {
-      const sec = document.getElementById('deep-tally-section');
-      const btnLists = document.getElementById('tab-btn-lists');
-      const btnQuick = document.getElementById('tab-btn-quick');
-      const submitLbl = document.getElementById('btn-tally-label');
-
-      if (mode === 'quick') {
-        if (sec) sec.classList.add('hidden');
-        btnLists.className = 'mode-toggle-btn px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2 text-gray-400 hover:text-white';
-        btnQuick.className = 'mode-toggle-btn px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2 bg-[#725CFF] text-white shadow-md';
-        if (submitLbl) submitLbl.innerText = 'Compare Public Telemetry';
-      } else {
-        if (sec) sec.classList.remove('hidden');
-        btnQuick.className = 'mode-toggle-btn px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2 text-gray-400 hover:text-white';
-        btnLists.className = 'mode-toggle-btn px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2 bg-[#725CFF] text-white shadow-md';
-        if (submitLbl) submitLbl.innerText = 'Cross-Reference & Tally Connections Now';
+    window.swapUserInputs = function() {
+      const u1 = document.getElementById('user1-input');
+      const u2 = document.getElementById('user2-input');
+      if (u1 && u2) {
+        const temp = u1.value;
+        u1.value = u2.value;
+        u2.value = temp;
       }
     };
 
-    // Smooth counter animation
-    function animateValue(elemId, start, end, duration = 800) {
+    function animateNumber(elemId, start, end, duration = 800) {
       const obj = document.getElementById(elemId);
       if (!obj) return;
       if (start === end) {
@@ -666,15 +447,15 @@ if (hasSSRSubmit) {
       requestAnimationFrame(run);
     }
 
-    // Main Tally Execution Function (Runs Client-Side Instant Tally + Concurrently Syncs with API)
-    window.executeMutualTally = async function(e) {
+    // Handles the primary submit: just 2 IDs
+    window.handleMutualsSubmit = async function(e) {
       if (e) e.preventDefault();
 
-      const userA = document.getElementById('input-acc-a')?.value.trim().toLowerCase().replace(/^@/, '') || '';
-      const userB = document.getElementById('input-acc-b')?.value.trim().toLowerCase().replace(/^@/, '') || '';
+      const userA = document.getElementById('user1-input')?.value.trim().toLowerCase().replace(/^@/, '') || '';
+      const userB = document.getElementById('user2-input')?.value.trim().toLowerCase().replace(/^@/, '') || '';
 
-      const errBox = document.getElementById('tally-error-box');
-      const errMsg = document.getElementById('tally-error-msg');
+      const errBox = document.getElementById('mutual-error-box');
+      const errMsg = document.getElementById('mutual-error-msg');
       if (errBox) errBox.classList.add('hidden');
 
       if (!userA || !userB) {
@@ -687,251 +468,180 @@ if (hasSSRSubmit) {
 
       if (userA === userB) {
         if (errBox && errMsg) {
-          errMsg.innerText = 'Please provide two different usernames to compare mutual connections.';
+          errMsg.innerText = 'Please enter two different usernames to compare mutual connections.';
           errBox.classList.remove('hidden');
         }
         return;
       }
 
-      const btn = document.getElementById('btn-tally-submit');
-      if (btn) {
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Tallying Networks...</span>';
-      }
+      // Check if user expanded manual lists
+      const listA = document.getElementById('adv-list-a')?.value.trim() || '';
+      const listB = document.getElementById('adv-list-b')?.value.trim() || '';
 
-      // Step 1: Read lists from textareas
-      const aFollowing = parseUsernamesFromText(document.getElementById('list-a-following')?.value || '');
-      const aFollowers = parseUsernamesFromText(document.getElementById('list-a-followers')?.value || '');
-      const bFollowing = parseUsernamesFromText(document.getElementById('list-b-following')?.value || '');
-      const bFollowers = parseUsernamesFromText(document.getElementById('list-b-followers')?.value || '');
+      // Show scanning state
+      const scanBox = document.getElementById('scanning-state');
+      const scanText = document.getElementById('scanning-step-text');
+      const btn = document.getElementById('btn-find-mutuals');
+      const btnLbl = document.getElementById('btn-find-label');
 
-      // Step 2: Instant Mathematical Set Intersections
-      const aFingSet = new Set(aFollowing);
-      const aFersSet = new Set(aFollowers);
-      const bFingSet = new Set(bFollowing);
-      const bFersSet = new Set(bFollowers);
+      if (scanBox) scanBox.classList.remove('hidden');
+      if (btn) btn.disabled = true;
+      if (btnLbl) btnLbl.innerText = 'Analyzing Networks...';
 
-      // Accounts both follow: A_fing ∩ B_fing
-      const mutualFollowingUsernames = aFollowing.filter(u => bFingSet.has(u) && u !== userA && u !== userB);
+      if (scanText) scanText.innerText = `Connecting to Instagram telemetry for @${userA} and @${userB}...`;
 
-      // Accounts following both: A_fers ∩ B_fers
-      const mutualFollowersUsernames = aFollowers.filter(u => bFersSet.has(u) && u !== userA && u !== userB);
-
-      // Cross connections: (A_fing ∩ B_fers) ∪ (B_fing ∩ A_fers)
-      const aFingBFers = aFollowing.filter(u => bFersSet.has(u) && u !== userA && u !== userB);
-      const bFingAFers = bFollowing.filter(u => aFersSet.has(u) && u !== userA && u !== userB);
-
-      // Direct follow reciprocity
-      const userAFollowsB = aFingSet.has(userB) || bFersSet.has(userA);
-      const userBFollowsA = bFingSet.has(userA) || aFersSet.has(userB);
-      const isMutualFollow = userAFollowsB && userBFollowsA;
-
-      // Construct mutual items map
-      const mutualsMap = new Map();
-
-      // Helper to build a clean card item
-      const makeItem = (username, connType, label) => {
-        const isVerified = ['cristiano', 'leomessi', 'nike', 'apple', 'instagram', 'natgeo', 'virat.kohli', 'rohit_sharma'].includes(username);
-        return {
-          username: username,
-          full_name: username.replace(/[._]/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
-          avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`,
-          is_verified: isVerified,
-          connection_type: connType,
-          label: label,
-          profile_link: `/report/${username}`,
-          instagram_link: `https://www.instagram.com/${username}/`
-        };
-      };
-
-      // Mutual following
-      mutualFollowingUsernames.forEach(u => {
-        mutualsMap.set(u, makeItem(u, 'mutual_following', 'Both Follow'));
-      });
-
-      // Mutual followers
-      mutualFollowersUsernames.forEach(u => {
-        if (mutualsMap.has(u)) {
-          const item = mutualsMap.get(u);
-          item.connection_type = 'dual_mutual';
-          item.label = 'Dual Connection (Both Follow & Follows Both)';
-        } else {
-          mutualsMap.set(u, makeItem(u, 'mutual_follower', 'Follows Both'));
-        }
-      });
-
-      // Cross connections
-      aFingBFers.forEach(u => {
-        if (!mutualsMap.has(u)) {
-          mutualsMap.set(u, makeItem(u, 'cross_connection', `@${userA} follows & follows @${userB}`));
-        }
-      });
-      bFingAFers.forEach(u => {
-        if (!mutualsMap.has(u)) {
-          mutualsMap.set(u, makeItem(u, 'cross_connection', `@${userB} follows & follows @${userA}`));
-        }
-      });
-
-      const allMutuals = Array.from(mutualsMap.values());
-      const mutualFollowingList = allMutuals.filter(i => i.connection_type === 'mutual_following' || i.connection_type === 'dual_mutual');
-      const mutualFollowersList = allMutuals.filter(i => i.connection_type === 'mutual_follower' || i.connection_type === 'dual_mutual');
-      const crossList = allMutuals.filter(i => i.connection_type === 'cross_connection');
-
-      // Shared affinity score calculation
-      let affinityScore = 0;
-      if (allMutuals.length > 0 || userAFollowsB || userBFollowsA) {
-        let base = Math.min(70, allMutuals.length * 7.5);
-        if (isMutualFollow) base += 30;
-        else if (userAFollowsB || userBFollowsA) base += 15;
-        affinityScore = +(Math.min(99.4, Math.max(5, base))).toFixed(1);
-      }
-
-      // Save to window state
-      window.tallyData.userA = userA;
-      window.tallyData.userB = userB;
-      window.tallyData.mutualFollowing = mutualFollowingList;
-      window.tallyData.mutualFollowers = mutualFollowersList;
-      window.tallyData.crossConnections = crossList;
-      window.tallyData.allMutuals = allMutuals;
-
-      // Update UI immediately (0ms delay!)
-      renderTallyResults({
-        userA,
-        userB,
-        userAFollowsB,
-        userBFollowsA,
-        isMutualFollow,
-        affinityScore,
-        allMutuals,
-        mutualFollowingList,
-        mutualFollowersList,
-        crossList,
-        counts: {
-          aFing: aFollowing.length,
-          aFers: aFollowers.length,
-          bFing: bFollowing.length,
-          bFers: bFollowers.length,
-        }
-      });
-
-      if (btn) {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fa-solid fa-satellite-dish text-base"></i> <span>Cross-Reference & Tally Connections Now</span>';
-      }
-
-      // Step 3: Concurrently fetch real profile metadata and enrich the results
       try {
-        fetch('/api/toolkit/mutuals', {
+        const resp = await fetch('/api/toolkit/mutuals', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             user1: userA,
             user2: userB,
-            user1_following: aFollowing,
-            user1_followers: aFollowers,
-            user2_following: bFollowing,
-            user2_followers: bFollowers,
+            user1_following: listA,
+            user2_following: listB,
           })
-        }).then(r => r.json()).then(data => {
-          if (data && data.success) {
-            enrichWithServerMetadata(data);
+        });
+
+        const data = await resp.json();
+
+        if (scanBox) scanBox.classList.add('hidden');
+        if (btn) btn.disabled = false;
+        if (btnLbl) btnLbl.innerText = 'Find Mutual Friends Now';
+
+        if (!data.success) {
+          if (errBox && errMsg) {
+            errMsg.innerText = data.error || 'Failed to compare profiles.';
+            errBox.classList.remove('hidden');
           }
-        }).catch(() => {});
-      } catch {}
+          return;
+        }
+
+        renderMutualResults(data);
+
+      } catch (err) {
+        if (scanBox) scanBox.classList.add('hidden');
+        if (btn) btn.disabled = false;
+        if (btnLbl) btnLbl.innerText = 'Find Mutual Friends Now';
+        if (errBox && errMsg) {
+          errMsg.innerText = 'Network error: ' + err.message;
+          errBox.classList.remove('hidden');
+        }
+      }
     };
 
-    // Render results view with fluid animations
-    function renderTallyResults(data) {
+    function renderMutualResults(data) {
       const dashboard = document.getElementById('results-dashboard');
       if (dashboard) {
         dashboard.classList.remove('hidden');
         dashboard.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
 
-      // User headers
-      const userAEl = document.getElementById('res-user-a');
-      const userBEl = document.getElementById('res-user-b');
-      if (userAEl) userAEl.innerText = `@${data.userA}`;
-      if (userBEl) userBEl.innerText = `@${data.userB}`;
+      const p1 = data.profile1 || {};
+      const p2 = data.profile2 || {};
+      const rel = data.relationship || {};
+      const metrics = data.metrics || {};
+      const allMutuals = data.all_mutuals || [];
+      const mutualFing = data.mutual_following || [];
+      const mutualFers = data.mutual_followers || [];
+      const cross = data.cross_connections || [];
 
-      const fACnt = document.getElementById('res-following-a-count');
-      const fArsACnt = document.getElementById('res-followers-a-count');
-      const fBCnt = document.getElementById('res-following-b-count');
-      const fArsBCnt = document.getElementById('res-followers-b-count');
+      window.mutualState.userA = p1.username;
+      window.mutualState.userB = p2.username;
+      window.mutualState.allMutuals = allMutuals;
+      window.mutualState.mutualFollowing = mutualFing;
+      window.mutualState.mutualFollowers = mutualFers;
+      window.mutualState.crossConnections = cross;
 
-      if (fACnt) fACnt.innerHTML = `<strong class="text-white">${data.counts.aFing.toLocaleString()}</strong> following`;
-      if (fArsACnt) fArsACnt.innerHTML = `<strong class="text-white">${data.counts.aFers.toLocaleString()}</strong> followers`;
-      if (fBCnt) fBCnt.innerHTML = `<strong class="text-white">${data.counts.bFing.toLocaleString()}</strong> following`;
-      if (fArsBCnt) fArsBCnt.innerHTML = `<strong class="text-white">${data.counts.bFers.toLocaleString()}</strong> followers`;
+      // Update Profile A
+      const elUserA = document.getElementById('res-user-a');
+      const elNameA = document.getElementById('res-name-a');
+      const elAvatarA = document.getElementById('res-avatar-a');
+      const elFingA = document.getElementById('res-following-a-count');
+      const elFersA = document.getElementById('res-followers-a-count');
+
+      if (elUserA) elUserA.innerText = `@${p1.username}`;
+      if (elNameA) elNameA.innerText = p1.full_name || p1.username;
+      if (elAvatarA && p1.avatar_url) elAvatarA.src = p1.avatar_url;
+      if (elFingA) elFingA.innerHTML = `<strong class="text-white">${(p1.following_count || 0).toLocaleString()}</strong> following`;
+      if (elFersA) elFersA.innerHTML = `<strong class="text-white">${(p1.followers_count || 0).toLocaleString()}</strong> followers`;
+
+      // Update Profile B
+      const elUserB = document.getElementById('res-user-b');
+      const elNameB = document.getElementById('res-name-b');
+      const elAvatarB = document.getElementById('res-avatar-b');
+      const elFingB = document.getElementById('res-following-b-count');
+      const elFersB = document.getElementById('res-followers-b-count');
+
+      if (elUserB) elUserB.innerText = `@${p2.username}`;
+      if (elNameB) elNameB.innerText = p2.full_name || p2.username;
+      if (elAvatarB && p2.avatar_url) elAvatarB.src = p2.avatar_url;
+      if (elFingB) elFingB.innerHTML = `<strong class="text-white">${(p2.following_count || 0).toLocaleString()}</strong> following`;
+      if (elFersB) elFersB.innerHTML = `<strong class="text-white">${(p2.followers_count || 0).toLocaleString()}</strong> followers`;
 
       // Affinity score
-      const affEl = document.getElementById('res-affinity-score');
-      if (affEl) affEl.innerText = `${data.affinityScore}%`;
+      const affScore = document.getElementById('res-affinity-score');
+      if (affScore) affScore.innerText = `${metrics.affinity_score || 0}%`;
 
-      // Direct relationship status
+      // Relationship banner
       const relLbl = document.getElementById('rel-status-label');
       const relAtoB = document.getElementById('rel-a-to-b');
       const relBtoA = document.getElementById('rel-b-to-a');
       const relIcon = document.getElementById('rel-status-icon');
       const relWrap = document.getElementById('rel-status-icon-wrap');
 
-      if (data.isMutualFollow) {
+      if (rel.is_mutual_follow) {
         if (relLbl) {
           relLbl.innerText = 'Mutual Follow (Both Follow Each Other)';
           relLbl.className = 'text-[#10B981] font-extrabold';
         }
         if (relIcon) relIcon.className = 'fa-solid fa-handshake text-[#10B981] text-base';
         if (relWrap) relWrap.className = 'w-9 h-9 rounded-xl bg-emerald-500/20 flex items-center justify-center text-[#10B981] shrink-0 border border-emerald-500/30';
-      } else if (data.userAFollowsB) {
+      } else if (rel.user1_follows_user2) {
         if (relLbl) {
-          relLbl.innerText = `@${data.userA} follows @${data.userB}`;
+          relLbl.innerText = `@${p1.username} follows @${p2.username}`;
           relLbl.className = 'text-[#725CFF] font-bold';
         }
         if (relIcon) relIcon.className = 'fa-solid fa-arrow-right text-[#725CFF]';
-      } else if (data.userBFollowsA) {
+      } else if (rel.user2_follows_user1) {
         if (relLbl) {
-          relLbl.innerText = `@${data.userB} follows @${data.userA}`;
+          relLbl.innerText = `@${p2.username} follows @${p1.username}`;
           relLbl.className = 'text-[#00F0FF] font-bold';
         }
         if (relIcon) relIcon.className = 'fa-solid fa-arrow-left text-[#00F0FF]';
       } else {
         if (relLbl) {
-          relLbl.innerText = data.allMutuals.length > 0 ? `Connected via ${data.allMutuals.length} Mutual Connection${data.allMutuals.length > 1 ? 's' : ''}` : 'No Direct Follow Found';
+          relLbl.innerText = allMutuals.length > 0 ? `Connected via ${allMutuals.length} Mutual Connection${allMutuals.length > 1 ? 's' : ''}` : 'No Direct Follow Found';
           relLbl.className = 'text-gray-400 font-medium';
         }
         if (relIcon) relIcon.className = 'fa-solid fa-users text-gray-400';
       }
 
       if (relAtoB) {
-        relAtoB.innerHTML = `<i class="fa-solid ${data.userAFollowsB ? 'fa-circle-check text-[#10B981]' : 'fa-circle-xmark text-gray-500'}"></i> @${data.userA} follows @${data.userB}`;
+        relAtoB.innerHTML = `<i class="fa-solid ${rel.user1_follows_user2 ? 'fa-circle-check text-[#10B981]' : 'fa-circle-xmark text-gray-500'}"></i> @${p1.username} follows @${p2.username}`;
       }
       if (relBtoA) {
-        relBtoA.innerHTML = `<i class="fa-solid ${data.userBFollowsA ? 'fa-circle-check text-[#10B981]' : 'fa-circle-xmark text-gray-500'}"></i> @${data.userB} follows @${data.userA}`;
+        relBtoA.innerHTML = `<i class="fa-solid ${rel.user2_follows_user1 ? 'fa-circle-check text-[#10B981]' : 'fa-circle-xmark text-gray-500'}"></i> @${p2.username} follows @${p1.username}`;
       }
 
-      // Animate 4 metric counters
-      animateValue('metric-mutual-following', 0, data.mutualFollowingList.length);
-      animateValue('metric-mutual-followers', 0, data.mutualFollowersList.length);
-      animateValue('metric-total-mutuals', 0, data.allMutuals.length);
-      animateValue('metric-cross-matches', 0, data.crossList.length);
+      // Animate 4 metrics
+      animateNumber('metric-mutual-following', 0, metrics.mutual_following_count || mutualFing.length);
+      animateNumber('metric-mutual-followers', 0, metrics.mutual_followers_count || mutualFers.length);
+      animateNumber('metric-total-mutuals', 0, allMutuals.length);
+      animateNumber('metric-cross-matches', 0, cross.length);
 
-      // Tab count badges
+      // Tab badges
       const tcAll = document.getElementById('tab-cnt-all');
       const tcFing = document.getElementById('tab-cnt-following');
       const tcFers = document.getElementById('tab-cnt-followers');
-      const tcCross = document.getElementById('tab-cnt-cross');
+      if (tcAll) tcAll.innerText = allMutuals.length;
+      if (tcFing) tcFing.innerText = mutualFing.length;
+      if (tcFers) tcFers.innerText = mutualFers.length;
 
-      if (tcAll) tcAll.innerText = data.allMutuals.length;
-      if (tcFing) tcFing.innerText = data.mutualFollowingList.length;
-      if (tcFers) tcFers.innerText = data.mutualFollowersList.length;
-      if (tcCross) tcCross.innerText = data.crossList.length;
-
-      // Populate Cards Grid
-      renderCardsList(data.allMutuals);
+      // Populate cards
+      renderCards(allMutuals);
     }
 
-    // Render cards list with fluid animations
-    function renderCardsList(items) {
+    function renderCards(items) {
       const grid = document.getElementById('mutual-cards-grid');
       const zeroView = document.getElementById('zero-mutuals-view');
       const zeroDetails = document.getElementById('zero-state-details');
@@ -942,9 +652,9 @@ if (hasSSRSubmit) {
       if (!items || items.length === 0) {
         if (zeroView) zeroView.classList.remove('hidden');
         if (zeroDetails) {
-          const uA = window.tallyData.userA || 'Account A';
-          const uB = window.tallyData.userB || 'Account B';
-          zeroDetails.innerText = `No common mutual connections detected between @${uA} and @${uB} in the supplied lists.`;
+          const uA = window.mutualState.userA || 'Account A';
+          const uB = window.mutualState.userB || 'Account B';
+          zeroDetails.innerText = `No common mutual connections detected between @${uA} and @${uB}. These accounts operate in separate social circles.`;
         }
         return;
       }
@@ -984,7 +694,7 @@ if (hasSSRSubmit) {
                 <p class="text-[11px] text-gray-400 truncate mt-0.5">${m.full_name || m.username}</p>
                 <span class="mt-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-bold border ${badgeBg}">
                   <i class="fa-solid ${badgeIcon}"></i>
-                  ${m.label || 'Mutual Connection'}
+                  ${m.label || 'Mutual Friend'}
                 </span>
               </div>
             </div>
@@ -1003,10 +713,9 @@ if (hasSSRSubmit) {
       });
     }
 
-    // Filter results tabs
     window.filterResultsTab = function(tab) {
-      window.tallyData.currentTab = tab;
-      const tabs = ['all', 'following', 'followers', 'cross'];
+      window.mutualState.currentTab = tab;
+      const tabs = ['all', 'following', 'followers'];
       tabs.forEach(t => {
         const btn = document.getElementById(`tab-res-${t}`);
         if (btn) {
@@ -1018,16 +727,14 @@ if (hasSSRSubmit) {
         }
       });
 
-      let items = window.tallyData.allMutuals;
-      if (tab === 'following') items = window.tallyData.mutualFollowing;
-      else if (tab === 'followers') items = window.tallyData.mutualFollowers;
-      else if (tab === 'cross') items = window.tallyData.crossConnections;
+      let items = window.mutualState.allMutuals;
+      if (tab === 'following') items = window.mutualState.mutualFollowing;
+      else if (tab === 'followers') items = window.mutualState.mutualFollowers;
 
-      renderCardsList(items);
+      renderCards(items);
       filterCardsByQuery();
     };
 
-    // Filter cards by search query
     window.filterCardsByQuery = function() {
       const q = document.getElementById('live-search-input')?.value.toLowerCase().trim() || '';
       const cards = document.querySelectorAll('.mutual-item-card');
@@ -1042,7 +749,6 @@ if (hasSSRSubmit) {
       });
     };
 
-    // Copy Toast Helper
     function showToast(msg) {
       const toast = document.getElementById('copy-toast');
       const toastMsg = document.getElementById('copy-toast-msg');
@@ -1057,9 +763,8 @@ if (hasSSRSubmit) {
       }
     }
 
-    // Copy All Mutual IDs
     window.copyAllMutualUsernames = function() {
-      const items = window.tallyData.allMutuals || [];
+      const items = window.mutualState.allMutuals || [];
       if (items.length === 0) {
         showToast('No mutual usernames to copy');
         return;
@@ -1072,15 +777,14 @@ if (hasSSRSubmit) {
       });
     };
 
-    // Export CSV
     window.exportMutualsCSV = function() {
-      const items = window.tallyData.allMutuals || [];
+      const items = window.mutualState.allMutuals || [];
       if (items.length === 0) {
         showToast('No mutual connections to export');
         return;
       }
-      const uA = window.tallyData.userA || 'Account_A';
-      const uB = window.tallyData.userB || 'Account_B';
+      const uA = window.mutualState.userA || 'Account_A';
+      const uB = window.mutualState.userB || 'Account_B';
       let csv = 'Username,Full Name,Connection Type,Label,Instagram Link\n';
       items.forEach(i => {
         csv += `"${i.username}","${(i.full_name || '').replace(/"/g, '""')}","${i.connection_type || ''}","${i.label || ''}","https://www.instagram.com/${i.username}/"\n`;
@@ -1097,30 +801,12 @@ if (hasSSRSubmit) {
       showToast(`✓ Exported mutuals_${uA}_${uB}.csv`);
     };
 
-    // Enrich profiles in background with authentic server data
-    function enrichWithServerMetadata(data) {
-      if (!data) return;
-      if (data.profile1 && data.profile1.avatar_url) {
-        const elA = document.getElementById('res-avatar-a');
-        if (elA) elA.src = data.profile1.avatar_url;
-        const nameA = document.getElementById('res-name-a');
-        if (nameA && data.profile1.full_name) nameA.innerText = data.profile1.full_name;
-      }
-      if (data.profile2 && data.profile2.avatar_url) {
-        const elB = document.getElementById('res-avatar-b');
-        if (elB) elB.src = data.profile2.avatar_url;
-        const nameB = document.getElementById('res-name-b');
-        if (nameB && data.profile2.full_name) nameB.innerText = data.profile2.full_name;
-      }
-    }
-
-    // Auto-initialize if SSR rendered
+    // Auto-trigger if query params exist on page load
     document.addEventListener('DOMContentLoaded', () => {
-      updateLiveCounters();
-      const inA = document.getElementById('input-acc-a')?.value.trim();
-      const inB = document.getElementById('input-acc-b')?.value.trim();
-      if (inA && inB) {
-        executeMutualTally();
+      const u1 = document.getElementById('user1-input')?.value.trim();
+      const u2 = document.getElementById('user2-input')?.value.trim();
+      if (u1 && u2) {
+        handleMutualsSubmit();
       }
     });
   </script>
