@@ -1,6 +1,9 @@
 import { VERIFIED_NETWORK_SEEDS } from '../data/networkSeed';
 import path from 'node:path';
 import fs from 'node:fs';
+import { createRequire } from 'node:module';
+
+const require = createRequire(import.meta.url);
 
 let dbInstance: any = null;
 

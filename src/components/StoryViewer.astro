@@ -21,6 +21,9 @@ const avatar = storiesData.avatar || `https://api.dicebear.com/7.x/avataaars/svg
 const fullName = storiesData.full_name || username;
 const isVerified = Boolean(storiesData.is_verified);
 const followers = Number(storiesData.followers_count || 0);
+const following = Number(storiesData.following_count || 0);
+const postsCount = Number(storiesData.posts_count || 0);
+const bio = storiesData.bio || '';
 
 const popular = ['cristiano', 'leomessi', 'zendaya', 'natgeo', 'selenagomez', 'taylorswift'];
 ---
@@ -118,11 +121,26 @@ const popular = ['cristiano', 'leomessi', 'zendaya', 'natgeo', 'selenagomez', 't
               </span>
             </div>
             <p class="text-xs text-gray-300 mt-0.5">{fullName}</p>
-            <div class="flex items-center gap-3 mt-2 text-[11px] text-gray-400">
+            {bio && (
+              <p class="text-[11px] text-gray-400 mt-1 max-w-md line-clamp-2">{bio}</p>
+            )}
+            <div class="flex items-center gap-3 mt-2 text-[11px] text-gray-400 flex-wrap">
               {followers > 0 && (
                 <span><strong class="text-white">{followers.toLocaleString()}</strong> followers</span>
-                <span>•</span>
               )}
+              {following > 0 && (
+                <>
+                  <span>•</span>
+                  <span><strong class="text-white">{following.toLocaleString()}</strong> following</span>
+                </>
+              )}
+              {postsCount > 0 && (
+                <>
+                  <span>•</span>
+                  <span><strong class="text-white">{postsCount.toLocaleString()}</strong> posts</span>
+                </>
+              )}
+              <span>•</span>
               <span class="text-emerald-400 font-semibold"><i class="fa-solid fa-shield-check"></i> 100% Anonymous Viewing</span>
             </div>
           </div>

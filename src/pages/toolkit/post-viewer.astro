@@ -196,7 +196,22 @@ const quickProfiles = ['natgeo', 'cristiano', 'leomessi', 'nike', 'arianagrande'
 
       <!-- Media Grid: All -->
       <div id="media-grid-all" class="media-container grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {allMedia.map((item: any) => {
+        {allMedia.length === 0 ? (
+          <div class="col-span-full glass-panel p-10 text-center border border-white/5 rounded-2xl">
+            <div class="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-2xl text-gray-500 mx-auto mb-4">
+              <i class="fa-solid fa-camera"></i>
+            </div>
+            <h4 class="text-base font-bold text-white mb-1">No Public Posts or Reels Found</h4>
+            <p class="text-xs text-gray-400 max-w-sm mx-auto mb-4">
+              @{acc.username} hasn't published any public media, or this account's posts are restricted by Instagram.
+            </p>
+            <a href={`/toolkit/post-viewer?username=${encodeURIComponent(acc.username)}&refresh=1`} class="btn-secondary py-2 px-4 text-xs font-bold inline-flex items-center gap-1.5">
+              <i class="fa-solid fa-arrows-rotate"></i>
+              <span>Refresh & Try Live Telemetry</span>
+            </a>
+          </div>
+        ) : (
+          allMedia.map((item: any) => {
           const isVideo = (item.media_type === 'reel') || Boolean(item.video_url);
           const isCarousel = Array.isArray(item.carousel) && item.carousel.length > 1;
           const downloadUrl = isVideo && item.video_url ? item.video_url : (item.thumbnail_url || item.media_url);
@@ -313,7 +328,7 @@ const quickProfiles = ['natgeo', 'cristiano', 'leomessi', 'nike', 'arianagrande'
 
             </div>
           );
-        })}
+        }))}
       </div>
 
     </div>
