@@ -686,8 +686,8 @@ export class InstagramIntelligenceService {
       const insertStmt = db.prepare(`
         INSERT INTO profile_media (
           account_id, media_type, media_url, thumbnail_url, video_url, shortcode,
-          caption, likes_count, comments_count, play_count, carousel_json, duration_sec, detected_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          caption, likes_count, comments_count, play_count, carousel_json, duration_sec, detected_at, tagged_users
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
 
       realItems.forEach((item) => {
@@ -705,6 +705,40 @@ export class InstagramIntelligenceService {
           caption = String(item.caption.text);
         }
 
+        // Extract genuine tagged users from caption mentions, usertags, and tagged_users
+        const taggedSet = new Set<string>();
+        if (caption) {
+          const mentions = caption.matchAll(/@([a-zA-Z0-9._]{2,30})/g);
+          for (const m of mentions) {
+            const cleanU = m[1].toLowerCase().replace(/\.$/, '');
+            if (cleanU !== username.toLowerCase() && !['instagram', 'reels', 'explore', 'threads'].includes(cleanU)) {
+              taggedSet.add(cleanU);
+            }
+          }
+        }
+
+        if (Array.isArray(item.usertags?.in)) {
+          item.usertags.in.forEach((uObj: any) => {
+            const u = uObj.user?.username || uObj.username;
+            if (u && typeof u === 'string') taggedSet.add(u.toLowerCase());
+          });
+        }
+
+        if (Array.isArray(item.tagged_users)) {
+          item.tagged_users.forEach((uObj: any) => {
+            const u = typeof uObj === 'string' ? uObj : (uObj?.username || uObj?.user?.username);
+            if (u && typeof u === 'string') taggedSet.add(u.toLowerCase());
+          });
+        }
+
+        if (Array.isArray(item.coauthor_producers)) {
+          item.coauthor_producers.forEach((uObj: any) => {
+            const u = typeof uObj === 'string' ? uObj : (uObj?.username || uObj?.user?.username);
+            if (u && typeof u === 'string') taggedSet.add(u.toLowerCase());
+          });
+        }
+
+        const taggedUsersJson = JSON.stringify(Array.from(taggedSet));
         const likesCount = Number(item.like_count || 0);
         const commentsCount = Number(item.comment_count || 0);
         const playCount = Number(item.play_count || (isVideo ? Math.max(5000, likesCount * 3) : 0));
@@ -725,7 +759,8 @@ export class InstagramIntelligenceService {
           playCount,
           carouselJson,
           durationSec,
-          detectedAt
+          detectedAt,
+          taggedUsersJson
         );
       });
     }
@@ -742,7 +777,7 @@ export class InstagramIntelligenceService {
 
     const rawPosts = db.prepare("SELECT * FROM profile_media WHERE account_id = ? AND media_type = 'post' ORDER BY id DESC").all(accountId) as any[];
     const rawReels = db.prepare("SELECT * FROM profile_media WHERE account_id = ? AND media_type = 'reel' ORDER BY id DESC").all(accountId) as any[];
-    const rawTagged = db.prepare("SELECT * FROM profile_media WHERE account_id = ? AND media_type = 'tagged' ORDER BY id DESC").all(accountId) as any[];
+    const rawTagged = db.prepare("SELECT * FROM profile_media WHERE account_id = ? AND (media_type = 'tagged' OR (tagged_users IS NOT NULL AND tagged_users != '[]' AND tagged_users != '')) ORDER BY id DESC").all(accountId) as any[];
 
     const formatItem = (m: any) => {
       const isVideo = m.media_type === 'reel' || Boolean(m.video_url);
@@ -755,6 +790,14 @@ export class InstagramIntelligenceService {
       let carousel = null;
       if (m.carousel_json) {
         try { carousel = JSON.parse(m.carousel_json); } catch {}
+      }
+
+      let taggedUsers: string[] = [];
+      if (m.tagged_users) {
+        try {
+          const parsed = JSON.parse(m.tagged_users);
+          if (Array.isArray(parsed)) taggedUsers = parsed;
+        } catch {}
       }
 
       return {
@@ -770,6 +813,7 @@ export class InstagramIntelligenceService {
         play_count: Number(m.play_count || 0),
         duration_sec: Number(m.duration_sec || 0),
         tagged_by: m.tagged_by || null,
+        tagged_users: taggedUsers,
         carousel,
         download_url: `/api/download?url=${encodeURIComponent(targetDl)}&filename=${encodeURIComponent(`${account.username}_${isVideo ? 'reel_' : 'post_'}${shortcode || m.id}.${ext}`)}`,
         instagram_url: shortcode ? (isVideo ? `https://www.instagram.com/reel/${shortcode}/` : `https://www.instagram.com/p/${shortcode}/`) : `https://www.instagram.com/${account.username}/`,

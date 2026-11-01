@@ -392,10 +392,49 @@ export class MutualIntelligenceService {
         const matches = caption.matchAll(/@([a-zA-Z0-9._]{2,30})/g);
         for (const m of matches) {
           const u = m[1].toLowerCase().replace(/\.$/, '');
-          if (u !== selfUsername && !['instagram', 'reels', 'explore'].includes(u)) {
+          if (u !== selfUsername && !['instagram', 'reels', 'explore', 'threads'].includes(u)) {
             mentions[u] = (mentions[u] || 0) + 1;
           }
         }
+      }
+
+      // Check usertags
+      if (Array.isArray(item.usertags?.in)) {
+        item.usertags.in.forEach((uObj: any) => {
+          const u = uObj.user?.username || uObj.username;
+          if (u && typeof u === 'string') {
+            const cleanU = this.sanitizeUsername(u);
+            if (cleanU && cleanU !== selfUsername) {
+              mentions[cleanU] = (mentions[cleanU] || 0) + 2;
+            }
+          }
+        });
+      }
+
+      // Check tagged_users
+      if (Array.isArray(item.tagged_users)) {
+        item.tagged_users.forEach((uObj: any) => {
+          const u = typeof uObj === 'string' ? uObj : (uObj?.username || uObj?.user?.username);
+          if (u && typeof u === 'string') {
+            const cleanU = this.sanitizeUsername(u);
+            if (cleanU && cleanU !== selfUsername) {
+              mentions[cleanU] = (mentions[cleanU] || 0) + 2;
+            }
+          }
+        });
+      }
+
+      // Check coauthor_producers
+      if (Array.isArray(item.coauthor_producers)) {
+        item.coauthor_producers.forEach((uObj: any) => {
+          const u = typeof uObj === 'string' ? uObj : (uObj?.username || uObj?.user?.username);
+          if (u && typeof u === 'string') {
+            const cleanU = this.sanitizeUsername(u);
+            if (cleanU && cleanU !== selfUsername) {
+              mentions[cleanU] = (mentions[cleanU] || 0) + 3;
+            }
+          }
+        });
       }
     });
 

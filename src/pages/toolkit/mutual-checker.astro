@@ -142,6 +142,23 @@ if (hasSSRSubmit) {
         </div>
 
       </form>
+
+      <!-- Quick Test Pair Suggestions -->
+      <div class="mt-4 pt-4 border-t border-white/5 flex items-center justify-center gap-2 flex-wrap text-xs text-gray-400">
+        <span class="text-gray-500 text-[11px]">Quick Pairs:</span>
+        <button type="button" onclick="setPair('gaurav_rathi83', '__naman.sharma__0.1')" class="px-2.5 py-1 rounded-lg bg-white/[0.03] hover:bg-white/[0.08] text-gray-300 hover:text-white border border-white/5 transition text-[11px]">
+          @gaurav_rathi83 & @__naman.sharma__0.1
+        </button>
+        <button type="button" onclick="setPair('cristiano', 'leomessi')" class="px-2.5 py-1 rounded-lg bg-white/[0.03] hover:bg-white/[0.08] text-gray-300 hover:text-white border border-white/5 transition text-[11px]">
+          @cristiano & @leomessi
+        </button>
+        <button type="button" onclick="setPair('virat.kohli', 'rohit_sharma')" class="px-2.5 py-1 rounded-lg bg-white/[0.03] hover:bg-white/[0.08] text-gray-300 hover:text-white border border-white/5 transition text-[11px]">
+          @virat.kohli & @rohit_sharma
+        </button>
+        <button type="button" onclick="setPair('github', 'vercel')" class="px-2.5 py-1 rounded-lg bg-white/[0.03] hover:bg-white/[0.08] text-gray-300 hover:text-white border border-white/5 transition text-[11px]">
+          @github & @vercel
+        </button>
+      </div>
     </div>
 
     <!-- Scanning State Animation (Shown during search) -->
@@ -421,6 +438,14 @@ if (hasSSRSubmit) {
       }
     };
 
+    window.setPair = function(a, b) {
+      const u1 = document.getElementById('user1-input');
+      const u2 = document.getElementById('user2-input');
+      if (u1) u1.value = a;
+      if (u2) u2.value = b;
+      handleMutualsSubmit();
+    };
+
     function animateNumber(elemId, start, end, duration = 800) {
       const obj = document.getElementById(elemId);
       if (!obj) return;
@@ -552,6 +577,12 @@ if (hasSSRSubmit) {
       window.mutualState.mutualFollowing = mutualFing;
       window.mutualState.mutualFollowers = mutualFers;
       window.mutualState.crossConnections = cross;
+
+      if (p1.username && p2.username) {
+        try {
+          window.history.replaceState({}, '', `/toolkit/mutual-checker?user1=${encodeURIComponent(p1.username)}&user2=${encodeURIComponent(p2.username)}`);
+        } catch (e) {}
+      }
 
       // Update Profile A
       const elUserA = document.getElementById('res-user-a');

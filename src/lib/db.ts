@@ -180,6 +180,10 @@ function runMigrations(db: DatabaseSync): void {
     );
   `);
 
+  try {
+    db.exec('ALTER TABLE profile_media ADD COLUMN tagged_users TEXT;');
+  } catch {}
+
   // Profile Connections
   db.exec(`
     CREATE TABLE IF NOT EXISTS profile_connections (
@@ -197,17 +201,14 @@ function runMigrations(db: DatabaseSync): void {
     CREATE INDEX IF NOT EXISTS idx_conn_target ON profile_connections (target_username);
   `);
 
-  // Auto-seed verified network connections if empty
+  // Auto-seed verified network connections
   try {
-    const countRow = db.prepare('SELECT COUNT(*) as c FROM profile_connections').get() as any;
-    if (countRow && countRow.c === 0) {
-      const stmt = db.prepare(`
-        INSERT OR IGNORE INTO profile_connections (account_username, connection_type, target_username, target_name, target_avatar, is_verified)
-        VALUES (?, ?, ?, ?, ?, ?)
-      `);
-      VERIFIED_NETWORK_SEEDS.forEach((s) => {
-        stmt.run(s.account_username, s.connection_type, s.target_username, s.target_name, s.target_avatar, s.is_verified ? 1 : 0);
-      });
-    }
+    const stmt = db.prepare(`
+      INSERT OR IGNORE INTO profile_connections (account_username, connection_type, target_username, target_name, target_avatar, is_verified)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `);
+    VERIFIED_NETWORK_SEEDS.forEach((s) => {
+      stmt.run(s.account_username, s.connection_type, s.target_username, s.target_name, s.target_avatar, s.is_verified ? 1 : 0);
+    });
   } catch {}
 }

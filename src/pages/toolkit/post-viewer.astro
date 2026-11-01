@@ -215,11 +215,15 @@ const quickProfiles = ['natgeo', 'cristiano', 'leomessi', 'nike', 'arianagrande'
             author: acc.username,
             authorAvatar: acc.avatar_url,
             carousel: item.carousel,
+            taggedUsers: item.tagged_users || [],
           }));
+
+          const hasTags = Array.isArray(item.tagged_users) && item.tagged_users.length > 0;
 
           return (
             <div class="glass-panel overflow-hidden flex flex-col justify-between group relative cursor-pointer hover:border-[#725CFF]/40 transition duration-300"
                  data-modal={modalData}
+                 data-has-tags={hasTags ? 'true' : 'false'}
                  onclick="openMediaModalFromEl(this)">
 
               <div class="relative h-72 overflow-hidden bg-black/60">
@@ -282,6 +286,17 @@ const quickProfiles = ['natgeo', 'cristiano', 'leomessi', 'nike', 'arianagrande'
                   <p class="text-xs text-gray-300 line-clamp-2 leading-relaxed">
                     {item.caption || 'No caption provided.'}
                   </p>
+                  {hasTags && (
+                    <div class="mt-2.5 flex items-center gap-1.5 flex-wrap">
+                      <span class="badge badge-purple text-[10px] font-bold py-0.5 px-2 flex items-center gap-1 shadow-sm">
+                        <i class="fa-solid fa-user-tag text-[9px] text-[#A78BFA]"></i>
+                        <span>Tagged: @{item.tagged_users[0]}</span>
+                        {item.tagged_users.length > 1 && (
+                          <span class="text-white/60">+{item.tagged_users.length - 1}</span>
+                        )}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 <div class="mt-3 pt-3 border-t border-white/5 flex items-center justify-between text-[11px] text-gray-500">
@@ -343,9 +358,18 @@ const quickProfiles = ['natgeo', 'cristiano', 'leomessi', 'nike', 'arianagrande'
           </div>
 
           <!-- Caption -->
-          <div class="space-y-2 mb-6">
+          <div class="space-y-2 mb-4">
             <span class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Caption & Insights</span>
-            <p id="modal-media-caption" class="text-xs text-gray-200 leading-relaxed max-h-44 overflow-y-auto bg-white/[0.02] p-3 rounded-xl border border-white/5 whitespace-pre-line"></p>
+            <p id="modal-media-caption" class="text-xs text-gray-200 leading-relaxed max-h-36 overflow-y-auto bg-white/[0.02] p-3 rounded-xl border border-white/5 whitespace-pre-line"></p>
+          </div>
+
+          <!-- Genuine Tagged Users in Post -->
+          <div id="modal-tagged-section" class="mb-4 space-y-2 hidden">
+            <span class="text-[10px] uppercase font-bold text-purple-300 tracking-wider flex items-center gap-1.5">
+              <i class="fa-solid fa-user-tag text-[#725CFF]"></i>
+              <span>Tagged Users in This Post</span>
+            </span>
+            <div id="modal-tagged-list" class="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto p-1"></div>
           </div>
 
           <!-- Engagement Stats -->
@@ -420,6 +444,25 @@ const quickProfiles = ['natgeo', 'cristiano', 'leomessi', 'nike', 'arianagrande'
       document.getElementById('modal-media-caption').innerText = data.caption || 'No caption';
       document.getElementById('modal-media-likes').innerText = Number(data.likes || 0).toLocaleString();
       document.getElementById('modal-media-comments').innerText = Number(data.comments || 0).toLocaleString();
+
+      // Render genuine tagged users
+      const taggedSec = document.getElementById('modal-tagged-section');
+      const taggedList = document.getElementById('modal-tagged-list');
+      if (taggedSec && taggedList) {
+        taggedList.innerHTML = '';
+        if (Array.isArray(data.taggedUsers) && data.taggedUsers.length > 0) {
+          taggedSec.classList.remove('hidden');
+          data.taggedUsers.forEach(u => {
+            const a = document.createElement('a');
+            a.href = `/toolkit/post-viewer?username=${encodeURIComponent(u)}`;
+            a.className = 'px-2.5 py-1 rounded-lg bg-[#725CFF]/15 hover:bg-[#725CFF]/30 border border-[#725CFF]/30 text-purple-300 hover:text-white text-xs flex items-center gap-1 transition shadow-sm';
+            a.innerHTML = `<i class="fa-solid fa-at text-[9px] text-[#725CFF]"></i><span>${u}</span>`;
+            taggedList.appendChild(a);
+          });
+        } else {
+          taggedSec.classList.add('hidden');
+        }
+      }
 
       const igLink = document.getElementById('modal-ig-link');
       if (igLink) {
@@ -524,7 +567,7 @@ const quickProfiles = ['natgeo', 'cristiano', 'leomessi', 'nike', 'arianagrande'
           if (isReel) card.classList.remove('hidden');
           else card.classList.add('hidden');
         } else if (tab === 'tagged') {
-          const isTagged = card.querySelector('.fa-tag');
+          const isTagged = card.getAttribute('data-has-tags') === 'true' || card.querySelector('.fa-user-tag') || card.querySelector('.fa-tag');
           if (isTagged) card.classList.remove('hidden');
           else card.classList.add('hidden');
         }

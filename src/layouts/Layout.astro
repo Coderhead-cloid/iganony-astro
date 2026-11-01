@@ -8,6 +8,12 @@ const {
   title = 'IGAnony Pro - Anonymous Instagram Story Viewer & Downloader',
   description = 'View and download Instagram stories, reels, posts, and compare mutual followers 100% anonymously. No account or login required.',
 } = Astro.props;
+
+const currentPath = Astro.url.pathname;
+const isHome = currentPath === '/';
+const isStories = currentPath.startsWith('/stories') || currentPath.includes('/story-viewer');
+const isReels = currentPath.startsWith('/toolkit/post-viewer') || currentPath.startsWith('/post-viewer');
+const isMutuals = currentPath.startsWith('/toolkit/mutual-checker') || currentPath.startsWith('/mutual-checker');
 ---
 
 <!DOCTYPE html>
@@ -18,6 +24,22 @@ const {
   <meta name="referrer" content="no-referrer">
   <title>{title}</title>
   <meta name="description" content={description}>
+
+  <!-- Prevent Theme Flash -->
+  <script is:inline>
+    (function() {
+      try {
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'light') {
+          document.documentElement.classList.remove('dark');
+          document.documentElement.classList.add('light');
+        } else {
+          document.documentElement.classList.remove('light');
+          document.documentElement.classList.add('dark');
+        }
+      } catch (e) {}
+    })();
+  </script>
 
   <!-- Favicon & App Icons with user icon.svg -->
   <link rel="icon" type="image/svg+xml" href="/images/icon.svg">
@@ -60,10 +82,10 @@ const {
   <!-- Custom CSS -->
   <link rel="stylesheet" href="/css/style.css">
 </head>
-<body class="bg-[#0B0D17] text-white min-h-screen flex flex-col font-sans selection:bg-[#725CFF] selection:text-white pb-20 md:pb-0">
+<body class="bg-[#0B0D17] text-white min-h-screen flex flex-col font-sans selection:bg-[#725CFF] selection:text-white pb-20 md:pb-0 transition-colors duration-200">
 
   <!-- Top Announcement Bar -->
-  <div class="bg-gradient-to-r from-[#EC4899]/85 via-[#725CFF]/90 to-[#00F0FF]/85 py-2 px-3 sm:px-4 text-center text-[11px] sm:text-xs font-medium tracking-wide flex items-center justify-center gap-1.5 sm:gap-2 backdrop-blur-md sticky top-0 z-50 border-b border-white/10">
+  <div class="bg-gradient-to-r from-[#EC4899]/85 via-[#725CFF]/90 to-[#00F0FF]/85 py-1.5 sm:py-2 px-3 sm:px-4 text-center text-[11px] sm:text-xs font-medium tracking-wide flex items-center justify-center gap-1.5 sm:gap-2 backdrop-blur-md sticky top-0 z-50 border-b border-white/10">
     <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-white/20 text-white backdrop-blur-sm animate-pulse">
       FREE
     </span>
@@ -72,39 +94,39 @@ const {
   </div>
 
   <!-- Main Navigation Header -->
-  <header class="border-b border-white/5 bg-[#0B0D17]/90 backdrop-blur-xl sticky top-[33px] sm:top-[37px] z-40 transition-all">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-4">
+  <header class="border-b border-white/5 bg-[#0B0D17]/90 backdrop-blur-xl sticky top-[29px] sm:top-[37px] z-40 transition-all">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-15 sm:h-20 flex items-center justify-between gap-2 sm:gap-4">
       
       <!-- Logo with user-provided icon.svg -->
-      <a href="/" class="flex items-center gap-2.5 sm:gap-3 group shrink-0">
-        <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-tr from-[#EC4899] via-[#725CFF] to-[#00F0FF] p-[2px] shadow-lg shadow-[#725CFF]/30 group-hover:shadow-[#EC4899]/50 transition duration-300 shrink-0">
-          <div class="w-full h-full bg-[#0B0D17] rounded-[14px] flex items-center justify-center overflow-hidden p-1 sm:p-1.5">
+      <a href="/" class="flex items-center gap-2 sm:gap-3 group shrink-0 min-w-0">
+        <div class="w-8 h-8 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-[#EC4899] via-[#725CFF] to-[#00F0FF] p-[2px] shadow-lg shadow-[#725CFF]/30 group-hover:shadow-[#EC4899]/50 transition duration-300 shrink-0">
+          <div class="w-full h-full bg-[#0B0D17] rounded-[10px] sm:rounded-[14px] flex items-center justify-center overflow-hidden p-1 sm:p-1.5">
             <img src="/images/icon.svg" alt="IGAnony Pro Icon" class="w-full h-full object-contain group-hover:scale-110 transition duration-300">
           </div>
         </div>
-        <div class="flex flex-col">
-          <span class="font-display font-extrabold text-lg sm:text-xl tracking-tight text-white flex items-center gap-1.5">
+        <div class="flex flex-col truncate">
+          <span class="font-display font-extrabold text-base sm:text-xl tracking-tight text-white flex items-center gap-1 sm:gap-1.5">
             IGAnony<span class="text-[#725CFF]">Pro</span>
           </span>
-          <span class="text-[9px] sm:text-[10px] text-gray-400 tracking-wider uppercase -mt-0.5">Anonymous Instagram Viewer</span>
+          <span class="text-[8px] sm:text-[10px] text-gray-400 tracking-wider uppercase -mt-0.5 hidden xs:inline">Anonymous Instagram Viewer</span>
         </div>
       </a>
 
       <!-- Desktop Navigation Menu -->
       <nav class="hidden md:flex items-center gap-6 lg:gap-8 text-sm font-medium">
-        <a href="/" class="text-gray-300 hover:text-white transition flex items-center gap-1.5">
+        <a href="/" class={`transition flex items-center gap-1.5 ${isHome ? 'text-white font-bold' : 'text-gray-300 hover:text-white'}`}>
           Home
         </a>
-        <a href="/stories" class="text-gray-300 hover:text-[#EC4899] transition flex items-center gap-1.5 group font-semibold">
+        <a href="/stories" class={`transition flex items-center gap-1.5 group font-semibold ${isStories ? 'text-[#EC4899] font-bold' : 'text-gray-300 hover:text-[#EC4899]'}`}>
           <i class="fa-solid fa-circle-play text-xs text-[#EC4899] group-hover:scale-110 transition"></i>
           <span>Story Viewer</span>
           <span class="badge badge-rose text-[9px] py-0 px-1.5 ml-0.5">FREE</span>
         </a>
-        <a href="/toolkit/post-viewer" class="text-gray-300 hover:text-[#00F0FF] transition flex items-center gap-1.5 font-semibold">
+        <a href="/toolkit/post-viewer" class={`transition flex items-center gap-1.5 font-semibold ${isReels ? 'text-[#00F0FF] font-bold' : 'text-gray-300 hover:text-[#00F0FF]'}`}>
           <i class="fa-solid fa-film text-xs text-[#00F0FF]"></i>
           <span>Reels & Posts</span>
         </a>
-        <a href="/toolkit/mutual-checker" class="text-gray-300 hover:text-[#725CFF] transition flex items-center gap-1.5 font-semibold">
+        <a href="/toolkit/mutual-checker" class={`transition flex items-center gap-1.5 font-semibold ${isMutuals ? 'text-[#725CFF] font-bold' : 'text-gray-300 hover:text-[#725CFF]'}`}>
           <i class="fa-solid fa-users-viewfinder text-xs text-[#725CFF]"></i>
           <span>Mutuals</span>
         </a>
@@ -118,21 +140,30 @@ const {
       </nav>
 
       <!-- Header Actions -->
-      <div class="flex items-center gap-2 sm:gap-3">
+      <div class="flex items-center gap-1.5 sm:gap-3 shrink-0">
+        
+        <!-- Dark / Light Theme Toggle Button -->
+        <button type="button" onclick="toggleTheme()" aria-label="Toggle Theme" title="Toggle Light/Dark Theme"
+                class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-gray-300 hover:text-white transition duration-200 shrink-0">
+          <i class="theme-icon-sun fa-solid fa-sun text-amber-400 text-sm hidden"></i>
+          <i class="theme-icon-moon fa-solid fa-moon text-indigo-300 text-sm"></i>
+        </button>
+
         <button type="button" onclick="openQuickSearchModal()" 
                 class="hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-gray-400 hover:text-white border border-white/5 text-xs transition">
           <i class="fa-solid fa-magnifying-glass text-xs"></i>
           <span>Search username...</span>
         </button>
 
-        <a href="/stories" class="btn-primary text-xs sm:text-sm py-2 px-3.5 sm:px-4 shadow-lg bg-gradient-to-r from-[#EC4899] to-[#725CFF] border-none flex items-center gap-1.5 whitespace-nowrap">
+        <a href="/stories" class="btn-primary text-xs sm:text-sm py-2 px-2.5 sm:px-4 shadow-lg bg-gradient-to-r from-[#EC4899] to-[#725CFF] border-none flex items-center gap-1.5 whitespace-nowrap shrink-0">
           <i class="fa-solid fa-circle-play text-xs"></i>
-          <span>Watch Stories</span>
+          <span class="hidden sm:inline">Watch Stories</span>
+          <span class="sm:hidden">Stories</span>
         </a>
 
-        <!-- Mobile Hamburger Toggle Button -->
+        <!-- Mobile Hamburger Toggle Button (ALWAYS VISIBLE & PROMINENT) -->
         <button id="mobile-menu-toggle" type="button" onclick="toggleMobileMenu()" aria-label="Toggle mobile menu"
-                class="md:hidden w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-gray-300 hover:text-white transition shrink-0">
+                class="md:hidden w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-gray-300 hover:text-white transition shrink-0 ml-0.5">
           <i id="mobile-menu-icon" class="fa-solid fa-bars text-base"></i>
         </button>
       </div>
@@ -187,23 +218,23 @@ const {
 
   <!-- Mobile Sticky Bottom Navigation Bar (md:hidden) -->
   <nav class="md:hidden fixed bottom-0 inset-x-0 z-40 mobile-bottom-nav px-2 py-1.5 flex items-center justify-around text-[10px] font-medium safe-area-pb select-none">
-    <a href="/" class="flex flex-col items-center gap-1 py-1 px-3 text-gray-400 hover:text-white transition">
+    <a href="/" data-nav="home" class={`flex flex-col items-center gap-1 py-1.5 px-3 rounded-xl transition ${isHome ? 'text-[#725CFF] bg-[#725CFF]/15 font-bold shadow-sm' : 'text-gray-400 hover:text-white'}`}>
       <i class="fa-solid fa-house text-sm"></i>
       <span>Home</span>
     </a>
-    <a href="/stories" class="flex flex-col items-center gap-1 py-1 px-3 text-[#EC4899] transition font-bold">
+    <a href="/stories" data-nav="stories" class={`flex flex-col items-center gap-1 py-1.5 px-3 rounded-xl transition ${isStories ? 'text-[#EC4899] bg-[#EC4899]/15 font-bold shadow-sm' : 'text-gray-400 hover:text-[#EC4899]'}`}>
       <i class="fa-solid fa-circle-play text-sm"></i>
       <span>Stories</span>
     </a>
-    <a href="/toolkit/post-viewer" class="flex flex-col items-center gap-1 py-1 px-3 text-gray-400 hover:text-[#00F0FF] transition">
+    <a href="/toolkit/post-viewer" data-nav="reels" class={`flex flex-col items-center gap-1 py-1.5 px-3 rounded-xl transition ${isReels ? 'text-[#00F0FF] bg-[#00F0FF]/15 font-bold shadow-sm' : 'text-gray-400 hover:text-[#00F0FF]'}`}>
       <i class="fa-solid fa-film text-sm"></i>
       <span>Reels</span>
     </a>
-    <a href="/toolkit/mutual-checker" class="flex flex-col items-center gap-1 py-1 px-3 text-gray-400 hover:text-[#725CFF] transition">
+    <a href="/toolkit/mutual-checker" data-nav="mutuals" class={`flex flex-col items-center gap-1 py-1.5 px-3 rounded-xl transition ${isMutuals ? 'text-[#725CFF] bg-[#725CFF]/15 font-bold shadow-sm' : 'text-gray-400 hover:text-[#725CFF]'}`}>
       <i class="fa-solid fa-users-viewfinder text-sm"></i>
       <span>Mutuals</span>
     </a>
-    <button type="button" onclick="openQuickSearchModal()" class="flex flex-col items-center gap-1 py-1 px-3 text-gray-400 hover:text-white transition">
+    <button type="button" onclick="openQuickSearchModal()" class="flex flex-col items-center gap-1 py-1.5 px-3 rounded-xl text-gray-400 hover:text-white transition">
       <i class="fa-solid fa-magnifying-glass text-sm"></i>
       <span>Search</span>
     </button>
@@ -350,6 +381,59 @@ const {
 
   <!-- Global Client Scripts -->
   <script is:inline>
+    function updateThemeIcons(theme) {
+      const suns = document.querySelectorAll('.theme-icon-sun');
+      const moons = document.querySelectorAll('.theme-icon-moon');
+      if (theme === 'light') {
+        suns.forEach(s => s.classList.remove('hidden'));
+        moons.forEach(m => m.classList.add('hidden'));
+      } else {
+        suns.forEach(s => s.classList.add('hidden'));
+        moons.forEach(m => m.classList.remove('hidden'));
+      }
+    }
+
+    function toggleTheme() {
+      const isCurrentlyLight = document.documentElement.classList.contains('light');
+      if (isCurrentlyLight) {
+        document.documentElement.classList.remove('light');
+        document.documentElement.classList.add('dark');
+        try { localStorage.setItem('theme', 'dark'); } catch (e) {}
+        updateThemeIcons('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+        document.documentElement.classList.add('light');
+        try { localStorage.setItem('theme', 'light'); } catch (e) {}
+        updateThemeIcons('light');
+      }
+    }
+
+    // Sync theme icons and mobile nav on load
+    document.addEventListener('DOMContentLoaded', () => {
+      const isLight = document.documentElement.classList.contains('light');
+      updateThemeIcons(isLight ? 'light' : 'dark');
+
+      // Sync active mobile footer nav highlighting from path
+      const path = window.location.pathname.toLowerCase();
+      const navLinks = document.querySelectorAll('.mobile-bottom-nav a[data-nav]');
+      navLinks.forEach(link => {
+        const nav = link.getAttribute('data-nav');
+        let isActive = false;
+        if (nav === 'home' && (path === '/' || path === '')) isActive = true;
+        else if (nav === 'stories' && (path.startsWith('/stories') || path.includes('story-viewer'))) isActive = true;
+        else if (nav === 'reels' && (path.startsWith('/toolkit/post-viewer') || path.startsWith('/post-viewer'))) isActive = true;
+        else if (nav === 'mutuals' && (path.startsWith('/toolkit/mutual-checker') || path.startsWith('/mutual-checker'))) isActive = true;
+
+        if (isActive) {
+          link.classList.remove('text-gray-400');
+          if (nav === 'stories') link.className = 'flex flex-col items-center gap-1 py-1.5 px-3 rounded-xl transition text-[#EC4899] bg-[#EC4899]/15 font-bold shadow-sm';
+          else if (nav === 'reels') link.className = 'flex flex-col items-center gap-1 py-1.5 px-3 rounded-xl transition text-[#00F0FF] bg-[#00F0FF]/15 font-bold shadow-sm';
+          else if (nav === 'mutuals') link.className = 'flex flex-col items-center gap-1 py-1.5 px-3 rounded-xl transition text-[#725CFF] bg-[#725CFF]/15 font-bold shadow-sm';
+          else link.className = 'flex flex-col items-center gap-1 py-1.5 px-3 rounded-xl transition text-[#725CFF] bg-[#725CFF]/15 font-bold shadow-sm';
+        }
+      });
+    });
+
     function toggleMobileMenu() {
       const drawer = document.getElementById('mobile-nav-drawer');
       const icon = document.getElementById('mobile-menu-icon');
