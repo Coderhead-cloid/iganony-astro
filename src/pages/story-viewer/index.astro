@@ -1,0 +1,11 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import StoryViewer from '../../components/StoryViewer.astro';
+
+const username = Astro.url.searchParams.get('username') || 'cristiano';
+---
+
+<Layout title={`Anonymous Instagram Story Viewer - @${username} | IGAnony Pro`}>
+  <StoryViewer />
+</Layout>
+

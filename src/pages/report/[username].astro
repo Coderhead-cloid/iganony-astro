@@ -1,0 +1,15 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import ReportViewer from '../../components/ReportViewer.astro';
+
+export const prerender = false;
+
+const { username } = Astro.params;
+const cleanUsername = (username || 'cristiano').replace(/^@/, '');
+const pageTitle = `@${cleanUsername} Instagram Activity & Intelligence Report | IGAnony Pro`;
+---
+
+<Layout title={pageTitle}>
+  <ReportViewer usernameParam={cleanUsername} />
+</Layout>
+

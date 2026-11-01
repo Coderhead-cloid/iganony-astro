@@ -1,0 +1,740 @@
+---
+import { InstagramIntelligenceService } from '../services/instagramIntelligence';
+
+interface Props {
+  usernameParam?: string;
+}
+
+const { usernameParam } = Astro.props;
+const url = Astro.url;
+const targetUsername = usernameParam || url.searchParams.get('username') || 'cristiano';
+const forceRefresh = url.searchParams.get('refresh') === '1' || url.searchParams.get('force') === 'true';
+
+const intelService = new InstagramIntelligenceService();
+const storiesData = await intelService.getAnonymousStories(targetUsername, forceRefresh);
+
+const username = storiesData.username || targetUsername;
+const stories = storiesData.stories || [];
+const highlights = storiesData.highlights || [];
+const isPrivate = Boolean(storiesData.is_private);
+const avatar = storiesData.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`;
+const fullName = storiesData.full_name || username;
+const isVerified = Boolean(storiesData.is_verified);
+const followers = Number(storiesData.followers_count || 0);
+
+const popular = ['cristiano', 'leomessi', 'zendaya', 'natgeo', 'selenagomez', 'taylorswift'];
+---
+
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+  
+  <!-- Hero Header -->
+  <div class="text-center max-w-3xl mx-auto mb-10">
+    <span class="badge badge-purple text-xs mb-3 inline-flex items-center gap-1.5">
+      <i class="fa-solid fa-user-secret text-[10px]"></i> 100% Anonymous Mode • No Login Required
+    </span>
+    <h1 class="text-3xl sm:text-5xl font-extrabold text-white mb-3 font-display tracking-tight">
+      Anonymous Instagram Story Viewer
+    </h1>
+    <p class="text-xs sm:text-sm text-gray-400 max-w-xl mx-auto">
+      View, watch, and download active 24-hour Instagram Stories & Highlights in original full HD without notifying the profile owner. Your identity stays 100% invisible.
+    </p>
+  </div>
+
+  <!-- Search Form -->
+  <div class="glass-panel p-6 sm:p-8 max-w-2xl mx-auto mb-10 relative overflow-hidden">
+    <div class="absolute -right-16 -top-16 w-52 h-52 bg-[#EC4899]/15 rounded-full blur-3xl pointer-events-none"></div>
+
+    <form action="/stories" method="GET" class="space-y-4 relative z-10">
+      <label class="block text-xs font-bold text-gray-300 uppercase tracking-wider">
+        Enter Instagram Username or Profile Link
+      </label>
+      <div class="flex flex-col sm:flex-row gap-2 relative">
+        <div class="relative flex-1">
+          <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-500 font-bold text-sm">@</span>
+          <input type="text" name="username" value={username} required
+                 placeholder="e.g. cristiano, leomessi, zendaya"
+                 class="w-full bg-[#0B0D17] border border-white/10 rounded-xl pl-9 pr-4 py-3.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#EC4899] transition">
+        </div>
+        <button type="submit" class="btn-primary py-3.5 px-6 text-xs font-bold flex items-center justify-center gap-1.5 bg-gradient-to-r from-[#EC4899] to-[#725CFF] border-none shadow-lg shadow-[#EC4899]/20 shrink-0">
+          <i class="fa-solid fa-eye"></i>
+          <span>Watch Stories</span>
+        </button>
+      </div>
+    </form>
+
+    <!-- Popular Profiles Pills -->
+    <div class="mt-4 pt-4 border-t border-white/5 flex items-center justify-center gap-2 flex-wrap text-xs text-gray-400">
+      <span class="text-gray-500 text-[11px]">Popular Profiles:</span>
+      {popular.map((pop) => {
+        const isCurrent = (username.toLowerCase() === pop);
+        return (
+          <a href={`/stories/${pop}`} 
+             class={`px-2.5 py-1 rounded-lg bg-white/[0.03] hover:bg-white/[0.08] text-gray-300 hover:text-white border border-white/5 transition text-[11px] ${isCurrent ? 'border-[#EC4899]/60 text-[#EC4899]' : ''}`}>
+            @{pop}
+          </a>
+        );
+      })}
+    </div>
+  </div>
+
+  <!-- Private Profile Notice -->
+  {isPrivate && (
+    <div class="glass-panel p-8 max-w-2xl mx-auto text-center border border-amber-500/30 bg-amber-500/5">
+      <div class="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-400 flex items-center justify-center text-2xl mx-auto mb-4 border border-amber-500/20">
+        <i class="fa-solid fa-lock"></i>
+      </div>
+      <h3 class="text-lg font-bold text-white mb-2">This Profile is Private (@{username})</h3>
+      <p class="text-xs text-gray-400 max-w-md mx-auto">
+        Instagram strictly protects stories, reels, and feeds of private accounts. Public telemetry bridges cannot anonymously view stories from private profiles without authorization.
+      </p>
+    </div>
+  )}
+
+  <!-- Active Profile Story Suite -->
+  {!isPrivate && (
+    <div class="space-y-10">
+
+      <!-- Profile Bar Card -->
+      <div class="glass-panel p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 relative overflow-hidden">
+        <div class="absolute -right-20 -bottom-20 w-80 h-80 bg-[#725CFF]/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="flex items-center gap-5 relative z-10">
+          <!-- Instagram Story Gradient Ring -->
+          <div onclick="openStoryPlayer(0)" title="Click to Watch Stories"
+               class="p-[3px] bg-gradient-to-tr from-[#F58529] via-[#DD2A7B] to-[#8134AF] rounded-3xl cursor-pointer hover:scale-105 transition duration-300 shadow-xl shadow-[#DD2A7B]/20 shrink-0 group">
+            <img src={avatar} alt={username} 
+                 referrerpolicy="no-referrer"
+                 class="w-16 h-16 sm:w-20 sm:h-20 rounded-[22px] object-cover border-2 border-[#0B0D17]">
+          </div>
+
+          <div class="min-w-0">
+            <div class="flex items-center gap-2 flex-wrap">
+              <h2 class="text-xl sm:text-2xl font-extrabold text-white font-display">@{username}</h2>
+              {isVerified && (
+                <i class="fa-solid fa-circle-check text-[#00F0FF] text-sm" title="Verified Creator"></i>
+              )}
+              <span class="badge badge-emerald text-[10px] flex items-center gap-1 font-bold">
+                <i class="fa-solid fa-circle text-[6px] animate-ping"></i> {stories.length} Stories Live
+              </span>
+            </div>
+            <p class="text-xs text-gray-300 mt-0.5">{fullName}</p>
+            <div class="flex items-center gap-3 mt-2 text-[11px] text-gray-400">
+              {followers > 0 && (
+                <span><strong class="text-white">{followers.toLocaleString()}</strong> followers</span>
+                <span>•</span>
+              )}
+              <span class="text-emerald-400 font-semibold"><i class="fa-solid fa-shield-check"></i> 100% Anonymous Viewing</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3 w-full sm:w-auto relative z-10">
+          <button onclick="openStoryPlayer(0)" 
+                  class="btn-primary py-3 px-6 text-xs sm:text-sm font-bold flex-1 sm:flex-none flex items-center justify-center gap-2 bg-gradient-to-r from-[#EC4899] to-[#725CFF] border-none shadow-lg shadow-[#EC4899]/25 hover:scale-105 transition duration-200">
+            <i class="fa-solid fa-circle-play text-base"></i>
+            <span>Watch Stories in Player</span>
+          </button>
+          <a href={`/stories/${encodeURIComponent(username)}?refresh=1`} class="btn-secondary py-3 px-4 text-xs font-semibold flex items-center gap-1.5" title="Force Check Live Stories">
+            <i class="fa-solid fa-arrows-rotate"></i>
+            <span class="hidden sm:inline">Refresh</span>
+          </a>
+          <a href={`/report/${encodeURIComponent(username)}`} class="btn-secondary py-3 px-4 text-xs font-semibold" title="View Full Account Telemetry">
+            <i class="fa-solid fa-chart-pie"></i>
+            <span class="hidden sm:inline ml-1">Report</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Active 24-Hour Stories Section -->
+      <div>
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h3 class="text-lg font-bold text-white font-display flex items-center gap-2">
+              <i class="fa-solid fa-circle-play text-[#EC4899]"></i>
+              <span>Active 24-Hour Stories ({stories.length})</span>
+            </h3>
+            <p class="text-xs text-gray-400">Click any story tile below to play in fullscreen story mode or download directly</p>
+          </div>
+          <div class="flex items-center gap-3">
+            <a href={`/stories/${encodeURIComponent(username)}?refresh=1`} class="text-xs text-gray-400 hover:text-[#EC4899] flex items-center gap-1 transition" title="Refresh Stories">
+              <i class="fa-solid fa-arrows-rotate text-[11px]"></i>
+              <span>Check for New Stories</span>
+            </a>
+            <span class="text-xs text-gray-500 hidden sm:inline">•</span>
+            <span class="text-xs text-gray-500 hidden sm:inline">Auto-expires in 24h</span>
+          </div>
+        </div>
+
+        {stories.length === 0 ? (
+          <div class="glass-panel p-8 text-center border border-white/5 rounded-2xl">
+            <div class="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-2xl text-gray-500 mx-auto mb-4">
+              <i class="fa-solid fa-moon"></i>
+            </div>
+            <h4 class="text-base font-bold text-white mb-1">No Active Stories Right Now</h4>
+            <p class="text-xs text-gray-400 max-w-sm mx-auto mb-4">
+              @{username} hasn't posted any stories in the last 24 hours, or their stories expired. Check back later or force-refresh!
+            </p>
+            <a href={`/stories/${encodeURIComponent(username)}?refresh=1`} class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold bg-white/10 hover:bg-[#EC4899] text-white transition shadow">
+              <i class="fa-solid fa-arrows-rotate"></i>
+              <span>Check for New Stories</span>
+            </a>
+          </div>
+        ) : (
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+            {stories.map((st: any, idx: number) => (
+              <div class="glass-panel overflow-hidden group relative flex flex-col justify-between hover:border-[#EC4899]/50 transition duration-300 rounded-2xl shadow-lg cursor-pointer"
+                   onclick={`openStoryPlayer(${idx})`}>
+                
+                <!-- Media Card Top Viewport -->
+                <div class="relative aspect-[9/16] bg-black/60 overflow-hidden">
+                  <img src={st.preview} alt="Story Preview" 
+                       loading="lazy" referrerpolicy="no-referrer"
+                       class="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+                  <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-black/40"></div>
+                  
+                  <!-- Badges -->
+                  <span class={`absolute top-2.5 left-2.5 px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider backdrop-blur-md ${st.type === 'video' ? 'bg-[#EC4899]/80 text-white' : 'bg-white/30 text-white'}`}>
+                    <i class={`fa-solid ${st.type === 'video' ? 'fa-video' : 'fa-camera'}`}></i> {st.type}
+                  </span>
+
+                  <!-- Expiration Countdown Badge Top Right -->
+                  <span class="story-expire-badge absolute top-2.5 right-2.5 text-[9px] font-bold text-amber-200 bg-black/75 px-2 py-0.5 rounded-md backdrop-blur-md border border-white/10 flex items-center gap-1 shadow"
+                        data-expires-at={st.expires_at}
+                        title={`Expires: ${st.expires_in || 'in 24 hours'}`}>
+                    <i class="fa-solid fa-hourglass-half text-amber-400 text-[8px]"></i>
+                    <span class="badge-expire-label">{st.expires_in || '24h left'}</span>
+                  </span>
+
+                  <!-- Center Play Button Overlay on Hover -->
+                  <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300 bg-black/30">
+                    <div class="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center text-white text-lg shadow-xl scale-90 group-hover:scale-100 transition">
+                      <i class="fa-solid fa-play ml-0.5"></i>
+                    </div>
+                  </div>
+
+                  <!-- Card Bottom Info: Posted Time and Download Button -->
+                  <div class="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between text-xs text-white" onclick="event.stopPropagation()">
+                    <div class="flex flex-col pr-1 min-w-0" data-story-times data-posted-at={st.posted_at} data-expires-at={st.expires_at}>
+                      <span class="story-posted-row text-[10px] text-white font-semibold flex items-center gap-1 truncate" title={`Uploaded to Instagram ${st.time_ago || ''}`}>
+                        <i class="fa-regular fa-clock text-[#EC4899] text-[9px] shrink-0"></i>
+                        <span class="story-time-ago">{st.time_ago || 'Recent'}</span>
+                        <span class="story-local-posted-time text-gray-400 font-normal text-[9px]"></span>
+                      </span>
+                      <span class="story-expire-row text-[8px] text-amber-300/90 font-medium mt-0.5 truncate" title={`Expires from Instagram: ${st.expires_in || ''}`}>
+                        <i class="fa-solid fa-hourglass-half text-amber-400 text-[7px] mr-0.5"></i>
+                        <span class="story-local-expire-text">{st.expires_in || ''}</span>
+                      </span>
+                    </div>
+                    
+                    <a href={st.download_url} 
+                       class="w-7 h-7 rounded-lg bg-white/20 hover:bg-[#EC4899] backdrop-blur-md flex items-center justify-center text-white transition shadow shrink-0 ml-auto"
+                       title="Download Story">
+                      <i class="fa-solid fa-download text-[11px]"></i>
+                    </a>
+                  </div>
+                </div>
+
+                {st.caption && (
+                  <div class="p-3 bg-[#0B0D17]/80 border-t border-white/5">
+                    <p class="text-[11px] text-gray-300 truncate">{st.caption}</p>
+                  </div>
+                )}
+
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <!-- Story Highlights Albums Section -->
+      {highlights.length > 0 && (
+        <div class="pt-6 border-t border-white/5">
+          <div class="mb-4">
+            <h3 class="text-lg font-bold text-white font-display flex items-center gap-2">
+              <i class="fa-solid fa-bookmark text-[#00F0FF]"></i>
+              <span>Story Highlights & Archives ({highlights.length} Albums)</span>
+            </h3>
+            <p class="text-xs text-gray-400">Archived stories saved permanently to this profile's highlights reel</p>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {highlights.map((hl: any) => (
+              <div class="glass-panel p-4 flex items-center gap-3.5 hover:border-[#00F0FF]/40 transition duration-200 cursor-pointer group"
+                   data-highlight-stories={encodeURIComponent(JSON.stringify(hl.stories || []))}
+                   data-highlight-title={encodeURIComponent(hl.title || '')}
+                   onclick="openHighlightPlayerFromEl(this)">
+                
+                <div class="p-[2px] rounded-full bg-gradient-to-tr from-[#00F0FF] to-[#725CFF] shrink-0 group-hover:scale-105 transition">
+                  <img src={hl.cover} alt="highlight" 
+                       loading="lazy" referrerpolicy="no-referrer"
+                       class="w-12 h-12 rounded-full object-cover border-2 border-[#0B0D17]" />
+                </div>
+
+                <div class="min-w-0 flex-grow">
+                  <h4 class="text-xs font-bold text-white truncate group-hover:text-[#00F0FF] transition">{hl.title}</h4>
+                  <span class="text-[10px] text-gray-400 block mt-0.5">{hl.count} stories</span>
+                </div>
+
+                <i class="fa-solid fa-chevron-right text-gray-600 group-hover:text-white text-xs ml-auto transition"></i>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+    </div>
+  )}
+
+</div>
+
+<!-- Fullscreen Instagram Story Player Modal -->
+<div id="story-modal" class="fixed inset-0 z-[100] bg-black/95 backdrop-blur-2xl hidden flex items-center justify-center p-2 sm:p-4 select-none">
+  
+  <!-- Modal Close Button Top Right -->
+  <button onclick="closeStoryPlayer()" 
+          class="absolute top-4 right-4 sm:top-6 sm:right-6 w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-lg z-50 transition">
+    <i class="fa-solid fa-xmark"></i>
+  </button>
+
+  <!-- Story Player Box -->
+  <div class="relative w-full h-full sm:h-auto sm:max-w-[420px] sm:aspect-[9/16] bg-[#050711] rounded-none sm:rounded-3xl overflow-hidden shadow-2xl border-0 sm:border border-white/10 flex flex-col justify-between">
+    
+    <!-- Top Controls Overlay -->
+    <div class="absolute top-0 inset-x-0 p-4 z-30 bg-gradient-to-b from-black/90 via-black/40 to-transparent">
+      
+      <!-- Progress Segments -->
+      <div id="story-progress-bars" class="flex items-center gap-1.5 mb-3 w-full"></div>
+
+      <!-- Header Info Inside Story -->
+      <div class="flex items-center justify-between text-white">
+        <div class="flex items-center gap-2.5">
+          <img id="player-avatar" src={avatar} alt="avatar" 
+               class="w-9 h-9 rounded-full object-cover border border-[#EC4899]">
+          <div>
+            <div class="flex items-center gap-1">
+              <span id="player-username" class="text-xs font-bold">@{username}</span>
+              {isVerified && (
+                <i class="fa-solid fa-circle-check text-[#00F0FF] text-[10px]"></i>
+              )}
+            </div>
+            <div class="flex items-center gap-1.5 text-[10px] text-gray-300 mt-0.5">
+              <span id="player-time" class="flex items-center gap-1 font-medium">
+                <i class="fa-regular fa-clock text-[#EC4899] text-[9px]"></i>
+                <span id="player-time-text">1h ago</span>
+              </span>
+              <span class="text-gray-500">•</span>
+              <span id="player-expire" class="flex items-center gap-1 text-amber-300 font-semibold" title="Story Expiration Countdown">
+                <i class="fa-solid fa-hourglass-half text-[8px]"></i>
+                <span id="player-expire-text">23h left</span>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Controls -->
+        <div class="flex items-center gap-2">
+          <span class="badge badge-purple text-[9px] py-0.5 px-1.5 hidden sm:inline-flex">
+            <i class="fa-solid fa-eye-slash text-[8px]"></i> Anonymous
+          </span>
+          <button id="btn-toggle-pause" onclick="togglePauseStory()" class="w-8 h-8 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center text-xs text-white transition">
+            <i id="pause-icon" class="fa-solid fa-pause"></i>
+          </button>
+          <button id="btn-toggle-mute" onclick="toggleMuteVideo()" class="w-8 h-8 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center text-xs text-white transition">
+            <i id="mute-icon" class="fa-solid fa-volume-high"></i>
+          </button>
+          <a id="player-download-btn" href="#" 
+             class="w-8 h-8 rounded-full bg-white/15 hover:bg-[#EC4899] flex items-center justify-center text-xs text-white transition"
+             title="Download Story">
+            <i class="fa-solid fa-download"></i>
+          </a>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Center Media Stage -->
+    <div class="relative w-full h-full flex items-center justify-center bg-black overflow-hidden" id="media-stage">
+      <!-- Video Player -->
+      <video id="player-video" playsinline class="w-full h-full object-cover hidden"></video>
+
+      <!-- Image Player -->
+      <img id="player-img" src="" alt="Story Media" class="w-full h-full object-cover hidden" referrerpolicy="no-referrer">
+
+      <!-- Navigation Zones -->
+      <div onpointerdown="startPauseHold()" onpointerup="endPauseHold()" onpointerleave="endPauseHold()" onclick="handlePrevTouch(event)" 
+           class="absolute left-0 top-0 bottom-0 w-1/3 z-20 cursor-w-resize" title="Previous Story"></div>
+      <div onpointerdown="startPauseHold()" onpointerup="endPauseHold()" onpointerleave="endPauseHold()" onclick="handleNextTouch(event)" 
+           class="absolute right-0 top-0 bottom-0 w-2/3 z-20 cursor-e-resize" title="Next Story"></div>
+    </div>
+
+    <!-- Bottom Caption Bar -->
+    <div id="player-caption-box" class="absolute bottom-0 inset-x-0 p-4 z-30 bg-gradient-to-t from-black/90 via-black/50 to-transparent">
+      <p id="player-caption" class="text-xs text-white leading-relaxed line-clamp-2 drop-shadow"></p>
+    </div>
+
+  </div>
+
+</div>
+
+<script is:inline define:vars={{ storiesJson: JSON.stringify(stories), targetUsername }}>
+  const activeStories = JSON.parse(storiesJson);
+  let currentPlaylist = activeStories;
+  let currentIndex = 0;
+  let storyTimer = null;
+  let storyDuration = 6000;
+  let progressInterval = null;
+  let currentProgress = 0;
+  let isPaused = false;
+  let isMuted = false;
+  let holdTimeout = null;
+  let isHolding = false;
+
+  function formatStoryTimestamps(postedAt, expiresAt) {
+    const now = Math.floor(Date.now() / 1000);
+    const postedTs = parseInt(postedAt, 10) || (now - 3600);
+    const expiresTs = parseInt(expiresAt, 10) || (postedTs + 86400);
+
+    const elapsedSec = Math.max(0, now - postedTs);
+    const remainingSec = Math.max(0, expiresTs - now);
+
+    const elapsedMins = Math.floor(elapsedSec / 60);
+    const elapsedHours = Math.floor(elapsedSec / 3600);
+    let timeAgo = '';
+    let shortAgo = '';
+
+    if (elapsedSec < 60) {
+      timeAgo = 'Just now';
+      shortAgo = 'Just now';
+    } else if (elapsedHours < 1) {
+      timeAgo = `${elapsedMins}m ago`;
+      shortAgo = `${elapsedMins}m ago`;
+    } else if (elapsedHours === 1) {
+      timeAgo = '1 hour ago';
+      shortAgo = '1h ago';
+    } else {
+      timeAgo = `${elapsedHours} hours ago`;
+      shortAgo = `${elapsedHours}h ago`;
+    }
+
+    const remMins = Math.floor((remainingSec % 3600) / 60);
+    const remHours = Math.floor(remainingSec / 3600);
+    let expiresIn = '';
+    let shortExpire = '';
+
+    if (remainingSec <= 0) {
+      expiresIn = 'Expired';
+      shortExpire = 'Expired';
+    } else if (remHours < 1) {
+      expiresIn = `${Math.max(1, remMins)}m left`;
+      shortExpire = `${Math.max(1, remMins)}m left`;
+    } else if (remHours === 1) {
+      expiresIn = `1h ${remMins > 0 ? remMins + 'm ' : ''}left`;
+      shortExpire = `1h left`;
+    } else {
+      expiresIn = `${remHours}h ${remMins > 0 ? remMins + 'm ' : ''}left`;
+      shortExpire = `${remHours}h left`;
+    }
+
+    const postedDate = new Date(postedTs * 1000);
+    const expiresDate = new Date(expiresTs * 1000);
+
+    const localPostedTime = postedDate.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+    const localExpiresTime = expiresDate.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+
+    const localPostedDate = postedDate.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }) + ' at ' + localPostedTime;
+    const localExpiresDate = expiresDate.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }) + ' at ' + localExpiresTime;
+
+    return {
+      timeAgo,
+      shortAgo,
+      expiresIn,
+      shortExpire,
+      localPostedTime,
+      localExpiresTime,
+      localPostedDate,
+      localExpiresDate,
+      remainingSec,
+      elapsedSec,
+    };
+  }
+
+  function hydrateStoryCardTimestamps() {
+    document.querySelectorAll('.story-expire-badge').forEach((badge) => {
+      const expTs = parseInt(badge.getAttribute('data-expires-at'), 10);
+      if (expTs) {
+        const timeInfo = formatStoryTimestamps(expTs - 86400, expTs);
+        const label = badge.querySelector('.badge-expire-label');
+        if (label) label.innerText = timeInfo.expiresIn;
+        badge.title = `Expires from Instagram: ${timeInfo.localExpiresDate} (${timeInfo.expiresIn})`;
+      }
+    });
+
+    document.querySelectorAll('[data-story-times]').forEach((box) => {
+      const postedTs = parseInt(box.getAttribute('data-posted-at'), 10);
+      const expiresTs = parseInt(box.getAttribute('data-expires-at'), 10);
+      if (postedTs && expiresTs) {
+        const timeInfo = formatStoryTimestamps(postedTs, expiresTs);
+        const agoEl = box.querySelector('.story-time-ago');
+        if (agoEl) agoEl.innerText = timeInfo.shortAgo;
+        const postedTimeEl = box.querySelector('.story-local-posted-time');
+        if (postedTimeEl) postedTimeEl.innerText = `(${timeInfo.localPostedTime})`;
+        const expireRow = box.querySelector('.story-expire-row');
+        const expireTextEl = box.querySelector('.story-local-expire-text');
+        if (expireTextEl) expireTextEl.innerText = `Expires at ${timeInfo.localExpiresTime} (${timeInfo.expiresIn})`;
+        if (expireRow) expireRow.title = `Expires from Instagram: ${timeInfo.localExpiresDate} (${timeInfo.expiresIn})`;
+        const postedRow = box.querySelector('.story-posted-row');
+        if (postedRow) postedRow.title = `Uploaded to Instagram: ${timeInfo.localPostedDate}`;
+      }
+    });
+  }
+
+  window.openStoryPlayer = function(index) {
+    if (!activeStories || activeStories.length === 0) {
+      if (typeof window.showToast === 'function') window.showToast('No active stories available for this user', 'info');
+      return;
+    }
+    currentPlaylist = activeStories;
+    const expBadge = document.getElementById('player-expire');
+    if (expBadge) expBadge.classList.remove('hidden');
+    launchPlayerAt(index);
+  };
+
+  window.openHighlightPlayerFromEl = function(el) {
+    try {
+      const rawStories = decodeURIComponent(el.getAttribute('data-highlight-stories') || '');
+      const title = decodeURIComponent(el.getAttribute('data-highlight-title') || '');
+      const stories = JSON.parse(rawStories);
+      window.openHighlightPlayer(stories, title);
+    } catch (e) {
+      console.error('Error opening highlight player:', e);
+    }
+  };
+
+  window.openHighlightPlayer = function(hlStories, hlTitle) {
+    if (!hlStories || hlStories.length === 0) {
+      if (typeof window.showToast === 'function') window.showToast('Highlight archive is empty or loading...', 'info');
+      return;
+    }
+    currentPlaylist = hlStories;
+    const userEl = document.getElementById('player-username');
+    if (userEl) userEl.innerText = `@${targetUsername} • ` + hlTitle;
+    const expBadge = document.getElementById('player-expire');
+    if (expBadge) expBadge.classList.add('hidden');
+    launchPlayerAt(0);
+  };
+
+  function launchPlayerAt(index) {
+    currentIndex = Math.max(0, Math.min(index, currentPlaylist.length - 1));
+    const modal = document.getElementById('story-modal');
+    if (modal) modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    initProgressBars();
+    loadCurrentStory();
+  }
+
+  window.closeStoryPlayer = function() {
+    clearTimeout(storyTimer);
+    clearInterval(progressInterval);
+    const video = document.getElementById('player-video');
+    if (video) {
+      video.pause();
+      video.src = '';
+    }
+    const modal = document.getElementById('story-modal');
+    if (modal) modal.classList.add('hidden');
+    document.body.style.overflow = '';
+  };
+
+  function initProgressBars() {
+    const container = document.getElementById('story-progress-bars');
+    if (!container) return;
+    container.innerHTML = '';
+    currentPlaylist.forEach((_, i) => {
+      const seg = document.createElement('div');
+      seg.className = 'flex-1 h-1 bg-white/30 rounded-full overflow-hidden';
+      seg.innerHTML = `<div id="bar-${i}" class="h-full bg-white transition-all duration-75 ease-linear" style="width: ${i < currentIndex ? '100%' : '0%'}"></div>`;
+      container.appendChild(seg);
+    });
+  }
+
+  function loadCurrentStory() {
+    clearTimeout(storyTimer);
+    clearInterval(progressInterval);
+    currentProgress = 0;
+    isPaused = false;
+    const pauseIcon = document.getElementById('pause-icon');
+    if (pauseIcon) pauseIcon.className = 'fa-solid fa-pause';
+
+    const story = currentPlaylist[currentIndex];
+    if (!story) return;
+
+    if (story.posted_at) {
+      const timeInfo = formatStoryTimestamps(story.posted_at, story.expires_at);
+      const timeTextEl = document.getElementById('player-time-text');
+      if (timeTextEl) {
+        timeTextEl.innerText = `${timeInfo.shortAgo} (${timeInfo.localPostedTime})`;
+        if (timeTextEl.parentElement) timeTextEl.parentElement.title = `Uploaded to Instagram: ${timeInfo.localPostedDate}`;
+      }
+      const expireTextEl = document.getElementById('player-expire-text');
+      if (expireTextEl) {
+        expireTextEl.innerText = `Expires in ${timeInfo.expiresIn} (at ${timeInfo.localExpiresTime})`;
+        if (expireTextEl.parentElement) expireTextEl.parentElement.title = `Expires from Instagram: ${timeInfo.localExpiresDate} (${timeInfo.expiresIn})`;
+      }
+    }
+
+    const captionEl = document.getElementById('player-caption');
+    if (captionEl) captionEl.innerText = story.caption || '';
+
+    const dlBtn = document.getElementById('player-download-btn');
+    if (dlBtn) {
+      const dlUrl = story.download_url || (`/api/download?url=${encodeURIComponent(story.media_url || story.preview)}&filename=${encodeURIComponent(`story_${story.id || currentIndex}.jpg`)}`);
+      dlBtn.href = dlUrl;
+    }
+
+    const videoEl = document.getElementById('player-video');
+    const imgEl = document.getElementById('player-img');
+
+    currentPlaylist.forEach((_, i) => {
+      const b = document.getElementById(`bar-${i}`);
+      if (b) b.style.width = (i < currentIndex) ? '100%' : '0%';
+    });
+
+    if (story.type === 'video' && (story.video_url || story.media_url)) {
+      if (imgEl) imgEl.classList.add('hidden');
+      if (videoEl) {
+        videoEl.classList.remove('hidden');
+        videoEl.src = story.video_url || story.media_url;
+        videoEl.muted = isMuted;
+        videoEl.currentTime = 0;
+        videoEl.play().catch(() => {
+          videoEl.muted = true;
+          isMuted = true;
+          const muteIcon = document.getElementById('mute-icon');
+          if (muteIcon) muteIcon.className = 'fa-solid fa-volume-xmark';
+          videoEl.play();
+        });
+      }
+      storyDuration = (story.duration || 15) * 1000;
+    } else {
+      if (videoEl) {
+        videoEl.pause();
+        videoEl.classList.add('hidden');
+      }
+      if (imgEl) {
+        imgEl.classList.remove('hidden');
+        imgEl.src = story.media_url || story.preview;
+      }
+      storyDuration = 6000;
+    }
+
+    startProgressTimer();
+  }
+
+  function startProgressTimer() {
+    const stepTime = 50;
+    const increment = (stepTime / storyDuration) * 100;
+
+    progressInterval = setInterval(() => {
+      if (!isPaused) {
+        currentProgress += increment;
+        const bar = document.getElementById(`bar-${currentIndex}`);
+        if (bar) bar.style.width = Math.min(100, currentProgress) + '%';
+        if (currentProgress >= 100) {
+          clearInterval(progressInterval);
+          nextStory();
+        }
+      }
+    }, stepTime);
+  }
+
+  function nextStory() {
+    if (currentIndex < currentPlaylist.length - 1) {
+      currentIndex++;
+      loadCurrentStory();
+    } else {
+      window.closeStoryPlayer();
+      if (typeof window.showToast === 'function') window.showToast('Finished watching all stories!', 'success');
+    }
+  }
+
+  function prevStory() {
+    if (currentIndex > 0) {
+      currentIndex--;
+      loadCurrentStory();
+    } else {
+      loadCurrentStory();
+    }
+  }
+
+  window.togglePauseStory = function() {
+    isPaused = !isPaused;
+    const video = document.getElementById('player-video');
+    const icon = document.getElementById('pause-icon');
+    if (isPaused) {
+      if (video && !video.classList.contains('hidden')) video.pause();
+      if (icon) icon.className = 'fa-solid fa-play';
+    } else {
+      if (video && !video.classList.contains('hidden')) video.play();
+      if (icon) icon.className = 'fa-solid fa-pause';
+    }
+  };
+
+  window.toggleMuteVideo = function() {
+    isMuted = !isMuted;
+    const video = document.getElementById('player-video');
+    if (video) video.muted = isMuted;
+    const icon = document.getElementById('mute-icon');
+    if (icon) icon.className = isMuted ? 'fa-solid fa-volume-xmark' : 'fa-solid fa-volume-high';
+  };
+
+  window.startPauseHold = function() {
+    isHolding = false;
+    holdTimeout = setTimeout(() => {
+      isHolding = true;
+      if (!isPaused) window.togglePauseStory();
+    }, 220);
+  };
+
+  window.endPauseHold = function() {
+    clearTimeout(holdTimeout);
+    if (isHolding) {
+      if (isPaused) window.togglePauseStory();
+      setTimeout(() => { isHolding = false; }, 60);
+    }
+  };
+
+  window.handlePrevTouch = function(e) {
+    if (isHolding) {
+      e.preventDefault();
+      return;
+    }
+    prevStory();
+  };
+
+  window.handleNextTouch = function(e) {
+    if (isHolding) {
+      e.preventDefault();
+      return;
+    }
+    nextStory();
+  };
+
+  document.addEventListener('keydown', (e) => {
+    const modal = document.getElementById('story-modal');
+    if (modal && !modal.classList.contains('hidden')) {
+      if (e.key === 'ArrowRight') nextStory();
+      if (e.key === 'ArrowLeft') prevStory();
+      if (e.key === ' ') { e.preventDefault(); window.togglePauseStory(); }
+      if (e.key === 'Escape') window.closeStoryPlayer();
+    }
+  });
+
+  document.addEventListener('DOMContentLoaded', () => {
+    hydrateStoryCardTimestamps();
+    setInterval(hydrateStoryCardTimestamps, 30000);
+  });
+  if (document.readyState === 'interactive' || document.readyState === 'complete') {
+    hydrateStoryCardTimestamps();
+  }
+</script>
+

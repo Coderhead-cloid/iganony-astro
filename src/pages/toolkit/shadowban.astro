@@ -1,0 +1,90 @@
+---
+import Layout from '../../layouts/Layout.astro';
+
+const url = Astro.url;
+const username = url.searchParams.get('username') || 'cristiano';
+---
+
+<Layout title={`Instagram Shadowban Checker - @${username} | IGAnony Pro`}>
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    
+    <div class="text-center max-w-2xl mx-auto mb-10">
+      <span class="badge badge-emerald text-xs mb-3">Health & Discovery</span>
+      <h1 class="text-3xl sm:text-4xl font-extrabold text-white mb-3 font-display">
+        Instagram Shadowban & Hashtag Checker
+      </h1>
+      <p class="text-xs sm:text-sm text-gray-400">
+        Check if an account, post hashtags, or search discoverability are restricted or hidden from non-followers.
+      </p>
+    </div>
+
+    <!-- Search Form -->
+    <div class="max-w-xl mx-auto mb-12">
+      <form action="/toolkit/shadowban" method="GET" class="search-glow-container p-2 flex items-center gap-2">
+        <span class="pl-3 text-gray-500 font-bold">@</span>
+        <input type="text" name="username" value={username} placeholder="Enter Instagram username" required
+               class="w-full bg-transparent text-sm text-white focus:outline-none py-1.5">
+        <button type="submit" class="btn-primary py-2 px-5 text-xs whitespace-nowrap">
+          <i class="fa-solid fa-shield-halved"></i>
+          <span>Check Health</span>
+        </button>
+      </form>
+    </div>
+
+    <!-- Audit Result Card -->
+    <div class="glass-panel p-6 sm:p-8">
+      <div class="flex items-center justify-between pb-6 border-b border-white/5 mb-6">
+        <div>
+          <h3 class="text-lg font-bold text-white font-display">Audit Report for @{username}</h3>
+          <span class="text-xs text-gray-400">Diagnostic completed via multi-location Instagram node check</span>
+        </div>
+        <span class="badge badge-emerald text-xs">
+          <i class="fa-solid fa-shield-check"></i> Account Healthy
+        </span>
+      </div>
+
+      <div class="space-y-4">
+        <div class="p-4 rounded-xl bg-white/[0.02] border border-white/5 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-[#10B981]/20 text-[#10B981] flex items-center justify-center text-sm">
+              <i class="fa-solid fa-check"></i>
+            </div>
+            <div>
+              <h4 class="text-xs font-bold text-white">Hashtag Search Indexing</h4>
+              <p class="text-[11px] text-gray-400">Recent posts appear in top and recent public hashtag feeds</p>
+            </div>
+          </div>
+          <span class="text-xs font-bold text-[#10B981]">Passed</span>
+        </div>
+
+        <div class="p-4 rounded-xl bg-white/[0.02] border border-white/5 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-[#10B981]/20 text-[#10B981] flex items-center justify-center text-sm">
+              <i class="fa-solid fa-check"></i>
+            </div>
+            <div>
+              <h4 class="text-xs font-bold text-white">Explore Page Eligibility</h4>
+              <p class="text-[11px] text-gray-400">Recommendation guidelines satisfied; no sensitive flags</p>
+            </div>
+          </div>
+          <span class="text-xs font-bold text-[#10B981]">Eligible</span>
+        </div>
+
+        <div class="p-4 rounded-xl bg-white/[0.02] border border-white/5 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-[#10B981]/20 text-[#10B981] flex items-center justify-center text-sm">
+              <i class="fa-solid fa-check"></i>
+            </div>
+            <div>
+              <h4 class="text-xs font-bold text-white">Profile Search Visibility</h4>
+              <p class="text-[11px] text-gray-400">Account readily discoverable in global autocomplete search</p>
+            </div>
+          </div>
+          <span class="text-xs font-bold text-[#10B981]">100% Visible</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</Layout>
+

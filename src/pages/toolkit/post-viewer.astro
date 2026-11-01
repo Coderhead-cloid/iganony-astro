@@ -1,0 +1,535 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { InstagramIntelligenceService } from '../../services/instagramIntelligence';
+
+const url = Astro.url;
+const targetUsername = url.searchParams.get('username') || 'natgeo';
+const forceRefresh = url.searchParams.get('refresh') === '1' || url.searchParams.get('force') === 'true';
+
+const intelService = new InstagramIntelligenceService();
+const mediaData = await intelService.getProfileMedia(targetUsername, 'all', forceRefresh);
+const acc = mediaData.account;
+const summary = mediaData.summary;
+const posts = mediaData.posts || [];
+const reels = mediaData.reels || [];
+const tagged = mediaData.tagged || [];
+const allMedia = mediaData.all || [...reels, ...posts];
+
+const quickProfiles = ['natgeo', 'cristiano', 'leomessi', 'nike', 'arianagrande'];
+---
+
+<Layout title={`Instagram Post & Reel Viewer - @${acc.username} | IGAnony Pro`}>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    
+    <!-- Hero Header -->
+    <div class="text-center max-w-3xl mx-auto mb-8">
+      <span class="badge badge-cyan text-xs mb-3 inline-flex items-center gap-1.5">
+        <i class="fa-solid fa-bolt text-[10px]"></i> Live Telemetry • Free Tool
+      </span>
+      <h1 class="text-3xl sm:text-5xl font-extrabold text-white mb-3 font-display tracking-tight">
+        Instagram Post & Reel Viewer
+      </h1>
+      <p class="text-xs sm:text-sm text-gray-400 max-w-xl mx-auto">
+        View public Instagram photos, carousels, and high-resolution video Reels in original quality. Save and download any media file without login or trace.
+      </p>
+    </div>
+
+    <!-- Search Form -->
+    <div class="max-w-2xl mx-auto mb-10">
+      <form id="post-viewer-search-form" action="/toolkit/post-viewer" method="GET" class="search-glow-container p-2 sm:p-2.5 flex flex-col sm:flex-row items-center gap-2">
+        <div class="flex items-center gap-2 w-full pl-3.5 pr-2">
+          <span class="text-gray-500 font-bold text-sm">@</span>
+          <input type="text" id="viewer-username-input" name="username" value={acc.username} 
+                 placeholder="Enter username (e.g. natgeo, cristiano, leomessi)" required
+                 class="w-full bg-transparent text-sm text-white focus:outline-none py-2.5 placeholder-gray-500">
+        </div>
+        <button type="submit" id="viewer-search-btn" class="w-full sm:w-auto btn-primary py-3 px-7 text-xs whitespace-nowrap flex items-center justify-center gap-2 font-bold shrink-0">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <span>Fetch Media</span>
+        </button>
+      </form>
+
+      <!-- Quick Suggestions -->
+      <div class="mt-3 flex items-center justify-center gap-2 flex-wrap text-xs text-gray-400">
+        <span class="text-gray-500 text-[11px]">Popular Profiles:</span>
+        {quickProfiles.map((quick) => (
+          <a href={`/toolkit/post-viewer?username=${quick}`} 
+             class={`px-2.5 py-1 rounded-lg bg-white/[0.03] hover:bg-white/[0.08] text-gray-300 hover:text-white border border-white/5 transition text-[11px] ${acc.username === quick ? 'border-[#725CFF]/60 text-[#725CFF]' : ''}`}>
+            @{quick}
+          </a>
+        ))}
+      </div>
+    </div>
+
+    <div id="viewer-content">
+      <!-- Profile Telemetry Card -->
+      <div class="glass-panel p-6 sm:p-8 mb-8 relative overflow-hidden">
+        <div class="absolute -right-20 -bottom-20 w-80 h-80 bg-[#725CFF]/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
+          <div class="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-5">
+            <div class="relative group">
+              <img id="view-profile-avatar" src={acc.avatar_url} alt="avatar" 
+                   class="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl object-cover border-2 border-white/10 shadow-2xl group-hover:scale-105 transition duration-300">
+              <a href={`/api/download?url=${encodeURIComponent(acc.avatar_url)}&filename=${encodeURIComponent(`${acc.username}_avatar.jpg`)}`} 
+                 title="Download HD Avatar"
+                 class="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-[#725CFF] hover:bg-[#5842ED] text-white flex items-center justify-center text-xs shadow-lg transition">
+                <i class="fa-solid fa-download"></i>
+              </a>
+            </div>
+            <div>
+              <div class="flex items-center justify-center sm:justify-start gap-2 mb-1 flex-wrap">
+                <h2 id="view-profile-username" class="text-xl sm:text-2xl font-extrabold text-white font-display">
+                  @{acc.username}
+                </h2>
+                {acc.is_verified && (
+                  <i class="fa-solid fa-circle-check text-[#00F0FF] text-base" title="Verified Account"></i>
+                )}
+                <span class="badge badge-purple text-[10px] uppercase font-bold tracking-wider">Public Profile</span>
+              </div>
+              <p id="view-profile-fullname" class="text-sm font-medium text-gray-300 mb-2">{acc.full_name}</p>
+              <p id="view-profile-bio" class="text-xs text-gray-400 max-w-xl leading-relaxed">{acc.bio}</p>
+            </div>
+          </div>
+
+          <!-- Stats Counters -->
+          <div class="flex items-center gap-4 sm:gap-6 text-center bg-black/30 p-4 rounded-2xl border border-white/5">
+            <div>
+              <span class="block text-[10px] text-gray-400 uppercase font-bold tracking-wider mb-0.5">Posts</span>
+              <span id="view-profile-posts" class="font-extrabold text-white text-base sm:text-lg">{acc.posts_count.toLocaleString()}</span>
+            </div>
+            <div class="w-px h-8 bg-white/10"></div>
+            <div>
+              <span class="block text-[10px] text-gray-400 uppercase font-bold tracking-wider mb-0.5">Followers</span>
+              <span id="view-profile-followers" class="font-extrabold text-[#00F0FF] text-base sm:text-lg">{acc.followers_count.toLocaleString()}</span>
+            </div>
+            <div class="w-px h-8 bg-white/10"></div>
+            <div>
+              <span class="block text-[10px] text-gray-400 uppercase font-bold tracking-wider mb-0.5">Following</span>
+              <span id="view-profile-following" class="font-extrabold text-white text-base sm:text-lg">{acc.following_count.toLocaleString()}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Deep Report Banner Link -->
+        <div class="mt-6 pt-5 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+          <span class="text-gray-400 flex items-center gap-2">
+            <i class="fa-solid fa-radar text-[#725CFF]"></i>
+            <span>Access complete profile metrics, reels stream, and downloadable media archives for this account.</span>
+          </span>
+          <a href={`/report/${acc.username}`} class="btn-secondary py-2 px-4 text-xs font-bold flex items-center gap-2 whitespace-nowrap">
+            <span>Open Full Intelligence Report</span>
+            <i class="fa-solid fa-arrow-right text-[10px]"></i>
+          </a>
+        </div>
+      </div>
+
+      <!-- Media Analytics Metric Pills -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+        <div class="glass-panel p-4 flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-[#725CFF]/15 text-[#725CFF] flex items-center justify-center text-lg">
+            <i class="fa-solid fa-images"></i>
+          </div>
+          <div>
+            <span class="text-[10px] uppercase text-gray-400 block font-bold">Fetched Media</span>
+            <span class="text-lg font-extrabold text-white">{allMedia.length} Items</span>
+          </div>
+        </div>
+
+        <div class="glass-panel p-4 flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-[#EC4899]/15 text-[#EC4899] flex items-center justify-center text-lg">
+            <i class="fa-solid fa-heart"></i>
+          </div>
+          <div>
+            <span class="text-[10px] uppercase text-gray-400 block font-bold">Sample Likes</span>
+            <span class="text-lg font-extrabold text-white">{Number(summary.total_likes).toLocaleString()}</span>
+          </div>
+        </div>
+
+        <div class="glass-panel p-4 flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-[#00F0FF]/15 text-[#00F0FF] flex items-center justify-center text-lg">
+            <i class="fa-solid fa-play"></i>
+          </div>
+          <div>
+            <span class="text-[10px] uppercase text-gray-400 block font-bold">Reel Plays</span>
+            <span class="text-lg font-extrabold text-[#00F0FF]">{Number(summary.total_reel_plays).toLocaleString()}</span>
+          </div>
+        </div>
+
+        <div class="glass-panel p-4 flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-[#10B981]/15 text-[#10B981] flex items-center justify-center text-lg">
+            <i class="fa-solid fa-chart-line"></i>
+          </div>
+          <div>
+            <span class="text-[10px] uppercase text-gray-400 block font-bold">Engagement</span>
+            <span class="text-lg font-extrabold text-[#10B981]">{summary.avg_engagement_rate}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filter Navigation Tabs -->
+      <div class="flex items-center justify-between mb-6 flex-wrap gap-4 border-b border-white/5 pb-4">
+        <div class="flex items-center gap-2 overflow-x-auto">
+          <button onclick="switchMediaTab('all')" id="btn-tab-all" class="tab-btn px-4 py-2 rounded-xl text-xs font-bold bg-[#725CFF] text-white flex items-center gap-2 transition">
+            <i class="fa-solid fa-grip"></i>
+            <span>All Media ({allMedia.length})</span>
+          </button>
+          <button onclick="switchMediaTab('posts')" id="btn-tab-posts" class="tab-btn px-4 py-2 rounded-xl text-xs font-bold text-gray-400 hover:text-white bg-white/[0.03] hover:bg-white/[0.08] flex items-center gap-2 transition">
+            <i class="fa-solid fa-image"></i>
+            <span>Photos & Carousels ({posts.length})</span>
+          </button>
+          <button onclick="switchMediaTab('reels')" id="btn-tab-reels" class="tab-btn px-4 py-2 rounded-xl text-xs font-bold text-gray-400 hover:text-white bg-white/[0.03] hover:bg-white/[0.08] flex items-center gap-2 transition">
+            <i class="fa-solid fa-film"></i>
+            <span>Reels & Videos ({reels.length})</span>
+          </button>
+          <button onclick="switchMediaTab('tagged')" id="btn-tab-tagged" class="tab-btn px-4 py-2 rounded-xl text-xs font-bold text-gray-400 hover:text-white bg-white/[0.03] hover:bg-white/[0.08] flex items-center gap-2 transition">
+            <i class="fa-solid fa-tag"></i>
+            <span>Tagged ({tagged.length})</span>
+          </button>
+        </div>
+
+        <div class="text-xs text-gray-400 flex items-center gap-2">
+          <i class="fa-solid fa-circle-info text-[#725CFF]"></i>
+          <span>Click any item for full-screen player & 1-click downloads</span>
+        </div>
+      </div>
+
+      <!-- Media Grid: All -->
+      <div id="media-grid-all" class="media-container grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {allMedia.map((item: any) => {
+          const isVideo = (item.media_type === 'reel') || Boolean(item.video_url);
+          const isCarousel = Array.isArray(item.carousel) && item.carousel.length > 1;
+          const downloadUrl = isVideo && item.video_url ? item.video_url : (item.thumbnail_url || item.media_url);
+          const downloadFilename = `${acc.username}_${isVideo ? 'reel_' : 'post_'}${item.shortcode || item.id}.${isVideo ? 'mp4' : 'jpg'}`;
+
+          const modalData = encodeURIComponent(JSON.stringify({
+            type: isVideo ? 'reel' : 'post',
+            url: item.thumbnail_url || item.media_url,
+            videoUrl: item.video_url,
+            caption: item.caption,
+            likes: item.likes_count,
+            comments: item.comments_count,
+            plays: item.play_count,
+            shortcode: item.shortcode,
+            date: item.detected_at,
+            author: acc.username,
+            authorAvatar: acc.avatar_url,
+            carousel: item.carousel,
+          }));
+
+          return (
+            <div class="glass-panel overflow-hidden flex flex-col justify-between group relative cursor-pointer hover:border-[#725CFF]/40 transition duration-300"
+                 data-modal={modalData}
+                 onclick="openMediaModalFromEl(this)">
+
+              <div class="relative h-72 overflow-hidden bg-black/60">
+                <img src={item.thumbnail_url || item.media_url} alt="Media preview" 
+                     class="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+                
+                <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent opacity-80 group-hover:opacity-100 transition duration-300"></div>
+
+                <!-- Type Badges -->
+                <div class="absolute top-3 left-3 flex items-center gap-1.5">
+                  {isVideo ? (
+                    <span class="badge badge-rose text-[10px] font-bold shadow-md">
+                      <i class="fa-solid fa-film"></i> REEL
+                    </span>
+                  ) : isCarousel ? (
+                    <span class="badge badge-cyan text-[10px] font-bold shadow-md">
+                      <i class="fa-solid fa-clone"></i> CAROUSEL ({item.carousel.length})
+                    </span>
+                  ) : (
+                    <span class="badge badge-purple text-[10px] font-bold shadow-md">
+                      <i class="fa-solid fa-image"></i> PHOTO
+                    </span>
+                  )}
+                </div>
+
+                <!-- Play icon overlay for reels -->
+                {isVideo && (
+                  <div class="absolute inset-0 flex items-center justify-center">
+                    <div class="w-12 h-12 rounded-full bg-black/60 border border-white/20 backdrop-blur-md flex items-center justify-center text-white text-lg group-hover:scale-110 group-hover:bg-[#725CFF] transition duration-300 shadow-xl">
+                      <i class="fa-solid fa-play ml-0.5"></i>
+                    </div>
+                  </div>
+                )}
+
+                <!-- Top Right Quick Download Button -->
+                <a href={`/api/download?url=${encodeURIComponent(downloadUrl)}&filename=${encodeURIComponent(downloadFilename)}`} 
+                   onclick="event.stopPropagation(); if (typeof showToast === 'function') showToast('Downloading file...', 'success');"
+                   title="Direct Download HD File"
+                   class="absolute top-3 right-3 w-8 h-8 rounded-xl bg-black/70 hover:bg-[#725CFF] border border-white/10 backdrop-blur-md flex items-center justify-center text-white text-xs shadow-lg transition">
+                  <i class="fa-solid fa-download"></i>
+                </a>
+
+                <!-- Bottom Bar Inside Preview -->
+                <div class="absolute bottom-3 inset-x-3 flex items-center justify-between text-xs text-white font-bold">
+                  <div class="flex items-center gap-3">
+                    <span><i class="fa-solid fa-heart text-[#EC4899] mr-1"></i> {Number(item.likes_count).toLocaleString()}</span>
+                    <span><i class="fa-solid fa-comment text-[#00F0FF] mr-1"></i> {Number(item.comments_count).toLocaleString()}</span>
+                  </div>
+                  {isVideo && Number(item.play_count) > 0 && (
+                    <span class="text-[11px] text-[#00F0FF] flex items-center gap-1 font-mono">
+                      <i class="fa-solid fa-play text-[9px]"></i> {Number(item.play_count).toLocaleString()}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <!-- Card Body -->
+              <div class="p-4 flex-grow flex flex-col justify-between">
+                <div>
+                  <p class="text-xs text-gray-300 line-clamp-2 leading-relaxed">
+                    {item.caption || 'No caption provided.'}
+                  </p>
+                </div>
+
+                <div class="mt-3 pt-3 border-t border-white/5 flex items-center justify-between text-[11px] text-gray-500">
+                  <span>{new Date(item.detected_at).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                  {item.shortcode && (
+                    <a href={`https://www.instagram.com/p/${item.shortcode}/`} target="_blank" onclick="event.stopPropagation();"
+                       class="text-[#725CFF] hover:text-white flex items-center gap-1 transition font-mono">
+                      <span>#{item.shortcode}</span>
+                      <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+                    </a>
+                  )}
+                </div>
+              </div>
+
+            </div>
+          );
+        })}
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Modal: Media Lightbox & High-Res Downloader -->
+  <div id="modal-media-viewer" class="modal-container fixed inset-0 bg-black/90 backdrop-blur-xl z-50 hidden items-center justify-center p-4">
+    <div class="bg-[#131627] border border-white/10 rounded-3xl max-w-4xl w-full overflow-hidden shadow-2xl flex flex-col md:flex-row relative max-h-[92vh]">
+      <button onclick="closeMediaModal()" class="absolute top-4 right-4 z-20 w-9 h-9 rounded-full bg-black/70 text-gray-300 hover:text-white flex items-center justify-center text-xl transition">
+        &times;
+      </button>
+
+      <!-- Media Display Left -->
+      <div class="md:w-3/5 bg-black flex flex-col items-center justify-center relative min-h-[350px] overflow-hidden">
+        <img id="modal-media-img" src="" alt="preview" class="max-h-[75vh] w-full object-contain" />
+        <video id="modal-media-video" controls autoplay loop playsinline class="max-h-[75vh] w-full hidden"></video>
+        <span id="modal-media-type-chip" class="absolute top-4 left-4 badge badge-purple text-xs"></span>
+
+        <!-- Carousel navigation -->
+        <div id="modal-carousel-nav" class="absolute bottom-3 inset-x-0 flex items-center justify-center gap-2 hidden">
+          <button id="modal-carousel-prev" class="w-8 h-8 rounded-full bg-black/70 text-white flex items-center justify-center hover:bg-[#725CFF] text-xs">
+            <i class="fa-solid fa-chevron-left"></i>
+          </button>
+          <span id="modal-carousel-counter" class="text-xs font-mono text-white bg-black/70 px-2 py-0.5 rounded">1/1</span>
+          <button id="modal-carousel-next" class="w-8 h-8 rounded-full bg-black/70 text-white flex items-center justify-center hover:bg-[#725CFF] text-xs">
+            <i class="fa-solid fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Info & Actions Right -->
+      <div class="md:w-2/5 p-6 flex flex-col justify-between overflow-y-auto">
+        <div>
+          <!-- Author Header -->
+          <div class="flex items-center gap-3 pb-4 border-b border-white/5 mb-4">
+            <img id="modal-author-avatar" src="" alt="author" class="w-10 h-10 rounded-xl object-cover border border-white/10" />
+            <div>
+              <span id="modal-author-handle" class="font-bold text-white text-sm block"></span>
+              <span id="modal-media-date" class="text-[11px] text-gray-400"></span>
+            </div>
+          </div>
+
+          <!-- Caption -->
+          <div class="space-y-2 mb-6">
+            <span class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Caption & Insights</span>
+            <p id="modal-media-caption" class="text-xs text-gray-200 leading-relaxed max-h-44 overflow-y-auto bg-white/[0.02] p-3 rounded-xl border border-white/5 whitespace-pre-line"></p>
+          </div>
+
+          <!-- Engagement Stats -->
+          <div class="grid grid-cols-2 gap-3 mb-6 text-center text-xs">
+            <div class="p-2.5 rounded-xl bg-white/[0.02] border border-white/5">
+              <span class="text-gray-400 text-[10px] uppercase block font-bold">Likes</span>
+              <span id="modal-media-likes" class="font-extrabold text-white text-sm"></span>
+            </div>
+            <div class="p-2.5 rounded-xl bg-white/[0.02] border border-white/5">
+              <span class="text-gray-400 text-[10px] uppercase block font-bold">Comments</span>
+              <span id="modal-media-comments" class="font-extrabold text-[#00F0FF] text-sm"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="space-y-2 pt-4 border-t border-white/5">
+          <a id="modal-btn-download" href="#" 
+             onclick="if (typeof showToast === 'function') showToast('Download initialized! Saving file...', 'success')"
+             class="w-full btn-primary py-3 text-xs flex items-center justify-center gap-2 font-bold shadow-lg shadow-[#725CFF]/20">
+            <i class="fa-solid fa-download text-sm"></i>
+            <span>Download Original HD Media</span>
+          </a>
+          <div class="flex items-center gap-2">
+            <button onclick="copyModalCaption()" class="w-1/2 btn-secondary py-2 text-xs flex items-center justify-center gap-1.5">
+              <i class="fa-solid fa-copy text-xs"></i>
+              <span>Copy Caption</span>
+            </button>
+            <a id="modal-ig-link" href="#" target="_blank" class="w-1/2 btn-secondary py-2 text-xs flex items-center justify-center gap-1.5">
+              <i class="fa-brands fa-instagram text-xs"></i>
+              <span>View on IG</span>
+            </a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script is:inline>
+    let currentModalMedia = null;
+    let currentCarouselIndex = 0;
+
+    window.openMediaModalFromEl = function(el) {
+      try {
+        const raw = decodeURIComponent(el.getAttribute('data-modal') || '');
+        const data = JSON.parse(raw);
+        openMediaModal(data);
+      } catch (e) {
+        console.error('Error opening media modal:', e);
+      }
+    };
+
+    window.openMediaModal = function(data) {
+      currentModalMedia = data;
+      currentCarouselIndex = 0;
+      const modal = document.getElementById('modal-media-viewer');
+      if (!modal) return;
+
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      document.body.style.overflow = 'hidden';
+
+      const img = document.getElementById('modal-media-img');
+      const video = document.getElementById('modal-media-video');
+      const chip = document.getElementById('modal-media-type-chip');
+      const nav = document.getElementById('modal-carousel-nav');
+
+      document.getElementById('modal-author-avatar').src = data.authorAvatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=user';
+      document.getElementById('modal-author-handle').innerText = '@' + data.author;
+      document.getElementById('modal-media-date').innerText = new Date(data.date).toLocaleDateString();
+      document.getElementById('modal-media-caption').innerText = data.caption || 'No caption';
+      document.getElementById('modal-media-likes').innerText = Number(data.likes || 0).toLocaleString();
+      document.getElementById('modal-media-comments').innerText = Number(data.comments || 0).toLocaleString();
+
+      const igLink = document.getElementById('modal-ig-link');
+      if (igLink) {
+        igLink.href = data.shortcode ? `https://www.instagram.com/p/${data.shortcode}/` : `https://www.instagram.com/${data.author}/`;
+      }
+
+      if (data.type === 'reel' && data.videoUrl) {
+        img.classList.add('hidden');
+        video.classList.remove('hidden');
+        video.src = data.videoUrl;
+        chip.innerText = 'REEL';
+        chip.className = 'absolute top-4 left-4 badge badge-rose text-xs';
+        nav.classList.add('hidden');
+        document.getElementById('modal-btn-download').href = `/api/download?url=${encodeURIComponent(data.videoUrl)}&filename=${encodeURIComponent(`${data.author}_reel.mp4`)}`;
+      } else if (Array.isArray(data.carousel) && data.carousel.length > 1) {
+        video.classList.add('hidden');
+        img.classList.remove('hidden');
+        renderCarouselSlide();
+        chip.innerText = `CAROUSEL (${data.carousel.length})`;
+        chip.className = 'absolute top-4 left-4 badge badge-cyan text-xs';
+        nav.classList.remove('hidden');
+      } else {
+        video.classList.add('hidden');
+        img.classList.remove('hidden');
+        img.src = data.url;
+        chip.innerText = 'PHOTO';
+        chip.className = 'absolute top-4 left-4 badge badge-purple text-xs';
+        nav.classList.add('hidden');
+        document.getElementById('modal-btn-download').href = `/api/download?url=${encodeURIComponent(data.url)}&filename=${encodeURIComponent(`${data.author}_post.jpg`)}`;
+      }
+    };
+
+    function renderCarouselSlide() {
+      if (!currentModalMedia || !currentModalMedia.carousel) return;
+      const slide = currentModalMedia.carousel[currentCarouselIndex];
+      const img = document.getElementById('modal-media-img');
+      const counter = document.getElementById('modal-carousel-counter');
+      const slideUrl = slide.image_versions2?.candidates?.[0]?.url || slide.thumbnail_url || slide.url || currentModalMedia.url;
+      img.src = slideUrl;
+      counter.innerText = `${currentCarouselIndex + 1}/${currentModalMedia.carousel.length}`;
+      document.getElementById('modal-btn-download').href = `/api/download?url=${encodeURIComponent(slideUrl)}&filename=${encodeURIComponent(`${currentModalMedia.author}_carousel_${currentCarouselIndex + 1}.jpg`)}`;
+    }
+
+    const prevBtn = document.getElementById('modal-carousel-prev');
+    if (prevBtn) {
+      prevBtn.onclick = () => {
+        if (currentModalMedia && currentModalMedia.carousel) {
+          currentCarouselIndex = (currentCarouselIndex - 1 + currentModalMedia.carousel.length) % currentModalMedia.carousel.length;
+          renderCarouselSlide();
+        }
+      };
+    }
+
+    const nextBtn = document.getElementById('modal-carousel-next');
+    if (nextBtn) {
+      nextBtn.onclick = () => {
+        if (currentModalMedia && currentModalMedia.carousel) {
+          currentCarouselIndex = (currentCarouselIndex + 1) % currentModalMedia.carousel.length;
+          renderCarouselSlide();
+        }
+      };
+    }
+
+    window.closeMediaModal = function() {
+      const modal = document.getElementById('modal-media-viewer');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+      const video = document.getElementById('modal-media-video');
+      if (video) {
+        video.pause();
+        video.src = '';
+      }
+      document.body.style.overflow = '';
+    };
+
+    window.copyModalCaption = function() {
+      const text = document.getElementById('modal-media-caption')?.innerText || '';
+      navigator.clipboard.writeText(text);
+      if (typeof showToast === 'function') showToast('Caption copied to clipboard!', 'success');
+    };
+
+    window.switchMediaTab = function(tab) {
+      document.querySelectorAll('.tab-btn').forEach((b) => {
+        b.className = 'tab-btn px-4 py-2 rounded-xl text-xs font-bold text-gray-400 hover:text-white bg-white/[0.03] hover:bg-white/[0.08] flex items-center gap-2 transition';
+      });
+      const activeBtn = document.getElementById('btn-tab-' + tab);
+      if (activeBtn) {
+        activeBtn.className = 'tab-btn px-4 py-2 rounded-xl text-xs font-bold bg-[#725CFF] text-white flex items-center gap-2 transition';
+      }
+      // Show/hide based on category filter
+      document.querySelectorAll('#media-grid-all > div').forEach((card) => {
+        if (tab === 'all') {
+          card.classList.remove('hidden');
+        } else if (tab === 'posts') {
+          const isPost = card.querySelector('.fa-image') || card.querySelector('.fa-clone');
+          if (isPost) card.classList.remove('hidden');
+          else card.classList.add('hidden');
+        } else if (tab === 'reels') {
+          const isReel = card.querySelector('.fa-film');
+          if (isReel) card.classList.remove('hidden');
+          else card.classList.add('hidden');
+        } else if (tab === 'tagged') {
+          const isTagged = card.querySelector('.fa-tag');
+          if (isTagged) card.classList.remove('hidden');
+          else card.classList.add('hidden');
+        }
+      });
+    };
+  </script>
+</Layout>
+

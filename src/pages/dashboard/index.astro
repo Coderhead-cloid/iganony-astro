@@ -1,0 +1,220 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getDb } from '../../lib/db';
+
+export const prerender = false;
+
+const db = getDb();
+let accounts: any[] = [];
+let alerts: any[] = [];
+
+try {
+  accounts = db.prepare("SELECT * FROM tracked_accounts ORDER BY last_scanned_at DESC").all() as any[];
+} catch (e) {
+  accounts = [];
+}
+
+try {
+  alerts = db.prepare("SELECT * FROM alert_logs ORDER BY sent_at DESC LIMIT 15").all() as any[];
+} catch (e) {
+  alerts = [];
+}
+
+const pageTitle = "Monitoring Dashboard | DolphinRadar Pro";
+---
+
+<Layout title={pageTitle}>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    
+    <!-- Dashboard Header -->
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-8 border-b border-white/5 gap-4">
+      <div>
+        <h1 class="text-3xl font-extrabold text-white font-display">Anonymous Viewer Hub</h1>
+        <p class="text-xs sm:text-sm text-gray-400 mt-1">Instant anonymous access to Instagram stories, reels, posts, and mutual connections</p>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <button data-open-modal="modal-quick-search" class="btn-primary py-2.5 px-4 text-xs sm:text-sm flex items-center gap-2">
+          <i class="fa-solid fa-magnifying-glass text-xs"></i>
+          <span>Search Any Profile</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Overview Stats -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 my-8">
+      <div class="glass-panel p-5">
+        <div class="flex items-center justify-between">
+          <span class="text-xs text-gray-400 uppercase tracking-wider font-semibold">Saved Lookups</span>
+          <i class="fa-solid fa-user-check text-[#725CFF] text-base"></i>
+        </div>
+        <span class="text-2xl font-extrabold text-white font-display mt-2 block">{accounts.length}</span>
+        <span class="text-[11px] text-gray-400 mt-1 block">Recent Lookups</span>
+      </div>
+
+      <div class="glass-panel p-5">
+        <div class="flex items-center justify-between">
+          <span class="text-xs text-gray-400 uppercase tracking-wider font-semibold">Privacy Mode</span>
+          <i class="fa-solid fa-user-secret text-[#00F0FF] text-base"></i>
+        </div>
+        <span class="text-2xl font-extrabold text-[#00F0FF] font-display mt-2 block">100% Invisible</span>
+        <span class="text-[11px] text-gray-400 mt-1 block">Zero trace left on Instagram</span>
+      </div>
+
+      <div class="glass-panel p-5">
+        <div class="flex items-center justify-between">
+          <span class="text-xs text-gray-400 uppercase tracking-wider font-semibold">HD Downloads</span>
+          <i class="fa-solid fa-download text-[#EC4899] text-base"></i>
+        </div>
+        <span class="text-2xl font-extrabold text-[#EC4899] font-display mt-2 block">Unlimited</span>
+        <span class="text-[11px] text-gray-400 mt-1 block">Stories, reels & carousels</span>
+      </div>
+
+      <div class="glass-panel p-5">
+        <div class="flex items-center justify-between">
+          <span class="text-xs text-gray-400 uppercase tracking-wider font-semibold">Subscription</span>
+          <i class="fa-solid fa-shield-halved text-[#10B981] text-base"></i>
+        </div>
+        <span class="text-2xl font-extrabold text-[#10B981] font-display mt-2 block">Pro Active</span>
+        <span class="text-[11px] text-gray-400 mt-1 block">All tools unlocked</span>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      
+      <!-- Profiles List (Col 2) -->
+      <div class="lg:col-span-2 space-y-6">
+        <div class="flex items-center justify-between">
+          <h3 class="text-lg font-bold text-white font-display">Recent Lookups ({accounts.length})</h3>
+          <span class="badge badge-purple text-xs">Direct Access</span>
+        </div>
+
+        <div class="space-y-4">
+          {accounts.length === 0 ? (
+            <div class="glass-panel p-10 text-center border border-white/10 rounded-2xl">
+              <div class="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-2xl text-gray-400 mx-auto mb-4">
+                <i class="fa-solid fa-user-secret"></i>
+              </div>
+              <h4 class="text-base font-bold text-white mb-2 font-display">No Profiles Viewed Yet</h4>
+              <p class="text-xs text-gray-400 max-w-sm mx-auto mb-6">
+                Look up any public Instagram username to watch stories anonymously, download reels and posts in HD, or compare mutual followers.
+              </p>
+              <button data-open-modal="modal-quick-search" class="btn-primary py-2.5 px-6 text-xs inline-flex items-center gap-2">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <span>Search Any Profile</span>
+              </button>
+            </div>
+          ) : (
+            accounts.map((acc: any) => (
+              <div class="glass-panel p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div class="flex items-center gap-4">
+                  <img src={acc.avatar_url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150'} 
+                       alt={acc.username}
+                       loading="lazy"
+                       referrerpolicy="no-referrer"
+                       class="w-14 h-14 rounded-2xl object-cover border border-white/10" />
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <h4 class="font-bold text-white text-base">@{acc.username}</h4>
+                      {Boolean(acc.is_verified) && (
+                        <i class="fa-solid fa-circle-check text-[#00F0FF] text-xs"></i>
+                      )}
+                    </div>
+                    <p class="text-xs text-gray-400">{acc.full_name || `@${acc.username}`}</p>
+                    <div class="flex items-center gap-3 mt-1.5 text-[11px] text-gray-500">
+                      <span><strong class="text-gray-300">{Number(acc.followers_count || 0).toLocaleString()}</strong> followers</span>
+                      <span>•</span>
+                      <span>Last scan: <strong class="text-gray-300">{acc.last_scanned_at || 'Recently'}</strong></span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-2 w-full sm:w-auto">
+                  <a href={`/report/${encodeURIComponent(acc.username)}`} class="btn-primary py-2 px-4 text-xs flex-1 sm:flex-none text-center inline-flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-chart-pie text-xs"></i>
+                    <span>View Report</span>
+                  </a>
+                  <a href={`/toolkit/story-viewer?username=${encodeURIComponent(acc.username)}`} class="btn-secondary py-2 px-3 text-xs" title="Watch Stories">
+                    <i class="fa-solid fa-circle-play text-xs text-[#EC4899]"></i>
+                  </a>
+                  <a href={`/api/export/${encodeURIComponent(acc.username)}`} class="btn-secondary py-2 px-3 text-xs" title="Export CSV">
+                    <i class="fa-solid fa-download"></i>
+                  </a>
+                  <button type="button" 
+                          data-untrack-id={acc.id}
+                          data-untrack-user={acc.username}
+                          class="untrack-btn btn-secondary py-2 px-3 text-xs text-red-400 hover:text-red-300 hover:border-red-500/30" 
+                          title="Remove Profile">
+                    <i class="fa-solid fa-trash-can text-xs"></i>
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+      <!-- Live Notification Feed (Col 1) -->
+      <div class="space-y-6">
+        <div class="flex items-center justify-between">
+          <h3 class="text-lg font-bold text-white font-display">Activity & Alert Feed</h3>
+          <span class="badge badge-cyan text-xs">Real-Time</span>
+        </div>
+
+        <div class="glass-panel p-5 space-y-4 max-h-[500px] overflow-y-auto">
+          {alerts.length === 0 ? (
+            <div class="p-6 text-center text-xs text-gray-500">
+              <i class="fa-regular fa-bell-slash text-xl mb-2 block text-gray-600"></i>
+              No activity alerts recorded yet.
+            </div>
+          ) : (
+            alerts.map((a: any) => (
+              <div class="p-3 rounded-xl bg-white/[0.02] border border-white/5 space-y-1">
+                <div class="flex items-center justify-between text-xs">
+                  <span class="font-bold text-white flex items-center gap-1.5">
+                    <i class="fa-solid fa-bell text-[#725CFF] text-[10px]"></i>
+                    {a.title}
+                  </span>
+                  <span class="text-[10px] text-gray-500">{a.sent_at}</span>
+                </div>
+                <p class="text-xs text-gray-400 leading-relaxed">
+                  {a.message}
+                </p>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+    document.querySelectorAll('.untrack-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const target = e.currentTarget as HTMLElement;
+        const id = target.getAttribute('data-untrack-id');
+        const user = target.getAttribute('data-untrack-user');
+        if (!confirm(`Remove @${user} from recent lookups?`)) return;
+
+        try {
+          const res = await fetch('/api/untrack', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ account_id: id })
+          });
+          const data = await res.json();
+          if (data.success) {
+            window.location.reload();
+          } else {
+            alert('Failed to remove: ' + (data.error || 'Unknown error'));
+          }
+        } catch (err) {
+          alert('Error removing account.');
+        }
+      });
+    });
+  </script>
+</Layout>
+

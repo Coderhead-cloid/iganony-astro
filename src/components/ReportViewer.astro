@@ -1,0 +1,580 @@
+---
+import { InstagramIntelligenceService } from '../services/instagramIntelligence';
+
+interface Props {
+  usernameParam?: string;
+  isSample?: boolean;
+}
+
+const { usernameParam, isSample = false } = Astro.props;
+const targetUsername = usernameParam || 'cristiano';
+
+const intelService = new InstagramIntelligenceService();
+const report = await intelService.getFullAccountDetails(
+  (await intelService.getOrCreateAccount(targetUsername)).account.id
+);
+
+const acc = report.account;
+const summary = report.summary || {};
+const posts = report.posts || [];
+const reels = report.reels || [];
+const tagged = report.tagged || [];
+const allMedia = report.all || [...reels, ...posts];
+const stData = report.storiesData || {};
+---
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+
+  <!-- Top Breadcrumb & Status -->
+  <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-6 border-b border-white/5 gap-4">
+    <div class="flex items-center gap-2 text-xs text-gray-400">
+      <a href="/" class="hover:text-white transition">Home</a>
+      <span>/</span>
+      <a href="/sample-report" class="hover:text-white transition">Reports</a>
+      <span>/</span>
+      <span class="text-[#00F0FF] font-semibold">@{acc.username}</span>
+    </div>
+
+    {isSample && (
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#725CFF]/15 border border-[#725CFF]/30 text-xs text-[#C4B5FD]">
+        <i class="fa-solid fa-sparkles text-[#00F0FF]"></i>
+        <span>Live Profile & Media Telemetry</span>
+      </div>
+    )}
+  </div>
+
+  <!-- Profile Header Card -->
+  <div class="glass-panel p-6 sm:p-8 my-8 relative overflow-hidden">
+    <div class="absolute -right-20 -bottom-20 w-80 h-80 bg-[#725CFF]/10 rounded-full blur-3xl pointer-events-none"></div>
+
+    <div class="flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
+      <div class="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-5">
+        <div class="relative group cursor-pointer" onclick={`window.location.href='/stories/${encodeURIComponent(acc.username)}'`} title="Watch Stories Anonymously">
+          <div class="p-[3px] bg-gradient-to-tr from-[#F58529] via-[#DD2A7B] to-[#8134AF] rounded-3xl hover:scale-105 transition duration-300 shadow-xl shadow-[#DD2A7B]/20">
+            <img src={acc.avatar_url} alt="avatar" 
+                 loading="lazy" referrerpolicy="no-referrer"
+                 class="w-20 h-20 sm:w-24 sm:h-24 rounded-[22px] object-cover border-2 border-[#0B0D17]" />
+          </div>
+          <a href={`/stories/${encodeURIComponent(acc.username)}`} 
+             title="Watch 24h Stories Anonymously"
+             class="absolute -bottom-2 -left-2 w-8 h-8 rounded-full bg-gradient-to-tr from-[#EC4899] to-[#725CFF] text-white flex items-center justify-center text-xs shadow-lg transition hover:scale-110">
+            <i class="fa-solid fa-circle-play"></i>
+          </a>
+          <a href={`/api/download?url=${encodeURIComponent(acc.avatar_url)}&filename=${encodeURIComponent(`${acc.username}_avatar.jpg`)}`} 
+             title="Download HD Avatar"
+             class="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-[#725CFF] hover:bg-[#5842ED] text-white flex items-center justify-center text-xs shadow-lg transition">
+            <i class="fa-solid fa-download"></i>
+          </a>
+        </div>
+        <div>
+          <div class="flex items-center justify-center sm:justify-start gap-2 mb-1 flex-wrap">
+            <h1 class="text-xl sm:text-3xl font-extrabold text-white font-display">
+              @{acc.username}
+            </h1>
+            {acc.is_verified && (
+              <i class="fa-solid fa-circle-check text-[#00F0FF] text-lg" title="Verified Account"></i>
+            )}
+            <a href={`/stories/${encodeURIComponent(acc.username)}`} 
+               class="badge badge-purple text-xs font-bold py-1 px-2.5 inline-flex items-center gap-1.5 hover:scale-105 transition bg-gradient-to-r from-[#EC4899]/20 to-[#725CFF]/20 border border-[#EC4899]/40 text-[#F472B6]">
+              <i class="fa-solid fa-circle-play text-[#EC4899]"></i>
+              <span>Watch Stories ({stData.stories ? stData.stories.length : 0})</span>
+            </a>
+            <span class="badge badge-purple text-[10px] uppercase font-bold tracking-wider">Public Profile</span>
+          </div>
+          <p class="text-sm font-semibold text-gray-300 mt-1">{acc.full_name}</p>
+          <p class="text-xs text-gray-400 mt-1 max-w-xl leading-relaxed">{acc.bio || ''}</p>
+
+          <div class="flex items-center gap-4 mt-3 text-xs text-gray-400 flex-wrap">
+            <span><i class="fa-regular fa-clock text-gray-500 mr-1"></i> Telemetry: <strong class="text-gray-200">Active</strong></span>
+            <a href={`https://www.instagram.com/${acc.username}/`} target="_blank" class="text-[#00F0FF] hover:underline flex items-center gap-1">
+              <i class="fa-brands fa-instagram"></i> Instagram Profile &rarr;
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Profile Stats & Actions Right -->
+      <div class="flex flex-col sm:flex-row md:flex-col lg:flex-row items-stretch sm:items-center gap-4 w-full md:w-auto">
+        <div class="grid grid-cols-3 gap-3 bg-white/[0.03] border border-white/5 rounded-2xl p-3.5 text-center">
+          <div class="px-2">
+            <span class="block text-[10px] text-gray-400 uppercase tracking-wider font-bold">Posts</span>
+            <span class="text-base font-extrabold text-white font-display">{Number(acc.posts_count).toLocaleString()}</span>
+          </div>
+          <div class="px-2 border-x border-white/5">
+            <span class="block text-[10px] text-gray-400 uppercase tracking-wider font-bold">Followers</span>
+            <span class="text-base font-extrabold text-[#00F0FF] font-display">{Number(acc.followers_count).toLocaleString()}</span>
+          </div>
+          <div class="px-2">
+            <span class="block text-[10px] text-gray-400 uppercase tracking-wider font-bold">Following</span>
+            <span class="text-base font-extrabold text-white font-display">{Number(acc.following_count).toLocaleString()}</span>
+          </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-2">
+          <a href={`/api/media/${acc.username}?refresh=1`} class="btn-primary py-2.5 px-4 text-xs whitespace-nowrap text-center flex items-center justify-center gap-1.5 font-bold">
+            <i class="fa-solid fa-rotate text-xs"></i>
+            <span>Fetch Fresh Media</span>
+          </a>
+          <a href={`/api/export/${acc.username}`} class="btn-secondary py-2.5 px-4 text-xs whitespace-nowrap text-center flex items-center justify-center gap-1.5 font-bold">
+            <i class="fa-solid fa-file-csv text-xs text-[#10B981]"></i>
+            <span>Export CSV</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Media Analytics Metric Pills -->
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+    <div class="glass-panel p-4 flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-[#725CFF]/15 text-[#725CFF] flex items-center justify-center text-lg">
+        <i class="fa-solid fa-images"></i>
+      </div>
+      <div>
+        <span class="text-[10px] uppercase text-gray-400 block font-bold">Total Media</span>
+        <span class="text-lg font-extrabold text-white">{allMedia.length} Items</span>
+      </div>
+    </div>
+
+    <div class="glass-panel p-4 flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-[#EC4899]/15 text-[#EC4899] flex items-center justify-center text-lg">
+        <i class="fa-solid fa-heart"></i>
+      </div>
+      <div>
+        <span class="text-[10px] uppercase text-gray-400 block font-bold">Sample Likes</span>
+        <span class="text-lg font-extrabold text-white">{Number(summary.total_likes || 0).toLocaleString()}</span>
+      </div>
+    </div>
+
+    <div class="glass-panel p-4 flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-[#00F0FF]/15 text-[#00F0FF] flex items-center justify-center text-lg">
+        <i class="fa-solid fa-play"></i>
+      </div>
+      <div>
+        <span class="text-[10px] uppercase text-gray-400 block font-bold">Reel Video Plays</span>
+        <span class="text-lg font-extrabold text-[#00F0FF]">{Number(summary.total_reel_plays || 0).toLocaleString()}</span>
+      </div>
+    </div>
+
+    <div class="glass-panel p-4 flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-[#10B981]/15 text-[#10B981] flex items-center justify-center text-lg">
+        <i class="fa-solid fa-chart-line"></i>
+      </div>
+      <div>
+        <span class="text-[10px] uppercase text-gray-400 block font-bold">Engagement Rate</span>
+        <span class="text-lg font-extrabold text-[#10B981]">{summary.avg_engagement_rate || '4.85%'}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation Tabs -->
+  <div class="flex items-center justify-between mb-8 flex-wrap gap-4 border-b border-white/5 pb-4">
+    <div class="flex items-center gap-2 overflow-x-auto">
+      <button onclick="switchReportTab('all')" id="rep-btn-all" class="rep-tab-btn px-4 py-2 rounded-xl text-xs font-bold bg-[#725CFF] text-white flex items-center gap-2 transition">
+        <i class="fa-solid fa-grip"></i>
+        <span>All Media ({allMedia.length})</span>
+      </button>
+      <button onclick="switchReportTab('posts')" id="rep-btn-posts" class="rep-tab-btn px-4 py-2 rounded-xl text-xs font-bold text-gray-400 hover:text-white bg-white/[0.03] hover:bg-white/[0.08] flex items-center gap-2 transition">
+        <i class="fa-solid fa-image text-[#00F0FF]"></i>
+        <span>Feed Posts & Photos ({posts.length})</span>
+      </button>
+      <button onclick="switchReportTab('reels')" id="rep-btn-reels" class="rep-tab-btn px-4 py-2 rounded-xl text-xs font-bold text-gray-400 hover:text-white bg-white/[0.03] hover:bg-white/[0.08] flex items-center gap-2 transition">
+        <i class="fa-solid fa-film text-[#EC4899]"></i>
+        <span>Instagram Reels & Videos ({reels.length})</span>
+      </button>
+      <button onclick="switchReportTab('stories')" id="rep-btn-stories" class="rep-tab-btn px-4 py-2 rounded-xl text-xs font-bold text-gray-400 hover:text-white bg-white/[0.03] hover:bg-white/[0.08] flex items-center gap-2 transition">
+        <i class="fa-solid fa-circle-play text-[#EC4899]"></i>
+        <span>Stories & Highlights ({stData.stories ? stData.stories.length : 0})</span>
+      </button>
+      <button onclick="switchReportTab('tagged')" id="rep-btn-tagged" class="rep-tab-btn px-4 py-2 rounded-xl text-xs font-bold text-gray-400 hover:text-white bg-white/[0.03] hover:bg-white/[0.08] flex items-center gap-2 transition">
+        <i class="fa-solid fa-user-tag text-[#A78BFA]"></i>
+        <span>Tagged Media ({tagged.length})</span>
+      </button>
+    </div>
+
+    <div class="text-xs text-gray-400 flex items-center gap-2">
+      <i class="fa-solid fa-download text-[#725CFF]"></i>
+      <span>Click any item for full-screen preview & 1-click HD downloads</span>
+    </div>
+  </div>
+
+  <!-- TAB 1: ALL MEDIA -->
+  <div id="rep-grid-all" class="rep-media-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+    {allMedia.map((item: any) => {
+      const isVideo = (item.media_type === 'reel') || Boolean(item.video_url);
+      const isCarousel = Array.isArray(item.carousel) && item.carousel.length > 1;
+      const thumb = item.thumbnail_url || item.media_url || '';
+      const video = item.video_url || null;
+      const shortcode = item.shortcode || null;
+      const downloadUrl = (isVideo && video) ? video : thumb;
+      const downloadFilename = `${acc.username}_${isVideo ? 'reel_' : 'post_'}${shortcode || item.id}.${isVideo ? 'mp4' : 'jpg'}`;
+
+      const modalData = encodeURIComponent(JSON.stringify({
+        type: isVideo ? 'reel' : 'post',
+        url: thumb,
+        videoUrl: video,
+        caption: item.caption || '',
+        likes: item.likes_count || 0,
+        comments: item.comments_count || 0,
+        plays: item.play_count || 0,
+        shortcode,
+        date: item.detected_at || 'Recent',
+        author: acc.username,
+        authorAvatar: acc.avatar_url,
+        carousel: item.carousel,
+      }));
+
+      return (
+        <div class="glass-panel overflow-hidden flex flex-col justify-between group relative cursor-pointer hover:border-[#725CFF]/50 transition duration-300"
+             data-modal={modalData}
+             onclick="openMediaModalFromEl(this)">
+
+          <div class="relative h-72 overflow-hidden bg-black/70">
+            <img src={thumb} alt="Media" 
+                 loading="lazy" referrerpolicy="no-referrer"
+                 class="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+            
+            <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent opacity-80 group-hover:opacity-100 transition duration-300"></div>
+
+            <div class="absolute top-3 left-3 flex items-center gap-1.5">
+              {isVideo ? (
+                <span class="badge badge-rose text-[10px] font-bold shadow-md">
+                  <i class="fa-solid fa-film"></i> REEL
+                </span>
+              ) : isCarousel ? (
+                <span class="badge badge-cyan text-[10px] font-bold shadow-md">
+                  <i class="fa-solid fa-clone"></i> CAROUSEL ({item.carousel.length})
+                </span>
+              ) : (
+                <span class="badge badge-purple text-[10px] font-bold shadow-md">
+                  <i class="fa-solid fa-image"></i> PHOTO
+                </span>
+              )}
+            </div>
+
+            {isVideo && (
+              <div class="absolute inset-0 flex items-center justify-center">
+                <div class="w-12 h-12 rounded-full bg-black/60 border border-white/20 backdrop-blur-md flex items-center justify-center text-white text-lg group-hover:scale-110 group-hover:bg-[#725CFF] transition duration-300 shadow-xl">
+                  <i class="fa-solid fa-play ml-0.5"></i>
+                </div>
+              </div>
+            )}
+
+            <a href={`/api/download?url=${encodeURIComponent(downloadUrl)}&filename=${encodeURIComponent(downloadFilename)}`} 
+               onclick="event.stopPropagation(); if (typeof showToast === 'function') showToast('Downloading file...', 'success');"
+               title="Download HD File"
+               class="absolute top-3 right-3 w-8 h-8 rounded-xl bg-black/70 hover:bg-[#725CFF] border border-white/10 backdrop-blur-md flex items-center justify-center text-white text-xs shadow-lg transition">
+              <i class="fa-solid fa-download"></i>
+            </a>
+
+            <div class="absolute bottom-3 inset-x-3 flex items-center justify-between text-xs text-white font-bold">
+              <div class="flex items-center gap-3">
+                <span><i class="fa-solid fa-heart text-[#EC4899] mr-1"></i> {Number(item.likes_count).toLocaleString()}</span>
+                <span><i class="fa-solid fa-comment text-[#00F0FF] mr-1"></i> {Number(item.comments_count).toLocaleString()}</span>
+              </div>
+              {isVideo && Number(item.play_count) > 0 && (
+                <span class="text-[11px] text-[#00F0FF] flex items-center gap-1 font-mono">
+                  <i class="fa-solid fa-play text-[9px]"></i> {Number(item.play_count).toLocaleString()}
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div class="p-4 flex-grow flex flex-col justify-between">
+            <div>
+              <p class="text-xs text-gray-300 line-clamp-2 leading-relaxed">
+                {item.caption || 'No caption provided.'}
+              </p>
+            </div>
+            <div class="mt-3 pt-3 border-t border-white/5 flex items-center justify-between text-[11px] text-gray-500">
+              <span>{new Date(item.detected_at).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+              {shortcode && (
+                <a href={`https://www.instagram.com/p/${shortcode}/`} target="_blank" onclick="event.stopPropagation();"
+                   class="text-[#725CFF] hover:text-white flex items-center gap-1 transition font-mono">
+                  <span>#{shortcode}</span>
+                  <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+                </a>
+              )}
+            </div>
+          </div>
+
+        </div>
+      );
+    })}
+  </div>
+
+  <!-- TAB 4: STORIES & HIGHLIGHTS -->
+  <div id="rep-grid-stories" class="rep-media-grid hidden space-y-8">
+    <div class="glass-panel p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div>
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-circle-play text-[#EC4899]"></i>
+          <span>Active 24-Hour Stories ({stData.stories ? stData.stories.length : 0})</span>
+        </h3>
+        <p class="text-xs text-gray-400 mt-0.5">Watch, preview, and download active stories 100% anonymously</p>
+      </div>
+      <a href={`/stories/${encodeURIComponent(acc.username)}`} 
+         class="btn-primary py-2 px-5 text-xs font-bold flex items-center gap-2 bg-gradient-to-r from-[#EC4899] to-[#725CFF] border-none shadow-lg shadow-[#EC4899]/20">
+        <i class="fa-solid fa-play"></i>
+        <span>Open Fullscreen Story Player</span>
+      </a>
+    </div>
+
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+      {(stData.stories || []).map((st: any) => (
+        <div class="glass-panel overflow-hidden group relative flex flex-col justify-between hover:border-[#EC4899]/50 transition duration-300 rounded-2xl cursor-pointer"
+             onclick={`window.location.href='/stories/${encodeURIComponent(acc.username)}'`}>
+          <div class="relative aspect-[9/16] bg-black/70 overflow-hidden">
+            <img src={st.preview} alt="Story" 
+                 loading="lazy" referrerpolicy="no-referrer"
+                 class="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30"></div>
+            <span class={`absolute top-2.5 left-2.5 px-2 py-0.5 rounded text-[9px] font-bold uppercase backdrop-blur-md ${st.type === 'video' ? 'bg-[#EC4899]/80 text-white' : 'bg-white/30 text-white'}`}>
+              {st.type}
+            </span>
+            <span class="absolute top-2.5 right-2.5 text-[9px] text-gray-200 bg-black/60 px-2 py-0.5 rounded backdrop-blur-md">
+              {st.expires_in || '24h'}
+            </span>
+            <div class="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between text-xs text-white" onclick="event.stopPropagation()">
+              <span class="text-[10px] text-gray-300">{st.time_ago || 'Recent'}</span>
+              <a href={st.download_url} 
+                 class="w-7 h-7 rounded-lg bg-white/20 hover:bg-[#EC4899] backdrop-blur-md flex items-center justify-center text-white transition"
+                 title="Download Story">
+                <i class="fa-solid fa-download text-[11px]"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal: Media Lightbox & High-Res Downloader -->
+<div id="modal-media-viewer" class="modal-container fixed inset-0 bg-black/90 backdrop-blur-xl z-50 hidden items-center justify-center p-4">
+  <div class="bg-[#131627] border border-white/10 rounded-3xl max-w-4xl w-full overflow-hidden shadow-2xl flex flex-col md:flex-row relative max-h-[92vh]">
+    <button onclick="closeMediaModal()" class="absolute top-4 right-4 z-20 w-9 h-9 rounded-full bg-black/70 text-gray-300 hover:text-white flex items-center justify-center text-xl transition">
+      &times;
+    </button>
+
+    <div class="md:w-3/5 bg-black flex flex-col items-center justify-center relative min-h-[350px] overflow-hidden">
+      <img id="modal-media-img" src="" alt="preview" referrerpolicy="no-referrer" class="max-h-[75vh] w-full object-contain" />
+      <video id="modal-media-video" controls autoplay loop playsinline class="max-h-[75vh] w-full hidden"></video>
+      <span id="modal-media-type-chip" class="absolute top-4 left-4 badge badge-purple text-xs"></span>
+
+      <div id="modal-carousel-nav" class="absolute bottom-3 inset-x-0 flex items-center justify-center gap-2 hidden">
+        <button id="modal-carousel-prev" class="w-8 h-8 rounded-full bg-black/70 text-white flex items-center justify-center hover:bg-[#725CFF] text-xs">
+          <i class="fa-solid fa-chevron-left"></i>
+        </button>
+        <span id="modal-carousel-counter" class="text-xs font-mono text-white bg-black/70 px-2 py-0.5 rounded">1/1</span>
+        <button id="modal-carousel-next" class="w-8 h-8 rounded-full bg-black/70 text-white flex items-center justify-center hover:bg-[#725CFF] text-xs">
+          <i class="fa-solid fa-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="md:w-2/5 p-6 flex flex-col justify-between overflow-y-auto">
+      <div>
+        <div class="flex items-center gap-3 pb-4 border-b border-white/5 mb-4">
+          <img id="modal-author-avatar" src="" alt="author" referrerpolicy="no-referrer" class="w-10 h-10 rounded-xl object-cover border border-white/10" />
+          <div>
+            <span id="modal-author-handle" class="font-bold text-white text-sm block"></span>
+            <span id="modal-media-date" class="text-[11px] text-gray-400"></span>
+          </div>
+        </div>
+
+        <div class="space-y-2 mb-6">
+          <span class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Caption & Insights</span>
+          <p id="modal-media-caption" class="text-xs text-gray-200 leading-relaxed max-h-44 overflow-y-auto bg-white/[0.02] p-3 rounded-xl border border-white/5 whitespace-pre-line"></p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 mb-6 text-center text-xs">
+          <div class="p-2.5 rounded-xl bg-white/[0.02] border border-white/5">
+            <span class="text-gray-400 text-[10px] uppercase block font-bold">Likes</span>
+            <span id="modal-media-likes" class="font-extrabold text-white text-sm"></span>
+          </div>
+          <div class="p-2.5 rounded-xl bg-white/[0.02] border border-white/5">
+            <span class="text-gray-400 text-[10px] uppercase block font-bold">Comments</span>
+            <span id="modal-media-comments" class="font-extrabold text-[#00F0FF] text-sm"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-2 pt-4 border-t border-white/5">
+        <a id="modal-btn-download" href="#" 
+           onclick="if (typeof showToast === 'function') showToast('Download initialized! Saving file...', 'success')"
+           class="w-full btn-primary py-3 text-xs flex items-center justify-center gap-2 font-bold shadow-lg shadow-[#725CFF]/20">
+          <i class="fa-solid fa-download text-sm"></i>
+          <span>Download Original HD Media</span>
+        </a>
+        <div class="flex items-center gap-2">
+          <button onclick="copyModalCaption()" class="w-1/2 btn-secondary py-2 text-xs flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-copy text-xs"></i>
+            <span>Copy Caption</span>
+          </button>
+          <a id="modal-ig-link" href="#" target="_blank" class="w-1/2 btn-secondary py-2 text-xs flex items-center justify-center gap-1.5">
+            <i class="fa-brands fa-instagram text-xs"></i>
+            <span>View on IG</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script is:inline>
+  let currentModalMedia = null;
+  let currentCarouselIndex = 0;
+
+  window.openMediaModalFromEl = function(el) {
+    try {
+      const raw = decodeURIComponent(el.getAttribute('data-modal') || '');
+      const data = JSON.parse(raw);
+      openMediaModal(data);
+    } catch (e) {
+      console.error('Error opening media modal:', e);
+    }
+  };
+
+  window.openMediaModal = function(data) {
+    currentModalMedia = data;
+    currentCarouselIndex = 0;
+    const modal = document.getElementById('modal-media-viewer');
+    if (!modal) return;
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    document.body.style.overflow = 'hidden';
+
+    const img = document.getElementById('modal-media-img');
+    const video = document.getElementById('modal-media-video');
+    const chip = document.getElementById('modal-media-type-chip');
+    const nav = document.getElementById('modal-carousel-nav');
+
+    document.getElementById('modal-author-avatar').src = data.authorAvatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=user';
+    document.getElementById('modal-author-handle').innerText = '@' + data.author;
+    document.getElementById('modal-media-date').innerText = new Date(data.date).toLocaleDateString();
+    document.getElementById('modal-media-caption').innerText = data.caption || 'No caption';
+    document.getElementById('modal-media-likes').innerText = Number(data.likes || 0).toLocaleString();
+    document.getElementById('modal-media-comments').innerText = Number(data.comments || 0).toLocaleString();
+
+    const igLink = document.getElementById('modal-ig-link');
+    if (igLink) {
+      igLink.href = data.shortcode ? `https://www.instagram.com/p/${data.shortcode}/` : `https://www.instagram.com/${data.author}/`;
+    }
+
+    if (data.type === 'reel' && data.videoUrl) {
+      img.classList.add('hidden');
+      video.classList.remove('hidden');
+      video.src = data.videoUrl;
+      chip.innerText = 'REEL';
+      chip.className = 'absolute top-4 left-4 badge badge-rose text-xs';
+      nav.classList.add('hidden');
+      document.getElementById('modal-btn-download').href = `/api/download?url=${encodeURIComponent(data.videoUrl)}&filename=${encodeURIComponent(`${data.author}_reel.mp4`)}`;
+    } else if (Array.isArray(data.carousel) && data.carousel.length > 1) {
+      video.classList.add('hidden');
+      img.classList.remove('hidden');
+      renderCarouselSlide();
+      chip.innerText = `CAROUSEL (${data.carousel.length})`;
+      chip.className = 'absolute top-4 left-4 badge badge-cyan text-xs';
+      nav.classList.remove('hidden');
+    } else {
+      video.classList.add('hidden');
+      img.classList.remove('hidden');
+      img.src = data.url;
+      chip.innerText = 'PHOTO';
+      chip.className = 'absolute top-4 left-4 badge badge-purple text-xs';
+      nav.classList.add('hidden');
+      document.getElementById('modal-btn-download').href = `/api/download?url=${encodeURIComponent(data.url)}&filename=${encodeURIComponent(`${data.author}_post.jpg`)}`;
+    }
+  };
+
+  function renderCarouselSlide() {
+    if (!currentModalMedia || !currentModalMedia.carousel) return;
+    const slide = currentModalMedia.carousel[currentCarouselIndex];
+    const img = document.getElementById('modal-media-img');
+    const counter = document.getElementById('modal-carousel-counter');
+    const slideUrl = slide.image_versions2?.candidates?.[0]?.url || slide.thumbnail_url || slide.url || currentModalMedia.url;
+    img.src = slideUrl;
+    counter.innerText = `${currentCarouselIndex + 1}/${currentModalMedia.carousel.length}`;
+    document.getElementById('modal-btn-download').href = `/api/download?url=${encodeURIComponent(slideUrl)}&filename=${encodeURIComponent(`${currentModalMedia.author}_carousel_${currentCarouselIndex + 1}.jpg`)}`;
+  }
+
+  const prevBtn = document.getElementById('modal-carousel-prev');
+  if (prevBtn) {
+    prevBtn.onclick = () => {
+      if (currentModalMedia && currentModalMedia.carousel) {
+        currentCarouselIndex = (currentCarouselIndex - 1 + currentModalMedia.carousel.length) % currentModalMedia.carousel.length;
+        renderCarouselSlide();
+      }
+    };
+  }
+
+  const nextBtn = document.getElementById('modal-carousel-next');
+  if (nextBtn) {
+    nextBtn.onclick = () => {
+      if (currentModalMedia && currentModalMedia.carousel) {
+        currentCarouselIndex = (currentCarouselIndex + 1) % currentModalMedia.carousel.length;
+        renderCarouselSlide();
+      }
+    };
+  }
+
+  window.closeMediaModal = function() {
+    const modal = document.getElementById('modal-media-viewer');
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+    const video = document.getElementById('modal-media-video');
+    if (video) {
+      video.pause();
+      video.src = '';
+    }
+    document.body.style.overflow = '';
+  };
+
+  window.copyModalCaption = function() {
+    const text = document.getElementById('modal-media-caption')?.innerText || '';
+    navigator.clipboard.writeText(text);
+    if (typeof showToast === 'function') showToast('Caption copied to clipboard!', 'success');
+  };
+
+  window.switchReportTab = function(tab) {
+    document.querySelectorAll('.rep-tab-btn').forEach((b) => {
+      b.className = 'rep-tab-btn px-4 py-2 rounded-xl text-xs font-bold text-gray-400 hover:text-white bg-white/[0.03] hover:bg-white/[0.08] flex items-center gap-2 transition';
+    });
+    const activeBtn = document.getElementById('rep-btn-' + tab);
+    if (activeBtn) {
+      activeBtn.className = 'rep-tab-btn px-4 py-2 rounded-xl text-xs font-bold bg-[#725CFF] text-white flex items-center gap-2 transition';
+    }
+
+    if (tab === 'stories') {
+      document.getElementById('rep-grid-all')?.classList.add('hidden');
+      document.getElementById('rep-grid-stories')?.classList.remove('hidden');
+    } else {
+      document.getElementById('rep-grid-stories')?.classList.add('hidden');
+      document.getElementById('rep-grid-all')?.classList.remove('hidden');
+      document.querySelectorAll('#rep-grid-all > div').forEach((card) => {
+        if (tab === 'all') {
+          card.classList.remove('hidden');
+        } else if (tab === 'posts') {
+          const isPost = card.querySelector('.fa-image') || card.querySelector('.fa-clone');
+          if (isPost) card.classList.remove('hidden');
+          else card.classList.add('hidden');
+        } else if (tab === 'reels') {
+          const isReel = card.querySelector('.fa-film');
+          if (isReel) card.classList.remove('hidden');
+          else card.classList.add('hidden');
+        } else if (tab === 'tagged') {
+          const isTagged = card.querySelector('.fa-user-tag') || card.querySelector('.fa-tag');
+          if (isTagged) card.classList.remove('hidden');
+          else card.classList.add('hidden');
+        }
+      });
+    }
+  };
+</script>
+

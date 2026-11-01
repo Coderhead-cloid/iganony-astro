@@ -1,0 +1,255 @@
+---
+import Layout from '../../layouts/Layout.astro';
+
+export const prerender = false;
+
+const plans = [
+  {
+    key: 'monthly',
+    name: 'Monthly Plan',
+    price: '$29.00',
+    period: 'per month',
+    badge: 'Flexible',
+    popular: false,
+    savings: '',
+    features: [
+      'Track 1 Instagram Account 24/7',
+      'High-Speed Profile & Bio Telemetry',
+      'Feed Posts & High-Resolution Photos',
+      'Fast Reels Fetching with Instant Thumbnails',
+      'Direct HD Video & Photo Downloader',
+      'Carousel Slide Inspection & Extraction',
+      'Public Media API Access (/api/media)',
+      'Automated 12-Hour Refresh Cycle',
+    ],
+  },
+  {
+    key: 'quarterly',
+    name: 'Quarterly Plan',
+    price: '$59.00',
+    period: 'per 3 months ($19.67/mo)',
+    badge: 'Most Popular',
+    popular: true,
+    savings: 'Save 32%',
+    features: [
+      'Everything in Monthly Plan',
+      'Track 3 Instagram Accounts 24/7',
+      'Tagged Media & Mentions Telemetry',
+      'Anonymous Stories & Highlights Daily Archive',
+      'CDN Thumbnail Proxy & Bypass Hotlink Protection',
+      '6-Hour Accelerated Scanning Cycle',
+      'Batch Media Download in High Definition',
+      'Direct Dedicated VIP Support',
+    ],
+  },
+  {
+    key: 'annual',
+    name: 'Annual Plan',
+    price: '$89.00',
+    period: 'per year ($7.41/mo)',
+    badge: 'Best Value',
+    popular: false,
+    savings: 'Save 74%',
+    features: [
+      'Everything in Quarterly Plan',
+      'Full 365 Days Historical Media Archive',
+      'Unlimited Instagram Account Tracking',
+      'Full Developer Media API Access & Webhooks',
+      'Complete Full Toolkit Lifetime Access',
+      'Automated Daily Intelligence PDF Digest',
+      'Stripe Buyer Protection Guarantee',
+    ],
+  },
+];
+
+const pageTitle = "Subscription Plans & Pricing | DolphinRadar Pro";
+---
+
+<Layout title={pageTitle}>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    
+    <div class="text-center max-w-2xl mx-auto mb-16">
+      <span class="badge badge-purple text-xs mb-3">Subscription Plans</span>
+      <h1 class="text-3xl sm:text-5xl font-extrabold text-white mb-4 font-display">
+        Unlimited Anonymous Instagram Access
+      </h1>
+      <p class="text-sm sm:text-base text-gray-300">
+        Enjoy high-speed anonymous story viewing, batch HD media downloads, unlimited mutual lookups, and developer API access with zero tracking limits.
+      </p>
+    </div>
+
+    <!-- Pricing Cards Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch mb-16">
+      {plans.map((p) => (
+        <div class={`glass-panel p-8 flex flex-col justify-between relative ${p.popular ? 'border-[#725CFF] shadow-2xl shadow-[#725CFF]/20 md:-translate-y-2' : ''}`}>
+          
+          {p.savings && (
+            <div class="absolute -top-3.5 right-6 px-3 py-1 rounded-full bg-gradient-to-r from-[#725CFF] to-[#00F0FF] text-[11px] font-extrabold text-white shadow-lg">
+              {p.savings}
+            </div>
+          )}
+
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <span class="text-xs font-bold uppercase tracking-wider text-gray-400">{p.badge}</span>
+            </div>
+
+            <h3 class="text-2xl font-bold text-white font-display mb-2">{p.name}</h3>
+            
+            <div class="flex items-baseline gap-1 my-6">
+              <span class="text-4xl sm:text-5xl font-black text-white font-display">{p.price}</span>
+              <span class="text-xs text-gray-400">/ {p.period}</span>
+            </div>
+
+            <ul class="space-y-3.5 text-xs text-gray-300 py-6 border-y border-white/5">
+              {p.features.map((feat) => (
+                <li class="flex items-center gap-3">
+                  <i class="fa-solid fa-check-circle text-[#725CFF] text-sm shrink-0"></i>
+                  <span>{feat}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div class="pt-8">
+            <button data-open-modal="modal-stripe-checkout" data-plan={p.key}
+                    class={`w-full flex items-center justify-center gap-2 ${p.popular ? 'btn-primary py-3.5 text-sm' : 'btn-secondary py-3 text-xs'}`}>
+              <span>Select {p.name}</span>
+              <i class="fa-solid fa-arrow-right text-xs"></i>
+            </button>
+          </div>
+
+        </div>
+      ))}
+    </div>
+
+    <!-- Security Guarantee -->
+    <div class="glass-panel p-8 max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
+      <div class="flex items-center gap-4">
+        <div class="w-14 h-14 rounded-2xl bg-[#635BFF]/20 flex items-center justify-center text-[#635BFF] text-2xl">
+          <i class="fa-brands fa-stripe"></i>
+        </div>
+        <div>
+          <h4 class="text-sm font-bold text-white">Stripe Verified Payment Gateway</h4>
+          <p class="text-xs text-gray-400 mt-0.5">
+            Payment security is provided by Stripe. None of your card or billing data is stored on DolphinRadar servers.
+          </p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 text-xs font-bold text-[#10B981] whitespace-nowrap">
+        <i class="fa-solid fa-lock"></i>
+        <span>256-Bit SSL Encrypted</span>
+      </div>
+    </div>
+
+    <!-- Modal: Stripe Checkout Simulation -->
+    <div id="modal-stripe-checkout" class="modal-container fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden items-center justify-center p-4">
+      <div class="bg-[#131627] border border-white/10 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+        <button data-close-modal class="absolute top-4 right-4 text-gray-400 hover:text-white text-xl">&times;</button>
+        
+        <div class="flex items-center gap-3 mb-6">
+          <div class="w-10 h-10 rounded-xl bg-[#635BFF]/20 flex items-center justify-center text-[#635BFF]">
+            <i class="fa-brands fa-stripe text-2xl"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-white">Stripe Secure Checkout</h3>
+            <p class="text-[11px] text-gray-400">Instant activation & 100% money-back guarantee</p>
+          </div>
+        </div>
+
+        <form id="stripe-checkout-form" class="space-y-4">
+          <div>
+            <label class="block text-xs font-medium text-gray-300 mb-1">Your Email (for activity reports)</label>
+            <input type="email" id="checkout-email" name="email" value="subscriber@example.com" required
+                   class="w-full bg-[#0B0D17] border border-white/10 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-[#725CFF]" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-gray-300 mb-2">Selected Plan</label>
+            <div class="grid grid-cols-3 gap-2">
+              <label class="p-2.5 rounded-xl border border-white/10 bg-white/[0.02] flex flex-col items-center cursor-pointer hover:border-[#725CFF]">
+                <input type="radio" name="plan" value="monthly" class="mb-1" />
+                <span class="text-[11px] font-bold text-white">Monthly</span>
+                <span class="text-[10px] text-gray-400">$29/mo</span>
+              </label>
+              <label class="p-2.5 rounded-xl border border-[#725CFF] bg-[#725CFF]/10 flex flex-col items-center cursor-pointer">
+                <input type="radio" name="plan" value="quarterly" checked class="mb-1" />
+                <span class="text-[11px] font-bold text-[#C4B5FD]">Quarterly</span>
+                <span class="text-[10px] text-[#00F0FF]">$59/3mo</span>
+              </label>
+              <label class="p-2.5 rounded-xl border border-white/10 bg-white/[0.02] flex flex-col items-center cursor-pointer hover:border-[#725CFF]">
+                <input type="radio" name="plan" value="annual" class="mb-1" />
+                <span class="text-[11px] font-bold text-white">Annual</span>
+                <span class="text-[10px] text-gray-400">$89/yr</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="p-3 rounded-xl bg-white/[0.02] border border-white/5 space-y-2">
+            <span class="text-[10px] uppercase font-bold text-gray-400 block">Test Payment Card Simulation</span>
+            <div class="flex items-center gap-2 text-xs text-gray-300 font-mono">
+              <i class="fa-solid fa-credit-card text-gray-500"></i>
+              <span>•••• •••• •••• 4242</span>
+              <span class="ml-auto">12/28</span>
+            </div>
+          </div>
+
+          <button type="submit" id="checkout-submit-btn" class="w-full btn-primary py-3 text-sm flex items-center justify-center gap-2">
+            <i class="fa-solid fa-lock text-xs"></i>
+            <span>Complete Purchase & Activate Radar</span>
+          </button>
+        </form>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const checkoutForm = document.getElementById('stripe-checkout-form');
+    if (checkoutForm) {
+      checkoutForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const submitBtn = document.getElementById('checkout-submit-btn');
+        if (submitBtn) submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Activating...';
+
+        const formData = new FormData(checkoutForm as HTMLFormElement);
+        const email = formData.get('email');
+        const plan = formData.get('plan');
+
+        try {
+          const res = await fetch('/api/subscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, plan })
+          });
+          const result = await res.json();
+          if (result.success) {
+            alert(result.message || 'Subscription successfully activated!');
+            const modal = document.getElementById('modal-stripe-checkout');
+            if (modal) {
+              modal.classList.add('hidden');
+              modal.classList.remove('flex');
+            }
+          } else {
+            alert('Failed to subscribe: ' + (result.error || 'Unknown error'));
+          }
+        } catch (err) {
+          alert('Error completing payment simulation.');
+        } finally {
+          if (submitBtn) submitBtn.innerHTML = '<i class="fa-solid fa-lock text-xs"></i> <span>Complete Purchase & Activate Radar</span>';
+        }
+      });
+    }
+
+    // Connect plan selection buttons to select radio
+    document.querySelectorAll('[data-plan]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const planKey = btn.getAttribute('data-plan');
+        const radio = document.querySelector(`input[name="plan"][value="${planKey}"]`) as HTMLInputElement;
+        if (radio) radio.checked = true;
+      });
+    });
+  </script>
+</Layout>
+

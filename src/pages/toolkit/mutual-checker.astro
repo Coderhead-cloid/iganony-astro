@@ -1,0 +1,691 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { MutualIntelligenceService } from '../../services/mutualIntelligence';
+
+const url = Astro.url;
+let userA = url.searchParams.get('user1') || url.searchParams.get('userA') || '';
+let userB = url.searchParams.get('user2') || url.searchParams.get('userB') || '';
+
+const user1Following = url.searchParams.get('user1_following') || url.searchParams.get('list1') || '';
+const user1Followers = url.searchParams.get('user1_followers') || '';
+const user2Following = url.searchParams.get('user2_following') || url.searchParams.get('list2') || '';
+const user2Followers = url.searchParams.get('user2_followers') || '';
+const forceRefresh = url.searchParams.get('refresh') === '1' || url.searchParams.get('force') === 'true';
+
+const hasLists = Boolean(user1Following || user1Followers || user2Following || user2Followers);
+
+let mutuals: any = null;
+let error = '';
+const hasSubmit = Boolean(userA && userB);
+
+if (hasSubmit) {
+  try {
+    const mutualService = new MutualIntelligenceService();
+    mutuals = await mutualService.findMutualConnections(
+      userA,
+      userB,
+      forceRefresh || hasLists,
+      hasLists ? {
+        user1_following: user1Following,
+        user1_followers: user1Followers,
+        user2_following: user2Following,
+        user2_followers: user2Followers,
+      } : undefined
+    );
+  } catch (err: any) {
+    error = err.message || 'Error comparing profiles';
+  }
+}
+
+const p1 = mutuals?.profile1;
+const p2 = mutuals?.profile2;
+const rel = mutuals?.relationship;
+const metrics = mutuals?.metrics;
+const allMutuals = mutuals?.all_mutuals || [];
+const mutualFollowing = mutuals?.mutual_following || [];
+const mutualFollowers = mutuals?.mutual_followers || [];
+---
+
+<Layout title="Find Mutual Followers & Following | IGAnony Pro">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    
+    <!-- Hero Header -->
+    <div class="text-center max-w-3xl mx-auto mb-10">
+      <span class="badge badge-purple text-xs mb-3 inline-flex items-center gap-1.5">
+        <i class="fa-solid fa-users-viewfinder text-[10px]"></i> Relationship Telemetry Engine
+      </span>
+      <h1 class="text-3xl sm:text-5xl font-extrabold text-white mb-3 font-display tracking-tight">
+        Find Mutual Followers & Following
+      </h1>
+      <p class="text-xs sm:text-sm text-gray-400 max-w-xl mx-auto">
+        Compare two Instagram accounts side-by-side. Our algorithm cross-references their complete following and followers lists to uncover common connections, mutual friends, and direct relationship status.
+      </p>
+    </div>
+
+    <!-- Dual Comparator Search Box -->
+    <div class="glass-panel p-6 sm:p-8 max-w-3xl mx-auto mb-10 relative overflow-hidden">
+      <div class="absolute -right-16 -top-16 w-60 h-60 bg-[#725CFF]/15 rounded-full blur-3xl pointer-events-none"></div>
+
+      <form id="mutuals-form" action="/toolkit/mutual-checker" method="GET" class="space-y-4 relative z-10">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 relative">
+          
+          <!-- Account 1 -->
+          <div>
+            <label class="block text-xs font-bold text-gray-300 mb-1.5 uppercase tracking-wider">
+              First Profile <span class="text-[#725CFF]">• Account A</span>
+            </label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-500 font-bold text-sm">@</span>
+              <input type="text" id="input-user1" name="user1" value={userA} required
+                     placeholder="e.g. cristiano"
+                     class="w-full bg-[#0B0D17] border border-white/10 rounded-xl pl-9 pr-3 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#725CFF] transition">
+            </div>
+          </div>
+
+          <!-- Swap Button (Desktop) -->
+          <button type="button" onclick="swapProfiles()" title="Swap accounts" 
+                  class="hidden sm:flex absolute left-1/2 top-9 -translate-x-1/2 w-9 h-9 rounded-full bg-[#131627] border border-white/20 hover:border-[#725CFF] text-gray-300 hover:text-white items-center justify-center text-xs shadow-xl hover:scale-110 transition duration-200 z-20">
+            <i class="fa-solid fa-arrow-right-arrow-left"></i>
+          </button>
+
+          <!-- Swap Button (Mobile) -->
+          <div class="sm:hidden flex justify-center -my-1.5 relative z-20">
+            <button type="button" onclick="swapProfiles()" title="Swap accounts" 
+                    class="w-8 h-8 rounded-full bg-[#131627] border border-white/20 text-gray-300 flex items-center justify-center text-xs shadow-lg active:scale-95 transition">
+              <i class="fa-solid fa-arrow-up-down"></i>
+            </button>
+          </div>
+
+          <!-- Account 2 -->
+          <div>
+            <label class="block text-xs font-bold text-gray-300 mb-1.5 uppercase tracking-wider">
+              Second Profile <span class="text-[#00F0FF]">• Account B</span>
+            </label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-500 font-bold text-sm">@</span>
+              <input type="text" id="input-user2" name="user2" value={userB} required
+                     placeholder="e.g. leomessi"
+                     class="w-full bg-[#0B0D17] border border-white/10 rounded-xl pl-9 pr-3 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#00F0FF] transition">
+            </div>
+          </div>
+        </div>
+
+        <!-- Expandable Direct List Tally Section -->
+        <div class="pt-2">
+          <button type="button" onclick="toggleTallySection()" id="btn-toggle-tally" 
+                  class="text-xs font-semibold text-purple-300 hover:text-white flex items-center gap-1.5 transition">
+            <i class="fa-solid fa-layer-group text-[#725CFF]"></i>
+            <span id="toggle-tally-label">Paste Follower / Following Lists to Tally Directly &darr;</span>
+          </button>
+          
+          <div id="tally-section" class={`${hasLists ? 'block' : 'hidden'} mt-3 p-4 rounded-2xl bg-black/40 border border-white/5 space-y-4`}>
+            <p class="text-[11px] text-gray-400">
+              Paste the followers or following usernames for each profile (one per line, comma or space separated). Our engine will tally them and output the exact common mutual IDs.
+            </p>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-[11px] font-bold text-purple-300 mb-1">
+                  Account A Follow List:
+                </label>
+                <textarea name="user1_following" rows="3" placeholder="Paste Account A's following or followers here (e.g. @user1, @user2)"
+                          class="w-full bg-[#0B0D17] border border-white/10 rounded-xl px-3 py-2 text-white font-mono text-[11px] focus:outline-none focus:border-[#725CFF]">{user1Following}</textarea>
+              </div>
+
+              <div>
+                <label class="block text-[11px] font-bold text-cyan-300 mb-1">
+                  Account B Follow List:
+                </label>
+                <textarea name="user2_following" rows="3" placeholder="Paste Account B's following or followers here (e.g. @user2, @user3)"
+                          class="w-full bg-[#0B0D17] border border-white/10 rounded-xl px-3 py-2 text-white font-mono text-[11px] focus:outline-none focus:border-[#00F0FF]">{user2Following}</textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="w-full btn-primary py-3.5 text-sm font-bold flex items-center justify-center gap-2 shadow-lg shadow-[#725CFF]/20 mt-2">
+          <i class="fa-solid fa-satellite-dish"></i>
+          <span>Cross-Reference & Tally Mutuals Now</span>
+        </button>
+      </form>
+    </div>
+
+    <!-- Error State -->
+    {error && (
+      <div class="max-w-3xl mx-auto mb-8 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs flex items-center gap-3">
+        <i class="fa-solid fa-circle-exclamation text-base shrink-0"></i>
+        <span>{error}</span>
+      </div>
+    )}
+
+    <!-- Prompt: Enter usernames first -->
+    {!hasSubmit && !error && (
+      <div class="max-w-2xl mx-auto mb-8 p-8 text-center glass-panel border border-white/5 rounded-2xl">
+        <div class="w-16 h-16 rounded-2xl bg-[#725CFF]/10 border border-[#725CFF]/20 flex items-center justify-center text-2xl text-[#725CFF] mx-auto mb-4">
+          <i class="fa-solid fa-users-viewfinder"></i>
+        </div>
+        <h3 class="text-lg font-bold text-white mb-2 font-display">Enter Two Instagram Usernames</h3>
+        <p class="text-xs text-gray-400 max-w-sm mx-auto">
+          Type both Instagram IDs above and click <strong class="text-white">Cross-Reference Mutuals Now</strong> to compare their mutual connections, shared followers, and relationship status.
+        </p>
+      </div>
+    )}
+
+    <!-- Results Display -->
+    {hasSubmit && p1 && p2 && metrics && (
+      <div class="space-y-8">
+        
+        <!-- Comparison Overview Card -->
+        <div class="glass-panel p-6 sm:p-8 relative overflow-hidden">
+          <div class="absolute -right-20 -bottom-20 w-80 h-80 bg-[#00F0FF]/10 rounded-full blur-3xl pointer-events-none"></div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-7 gap-6 items-center relative z-10">
+            
+            <!-- Account 1 Summary -->
+            <div class="lg:col-span-3 flex items-center gap-4 bg-black/25 p-4 rounded-2xl border border-white/5">
+              <img src={p1.avatar_url} alt="avatar" 
+                   referrerpolicy="no-referrer"
+                   class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border-2 border-[#725CFF]/30 shadow-lg shrink-0" />
+              <div class="min-w-0 flex-grow">
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <h3 class="font-extrabold text-white text-base sm:text-lg font-display truncate">@{p1.username}</h3>
+                  {p1.is_verified && (
+                    <i class="fa-solid fa-circle-check text-[#00F0FF] text-xs" title="Verified"></i>
+                  )}
+                </div>
+                <p class="text-xs text-gray-300 truncate">{p1.full_name}</p>
+                <div class="flex items-center gap-3 mt-2 text-[11px] text-gray-400">
+                  <span><strong class="text-white">{p1.followers_count.toLocaleString()}</strong> followers</span>
+                  <span>•</span>
+                  <span><strong class="text-white">{p1.following_count.toLocaleString()}</strong> following</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Central Connection Bridge -->
+            <div class="lg:col-span-1 flex flex-col items-center justify-center text-center py-2">
+              <div class="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold border shadow-xl mb-2"
+                   style={`background: ${metrics.intimacy_color}20; border-color: ${metrics.intimacy_color}40; color: ${metrics.intimacy_color};`}>
+                <i class="fa-solid fa-link"></i>
+              </div>
+              <span class="text-xs font-black tracking-tight" style={`color: ${metrics.intimacy_color};`}>
+                {metrics.affinity_score}%
+              </span>
+              <span class="text-[9px] uppercase tracking-wider text-gray-400 font-bold block mt-0.5">
+                Shared Affinity
+              </span>
+            </div>
+
+            <!-- Account 2 Summary -->
+            <div class="lg:col-span-3 flex items-center gap-4 bg-black/25 p-4 rounded-2xl border border-white/5">
+              <img src={p2.avatar_url} alt="avatar" 
+                   referrerpolicy="no-referrer"
+                   class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border-2 border-[#00F0FF]/30 shadow-lg shrink-0" />
+              <div class="min-w-0 flex-grow">
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <h3 class="font-extrabold text-white text-base sm:text-lg font-display truncate">@{p2.username}</h3>
+                  {p2.is_verified && (
+                    <i class="fa-solid fa-circle-check text-[#00F0FF] text-xs" title="Verified"></i>
+                  )}
+                </div>
+                <p class="text-xs text-gray-300 truncate">{p2.full_name}</p>
+                <div class="flex items-center gap-3 mt-2 text-[11px] text-gray-400">
+                  <span><strong class="text-white">{p2.followers_count.toLocaleString()}</strong> followers</span>
+                  <span>•</span>
+                  <span><strong class="text-white">{p2.following_count.toLocaleString()}</strong> following</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Reciprocity Status Banner -->
+          <div class="mt-6 pt-5 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-3 text-xs">
+              <div class="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-gray-300 shrink-0">
+                <i class="fa-solid fa-handshake text-sm"></i>
+              </div>
+              <div>
+                <span class="font-bold text-white block">
+                  Direct Relationship: <span class="text-[#00F0FF]">{rel.status_label}</span>
+                </span>
+                <div class="flex items-center gap-4 text-[11px] text-gray-400 mt-0.5">
+                  <span class="flex items-center gap-1.5">
+                    <i class={`fa-solid ${rel.user1_follows_user2 ? 'fa-circle-check text-[#10B981]' : 'fa-circle-xmark text-gray-500'}`}></i>
+                    @{p1.username} follows @{p2.username}
+                  </span>
+                  <span class="flex items-center gap-1.5">
+                    <i class={`fa-solid ${rel.user2_follows_user1 ? 'fa-circle-check text-[#10B981]' : 'fa-circle-xmark text-gray-500'}`}></i>
+                    @{p2.username} follows @{p1.username}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2 flex-wrap">
+              <button type="button" onclick={`openImportModal('${p1.username}')`} 
+                      class="btn-secondary py-2 px-3 text-xs font-semibold flex items-center gap-1.5 text-purple-300 hover:text-white border border-[#725CFF]/30 hover:border-[#725CFF]" title="Import/Sync Real Follow Lists">
+                <i class="fa-solid fa-user-plus text-[#725CFF]"></i>
+                <span>Sync Follow Lists</span>
+              </button>
+              <a href={`/api/mutuals/export?user1=${encodeURIComponent(p1.username)}&user2=${encodeURIComponent(p2.username)}`} 
+                 class="btn-secondary py-2 px-3 text-xs font-semibold flex items-center gap-1.5" title="Export as CSV">
+                <i class="fa-solid fa-download"></i>
+                <span>Export CSV</span>
+              </a>
+              <a href={`/api/mutuals?user1=${encodeURIComponent(p1.username)}&user2=${encodeURIComponent(p2.username)}`} target="_blank"
+                 class="btn-secondary py-2 px-3 text-xs font-semibold flex items-center gap-1.5 text-gray-400 hover:text-white" title="View JSON API">
+                <i class="fa-solid fa-code"></i>
+                <span>JSON API</span>
+              </a>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- 4 Metric Cards -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div class="glass-panel p-4 flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-[#725CFF]/15 text-[#725CFF] flex items-center justify-center text-lg shrink-0">
+              <i class="fa-solid fa-user-plus"></i>
+            </div>
+            <div>
+              <span class="text-[10px] uppercase text-gray-400 block font-bold">Both Follow</span>
+              <span class="text-lg font-extrabold text-white">{metrics.mutual_following_count.toLocaleString()}</span>
+            </div>
+          </div>
+
+          <div class="glass-panel p-4 flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-[#00F0FF]/15 text-[#00F0FF] flex items-center justify-center text-lg shrink-0">
+              <i class="fa-solid fa-users"></i>
+            </div>
+            <div>
+              <span class="text-[10px] uppercase text-gray-400 block font-bold">Follow Both</span>
+              <span class="text-lg font-extrabold text-[#00F0FF]">{metrics.mutual_followers_count.toLocaleString()}</span>
+            </div>
+          </div>
+
+          <div class="glass-panel p-4 flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-[#10B981]/15 text-[#10B981] flex items-center justify-center text-lg shrink-0">
+              <i class="fa-solid fa-network-wired"></i>
+            </div>
+            <div>
+              <span class="text-[10px] uppercase text-gray-400 block font-bold">Unique Mutuals</span>
+              <span class="text-lg font-extrabold text-[#10B981]">{metrics.total_unique_mutuals.toLocaleString()}</span>
+            </div>
+          </div>
+
+          <div class="glass-panel p-4 flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-[#F59E0B]/15 text-[#F59E0B] flex items-center justify-center text-lg shrink-0">
+              <i class="fa-solid fa-circle-check"></i>
+            </div>
+            <div>
+              <span class="text-[10px] uppercase text-gray-400 block font-bold">Verified Shared</span>
+              <span class="text-lg font-extrabold text-[#F59E0B]">{metrics.verified_mutuals_count.toLocaleString()}</span>
+            </div>
+          </div>
+        </div>
+
+        {allMutuals.length === 0 ? (
+          <div class="glass-panel p-10 text-center max-w-2xl mx-auto my-6 border border-white/10 relative overflow-hidden">
+            <div class="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-2xl text-gray-400 mx-auto mb-4">
+              <i class="fa-solid fa-users-slash"></i>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2 font-display">No Mutual Connections Detected</h3>
+            <p class="text-xs sm:text-sm text-gray-400 max-w-md mx-auto mb-5 leading-relaxed">
+              @{p1.username} and @{p2.username} do not share any public mutual followers, shared following, or tagged collaborations. These accounts operate in completely separate social circles.
+            </p>
+            <div class="mb-6 flex items-center justify-center gap-2">
+              <button type="button" onclick={`openImportModal('${p1.username}')`} class="btn-primary py-2 px-4 text-xs font-semibold flex items-center gap-2">
+                <i class="fa-solid fa-file-import"></i>
+                <span>Sync / Import Real Follow List for @{p1.username}</span>
+              </button>
+            </div>
+            <div class="pt-6 border-t border-white/5">
+              <span class="text-xs text-gray-500 font-semibold uppercase tracking-wider block mb-3">Tally Between These Two Accounts:</span>
+              <div class="flex items-center justify-center gap-2 flex-wrap">
+                <button type="button" onclick={`openImportModal('${p1.username}')`} class="btn-secondary py-1.5 px-3 text-xs flex items-center gap-1.5 text-purple-300">
+                  <i class="fa-solid fa-list-check text-[#725CFF]"></i> Add/Sync @{p1.username} List
+                </button>
+                <button type="button" onclick={`openImportModal('${p2.username}')`} class="btn-secondary py-1.5 px-3 text-xs flex items-center gap-1.5 text-cyan-300">
+                  <i class="fa-solid fa-list-check text-[#00F0FF]"></i> Add/Sync @{p2.username} List
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div class="space-y-6">
+            <!-- Filter & Search Bar -->
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 border-b border-white/5 pb-4">
+              <!-- Navigation Tabs -->
+              <div class="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
+                <button onclick="switchMutualTab('all')" id="btn-tab-all" class="mutual-tab-btn px-4 py-2 rounded-xl text-xs font-bold bg-[#725CFF] text-white flex items-center gap-2 transition shrink-0">
+                  <i class="fa-solid fa-grip"></i>
+                  <span>All Mutuals ({allMutuals.length})</span>
+                </button>
+                <button onclick="switchMutualTab('following')" id="btn-tab-following" class="mutual-tab-btn px-4 py-2 rounded-xl text-xs font-bold text-gray-400 hover:text-white bg-white/[0.03] hover:bg-white/[0.08] flex items-center gap-2 transition shrink-0">
+                  <i class="fa-solid fa-user-plus"></i>
+                  <span>Accounts Both Follow ({mutualFollowing.length})</span>
+                </button>
+                <button onclick="switchMutualTab('followers')" id="btn-tab-followers" class="mutual-tab-btn px-4 py-2 rounded-xl text-xs font-bold text-gray-400 hover:text-white bg-white/[0.03] hover:bg-white/[0.08] flex items-center gap-2 transition shrink-0">
+                  <i class="fa-solid fa-users"></i>
+                  <span>Accounts Following Both ({mutualFollowers.length})</span>
+                </button>
+              </div>
+
+              <!-- Live Search Filter -->
+              <div class="relative w-full sm:w-64">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500 text-xs">
+                  <i class="fa-solid fa-magnifying-glass"></i>
+                </span>
+                <input type="text" id="mutual-search-input" onkeyup="filterMutualCards()" placeholder="Filter mutual accounts..."
+                       class="w-full bg-[#0B0D17] border border-white/10 rounded-xl pl-8 pr-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-[#725CFF]">
+              </div>
+            </div>
+
+            <!-- Mutual Grid: All -->
+            <div id="grid-all" class="mutual-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {allMutuals.map((m: any) => (
+                <div class="mutual-card glass-panel p-4 flex flex-col justify-between group hover:border-[#725CFF]/40 transition duration-200"
+                     data-username={m.username.toLowerCase()} data-name={m.full_name.toLowerCase()}>
+                  
+                  <div class="flex items-start gap-3 mb-3">
+                    <img src={m.avatar_url} alt="avatar" 
+                         loading="lazy" referrerpolicy="no-referrer"
+                         class="w-12 h-12 rounded-xl object-cover border border-white/10 group-hover:scale-105 transition duration-200 shrink-0" />
+                    
+                    <div class="min-w-0 flex-grow">
+                      <div class="flex items-center gap-1.5 truncate">
+                        <span class="text-xs font-bold text-white truncate">@{m.username}</span>
+                        {m.is_verified && (
+                          <i class="fa-solid fa-circle-check text-[#00F0FF] text-[10px]" title="Verified"></i>
+                        )}
+                      </div>
+                      <p class="text-[11px] text-gray-400 truncate mt-0.5">{m.full_name}</p>
+                      
+                      <span class={`mt-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-bold ${m.connection_type === 'dual_mutual' ? 'bg-[#725CFF]/20 text-[#C4B5FD] border border-[#725CFF]/30' : (m.connection_type === 'mutual_following' ? 'bg-[#00F0FF]/20 text-[#00F0FF] border border-[#00F0FF]/30' : 'bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/30')}`}>
+                        <i class={`fa-solid ${m.connection_type === 'dual_mutual' ? 'fa-link' : (m.connection_type === 'mutual_following' ? 'fa-user-plus' : 'fa-users')}`}></i>
+                        {m.label || 'Mutual Connection'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div class="pt-3 border-t border-white/5 flex items-center justify-between text-[11px]">
+                    <a href={`/report/${m.username}`} class="text-[#725CFF] hover:text-[#00F0FF] font-semibold flex items-center gap-1 transition">
+                      <span>Inspect Profile</span>
+                      <i class="fa-solid fa-arrow-right text-[9px]"></i>
+                    </a>
+                    <a href={m.instagram_link} target="_blank" rel="noopener noreferrer" class="text-gray-500 hover:text-white transition" title="Open on Instagram">
+                      <i class="fa-brands fa-instagram text-xs"></i>
+                    </a>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <!-- Mutual Grid: Following -->
+            <div id="grid-following" class="mutual-grid hidden grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {mutualFollowing.map((m: any) => (
+                <div class="mutual-card glass-panel p-4 flex flex-col justify-between group hover:border-[#00F0FF]/40 transition duration-200"
+                     data-username={m.username.toLowerCase()} data-name={m.full_name.toLowerCase()}>
+                  <div class="flex items-start gap-3 mb-3">
+                    <img src={m.avatar_url} alt="avatar" 
+                         loading="lazy" referrerpolicy="no-referrer"
+                         class="w-12 h-12 rounded-xl object-cover border border-white/10 shrink-0" />
+                    <div class="min-w-0 flex-grow">
+                      <div class="flex items-center gap-1.5 truncate">
+                        <span class="text-xs font-bold text-white truncate">@{m.username}</span>
+                        {m.is_verified && (
+                          <i class="fa-solid fa-circle-check text-[#00F0FF] text-[10px]"></i>
+                        )}
+                      </div>
+                      <p class="text-[11px] text-gray-400 truncate mt-0.5">{m.full_name}</p>
+                      <span class="mt-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-bold bg-[#00F0FF]/20 text-[#00F0FF] border border-[#00F0FF]/30">
+                        <i class="fa-solid fa-user-plus"></i> Both Follow
+                      </span>
+                    </div>
+                  </div>
+                  <div class="pt-3 border-t border-white/5 flex items-center justify-between text-[11px]">
+                    <a href={`/report/${m.username}`} class="text-[#00F0FF] hover:underline font-semibold flex items-center gap-1">
+                      <span>Inspect Profile</span>
+                      <i class="fa-solid fa-arrow-right text-[9px]"></i>
+                    </a>
+                    <a href={m.instagram_link} target="_blank" rel="noopener noreferrer" class="text-gray-500 hover:text-white">
+                      <i class="fa-brands fa-instagram text-xs"></i>
+                    </a>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <!-- Mutual Grid: Followers -->
+            <div id="grid-followers" class="mutual-grid hidden grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {mutualFollowers.map((m: any) => (
+                <div class="mutual-card glass-panel p-4 flex flex-col justify-between group hover:border-[#10B981]/40 transition duration-200"
+                     data-username={m.username.toLowerCase()} data-name={m.full_name.toLowerCase()}>
+                  <div class="flex items-start gap-3 mb-3">
+                    <img src={m.avatar_url} alt="avatar" 
+                         loading="lazy" referrerpolicy="no-referrer"
+                         class="w-12 h-12 rounded-xl object-cover border border-white/10 shrink-0" />
+                    <div class="min-w-0 flex-grow">
+                      <div class="flex items-center gap-1.5 truncate">
+                        <span class="text-xs font-bold text-white truncate">@{m.username}</span>
+                        {m.is_verified && (
+                          <i class="fa-solid fa-circle-check text-[#10B981] text-[10px]"></i>
+                        )}
+                      </div>
+                      <p class="text-[11px] text-gray-400 truncate mt-0.5">{m.full_name}</p>
+                      <span class="mt-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-bold bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/30">
+                        <i class="fa-solid fa-users"></i> Follows Both
+                      </span>
+                    </div>
+                  </div>
+                  <div class="pt-3 border-t border-white/5 flex items-center justify-between text-[11px]">
+                    <a href={`/report/${m.username}`} class="text-[#10B981] hover:underline font-semibold flex items-center gap-1">
+                      <span>Inspect Profile</span>
+                      <i class="fa-solid fa-arrow-right text-[9px]"></i>
+                    </a>
+                    <a href={m.instagram_link} target="_blank" rel="noopener noreferrer" class="text-gray-500 hover:text-white">
+                      <i class="fa-brands fa-instagram text-xs"></i>
+                    </a>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+      </div>
+    )}
+
+  </div>
+
+  <!-- Import/Sync Connections Modal -->
+  <div id="import-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm hidden p-4">
+    <div class="glass-panel p-6 max-w-lg w-full relative border border-white/20 shadow-2xl rounded-2xl bg-[#0D101F]">
+      <button type="button" onclick="closeImportModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white text-lg">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-10 h-10 rounded-xl bg-[#725CFF]/20 text-[#725CFF] flex items-center justify-center text-lg">
+          <i class="fa-solid fa-users-gear"></i>
+        </div>
+        <div>
+          <h3 class="text-base font-bold text-white font-display">Sync / Import Real Follow Lists</h3>
+          <p class="text-xs text-gray-400">Add authentic following or followers to cross-reference with 100% precision.</p>
+        </div>
+      </div>
+
+      <form id="import-form" onsubmit="submitImportConnections(event)" class="space-y-4 text-xs">
+        <div>
+          <label class="block font-bold text-gray-300 mb-1">Target Account:</label>
+          <input type="text" id="import-username" name="username" required placeholder="e.g. gaurav_rathi83"
+                 class="w-full bg-[#0B0D17] border border-white/10 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-[#725CFF]">
+        </div>
+
+        <div>
+          <label class="block font-bold text-gray-300 mb-1">List Type:</label>
+          <div class="grid grid-cols-2 gap-3">
+            <label class="flex items-center gap-2 p-2.5 rounded-xl border border-white/10 bg-white/[0.02] cursor-pointer hover:border-[#725CFF]/50">
+              <input type="radio" name="connection_type" value="following" checked class="text-[#725CFF]">
+              <span class="text-gray-300">Following (Whom they follow)</span>
+            </label>
+            <label class="flex items-center gap-2 p-2.5 rounded-xl border border-white/10 bg-white/[0.02] cursor-pointer hover:border-[#00F0FF]/50">
+              <input type="radio" name="connection_type" value="follower" class="text-[#00F0FF]">
+              <span class="text-gray-300">Followers (Who follows them)</span>
+            </label>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-gray-300 mb-1">Usernames to Tally:</label>
+          <textarea id="import-targets" name="targets" rows="5" required placeholder="Paste usernames (one per line, comma or space separated)&#10;e.g.&#10;@__naman.sharma__0.1&#10;@gswebit&#10;@rohit_sharma"
+                    class="w-full bg-[#0B0D17] border border-white/10 rounded-xl px-3 py-2 text-white font-mono text-[11px] focus:outline-none focus:border-[#725CFF]"></textarea>
+          <span class="text-[10px] text-gray-500">Supports comma-separated, space-separated, or line-by-line Instagram usernames.</span>
+        </div>
+
+        <div id="import-status" class="hidden p-3 rounded-xl text-xs"></div>
+
+        <div class="flex items-center justify-end gap-2 pt-2">
+          <button type="button" onclick="closeImportModal()" class="btn-secondary py-2 px-4 text-xs font-semibold">Cancel</button>
+          <button type="submit" id="import-submit-btn" class="btn-primary py-2 px-5 text-xs font-bold flex items-center gap-1.5">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+            <span>Save & Tally</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script is:inline>
+    window.toggleTallySection = function() {
+      const el = document.getElementById('tally-section');
+      const label = document.getElementById('toggle-tally-label');
+      if (el) {
+        if (el.classList.contains('hidden')) {
+          el.classList.remove('hidden');
+          el.classList.add('block');
+          if (label) label.innerText = 'Hide Direct List Tally &uarr;';
+        } else {
+          el.classList.add('hidden');
+          el.classList.remove('block');
+          if (label) label.innerText = 'Paste Follower / Following Lists to Tally Directly &darr;';
+        }
+      }
+    };
+
+    window.swapProfiles = function() {
+      const u1 = document.getElementById('input-user1');
+      const u2 = document.getElementById('input-user2');
+      if (u1 && u2) {
+        const temp = u1.value;
+        u1.value = u2.value;
+        u2.value = temp;
+      }
+    };
+
+    window.openImportModal = function(username) {
+      const modal = document.getElementById('import-modal');
+      if (modal) {
+        modal.classList.remove('hidden');
+        if (username) {
+          const input = document.getElementById('import-username');
+          if (input) input.value = username;
+        }
+      }
+    };
+
+    window.closeImportModal = function() {
+      const modal = document.getElementById('import-modal');
+      if (modal) modal.classList.add('hidden');
+    };
+
+    window.submitImportConnections = async function(e) {
+      e.preventDefault();
+      const btn = document.getElementById('import-submit-btn');
+      const statusEl = document.getElementById('import-status');
+      const username = document.getElementById('import-username').value.trim();
+      const type = document.querySelector('input[name="connection_type"]:checked').value;
+      const targets = document.getElementById('import-targets').value.trim();
+
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
+      }
+      if (statusEl) statusEl.className = 'hidden';
+
+      try {
+        const resp = await fetch('/api/connections/import', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify({ username, type, targets })
+        });
+        const json = await resp.json();
+        if (json.success) {
+          if (statusEl) {
+            statusEl.className = 'p-3 rounded-xl text-xs bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 block';
+            statusEl.innerText = json.message || 'Saved successfully! Reloading...';
+          }
+          setTimeout(() => {
+            window.location.reload();
+          }, 1000);
+        } else {
+          if (statusEl) {
+            statusEl.className = 'p-3 rounded-xl text-xs bg-red-500/20 border border-red-500/30 text-red-300 block';
+            statusEl.innerText = json.error || 'Failed to import connections.';
+          }
+          if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Save & Tally';
+          }
+        }
+      } catch (err) {
+        if (statusEl) {
+          statusEl.className = 'p-3 rounded-xl text-xs bg-red-500/20 border border-red-500/30 text-red-300 block';
+          statusEl.innerText = 'Network error: ' + err.message;
+        }
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Save & Tally';
+        }
+      }
+    };
+
+    window.switchMutualTab = function(type) {
+      const grids = ['all', 'following', 'followers'];
+      grids.forEach((g) => {
+        const gridEl = document.getElementById('grid-' + g);
+        const btnEl = document.getElementById('btn-tab-' + g);
+        if (gridEl && btnEl) {
+          if (g === type) {
+            gridEl.classList.remove('hidden');
+            gridEl.classList.add('grid');
+            btnEl.classList.remove('text-gray-400', 'bg-white/[0.03]');
+            btnEl.classList.add('bg-[#725CFF]', 'text-white');
+          } else {
+            gridEl.classList.add('hidden');
+            gridEl.classList.remove('grid');
+            btnEl.classList.add('text-gray-400', 'bg-white/[0.03]');
+            btnEl.classList.remove('bg-[#725CFF]', 'text-white');
+          }
+        }
+      });
+    };
+
+    window.filterMutualCards = function() {
+      const query = document.getElementById('mutual-search-input')?.value.toLowerCase().trim() || '';
+      const cards = document.querySelectorAll('.mutual-card');
+      cards.forEach((card) => {
+        const u = card.getAttribute('data-username') || '';
+        const n = card.getAttribute('data-name') || '';
+        if (u.includes(query) || n.includes(query)) {
+          card.style.display = '';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    };
+  </script>
+</Layout>

@@ -1,0 +1,89 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { InstagramIntelligenceService } from '../../services/instagramIntelligence';
+import { getDatabase } from '../../lib/db';
+
+const url = Astro.url;
+const username = url.searchParams.get('username') || 'cristiano';
+
+const intelService = new InstagramIntelligenceService();
+const accountData = await intelService.getOrCreateAccount(username);
+const acc = accountData.account;
+
+const db = getDatabase();
+const follows = db.prepare("SELECT * FROM follow_events WHERE account_id = ? ORDER BY detected_at DESC").all(acc.id) as any[];
+const unfollows = follows.filter((f) => f.event_type === 'unfollowed');
+---
+
+<Layout title={`Instagram Unfollowers Tracker - @${acc.username} | IGAnony Pro`}>
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    
+    <div class="text-center max-w-2xl mx-auto mb-10">
+      <span class="badge badge-amber text-xs mb-3">Audience Reciprocity</span>
+      <h1 class="text-3xl sm:text-4xl font-extrabold text-white mb-3 font-display">
+        Instagram Unfollowers & Non-Followers Tracker
+      </h1>
+      <p class="text-xs sm:text-sm text-gray-400">
+        Audit which accounts stopped following or do not follow back without exposing your login credentials.
+      </p>
+    </div>
+
+    <!-- Search Form -->
+    <div class="max-w-xl mx-auto mb-12">
+      <form action="/toolkit/unfollowers" method="GET" class="search-glow-container p-2 flex items-center gap-2">
+        <span class="pl-3 text-gray-500 font-bold">@</span>
+        <input type="text" name="username" value={acc.username} placeholder="Enter Instagram username" required
+               class="w-full bg-transparent text-sm text-white focus:outline-none py-1.5">
+        <button type="submit" class="btn-primary py-2 px-5 text-xs whitespace-nowrap">
+          <i class="fa-solid fa-user-xmark"></i>
+          <span>Audit Unfollowers</span>
+        </button>
+      </form>
+    </div>
+
+    <!-- Results -->
+    <div class="glass-panel p-6 sm:p-8">
+      <div class="flex items-center justify-between pb-6 border-b border-white/5 mb-6">
+        <div class="flex items-center gap-3">
+          <img src={acc.avatar_url} class="w-12 h-12 rounded-xl object-cover border border-white/10" alt="avatar" />
+          <div>
+            <h3 class="font-bold text-white text-base">@{acc.username}</h3>
+            <span class="text-xs text-gray-400">Following: {Number(acc.following_count).toLocaleString()} accounts</span>
+          </div>
+        </div>
+
+        <span class="badge badge-rose text-xs">
+          {unfollows.length} Recent Unfollows Detected
+        </span>
+      </div>
+
+      <div class="space-y-3">
+        {unfollows.length > 0 ? (
+          unfollows.map((u: any) => (
+            <div class="p-4 rounded-xl bg-white/[0.02] border border-white/5 flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <img src={u.target_avatar} class="w-10 h-10 rounded-xl object-cover" alt="avatar" />
+                <div>
+                  <span class="font-bold text-sm text-white block">@{u.target_username}</span>
+                  <span class="text-xs text-gray-400">{u.target_name || 'User'}</span>
+                </div>
+              </div>
+
+              <div class="text-right text-xs">
+                <span class="badge badge-rose text-[10px]">Unfollowed</span>
+                <span class="text-gray-500 block text-[11px] mt-1">{u.detected_at}</span>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div class="p-8 text-center text-xs text-gray-400">
+            <i class="fa-solid fa-circle-check text-2xl text-[#10B981] mb-2 block"></i>
+            No recent unfollow drops detected in this scan window.
+          </div>
+        )}
+      </div>
+    </div>
+
+  </div>
+</Layout>
+

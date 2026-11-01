@@ -1,0 +1,22 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+export const prerender = false;
+---
+
+<Layout title="404 - Page Not Found | DolphinRadar Pro">
+  <div class="max-w-2xl mx-auto px-4 py-24 text-center">
+    <div class="w-16 h-16 rounded-2xl bg-[#725CFF]/20 text-[#725CFF] flex items-center justify-center text-2xl mx-auto mb-6">
+      <i class="fa-solid fa-satellite-dish"></i>
+    </div>
+    <h1 class="text-4xl font-extrabold text-white mb-3 font-display">404 - Radar Lost in Orbit</h1>
+    <p class="text-sm text-gray-400 mb-8">
+      The endpoint or profile you requested could not be located in our telemetry index.
+    </p>
+    <a href="/" class="btn-primary py-3 px-6 text-sm inline-flex items-center gap-2">
+      <i class="fa-solid fa-arrow-left"></i>
+      <span>Return to DolphinRadar Home</span>
+    </a>
+  </div>
+</Layout>
+

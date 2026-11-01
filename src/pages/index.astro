@@ -1,0 +1,541 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="IGAnony Pro - Anonymous Instagram Story Viewer & Downloader">
+  <!-- Hero Section -->
+  <section class="relative pt-12 pb-24 overflow-hidden">
+    <!-- Background glowing ambient orb -->
+    <div class="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px] bg-gradient-to-tr from-[#725CFF]/20 to-[#00F0FF]/15 blur-[120px] rounded-full pointer-events-none"></div>
+
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+      
+      <!-- Top Pill Tag -->
+      <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-md mb-8">
+        <span class="w-2 h-2 rounded-full bg-[#10B981] animate-ping"></span>
+        <span class="text-xs font-semibold text-gray-300">Live Telemetry & Activity Radar 2026</span>
+      </div>
+
+      <!-- Main Heading -->
+      <h1 class="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-white mb-6 font-display">
+        Your All-in-One <br>
+        <span class="gradient-text-accent">Instagram Media & Profile Radar</span>
+      </h1>
+
+      <!-- Subtitle -->
+      <p class="max-w-2xl mx-auto text-base sm:text-xl text-gray-300 mb-10 font-normal leading-relaxed">
+        Instant Instagram Intelligence — High-speed reels with thumbnails, full-resolution posts, tagged media, and one-click HD downloads. 100% private and platform-compliant.
+      </p>
+
+      <!-- Tool Selector Tabs -->
+      <div class="flex items-center justify-center gap-2 mb-4 max-w-xl mx-auto flex-wrap text-xs">
+        <button type="button" onclick="selectSearchMode('stories')" id="tab-mode-stories" 
+                class="hero-mode-tab px-4 py-2 rounded-xl font-bold bg-[#EC4899] text-white flex items-center gap-1.5 transition shadow-lg shadow-[#EC4899]/20">
+          <i class="fa-solid fa-circle-play text-xs"></i>
+          <span>Story Viewer</span>
+        </button>
+        <button type="button" onclick="selectSearchMode('reels')" id="tab-mode-reels" 
+                class="hero-mode-tab px-4 py-2 rounded-xl font-bold bg-white/[0.04] text-gray-300 hover:text-white hover:bg-white/[0.08] flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-film text-xs text-[#00F0FF]"></i>
+          <span>Reels & Posts</span>
+        </button>
+        <button type="button" onclick="selectSearchMode('mutuals')" id="tab-mode-mutuals" 
+                class="hero-mode-tab px-4 py-2 rounded-xl font-bold bg-white/[0.04] text-gray-300 hover:text-white hover:bg-white/[0.08] flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-users-viewfinder text-xs text-[#725CFF]"></i>
+          <span>Mutuals</span>
+        </button>
+        <button type="button" onclick="selectSearchMode('profile')" id="tab-mode-profile" 
+                class="hero-mode-tab px-4 py-2 rounded-xl font-bold bg-white/[0.04] text-gray-300 hover:text-white hover:bg-white/[0.08] flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-user text-xs text-emerald-400"></i>
+          <span>Profile Viewer</span>
+        </button>
+      </div>
+
+      <!-- Search Input Bar -->
+      <div class="max-w-2xl mx-auto mb-8">
+        <form id="hero-search-form" action="/toolkit/story-viewer" method="GET" class="search-glow-container p-2 flex flex-col sm:flex-row items-center gap-2 shadow-2xl">
+          <div class="flex items-center gap-3 pl-4 w-full">
+            <span id="hero-search-icon" class="text-xl text-[#EC4899]"><i class="fa-solid fa-circle-play"></i></span>
+            <input type="text" id="hero-username-input" name="username" placeholder="Enter username to view stories anonymously (e.g. cristiano)" required
+                   class="w-full bg-transparent text-sm sm:text-base text-white placeholder-gray-500 focus:outline-none py-2">
+          </div>
+          <button type="submit" id="hero-search-btn" class="w-full sm:w-auto btn-primary py-3 px-8 text-sm sm:text-base whitespace-nowrap shrink-0 bg-gradient-to-r from-[#EC4899] to-[#725CFF] border-none shadow-lg shadow-[#EC4899]/20">
+            <i class="fa-solid fa-eye"></i>
+            <span id="hero-search-btn-text">Watch Stories</span>
+          </button>
+        </form>
+        
+        <div class="flex items-center justify-center gap-2 mt-4 text-xs text-gray-400">
+          <span>Want to see an authentic sample first?</span>
+          <a href="/sample-report" class="text-[#725CFF] hover:text-[#00F0FF] font-semibold underline transition">
+            View Live Sample Report &rarr;
+          </a>
+        </div>
+      </div>
+
+      <!-- 4 Value Pillars -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-4xl mx-auto pt-6 border-t border-white/5">
+        <div class="flex items-center justify-center gap-2.5 p-3 rounded-xl bg-white/[0.02] border border-white/5">
+          <i class="fa-solid fa-check text-xs text-[#725CFF]"></i>
+          <span class="text-xs sm:text-sm font-semibold text-gray-200">Find the Truth</span>
+        </div>
+        <div class="flex items-center justify-center gap-2.5 p-3 rounded-xl bg-white/[0.02] border border-white/5">
+          <i class="fa-solid fa-database text-xs text-[#725CFF]"></i>
+          <span class="text-xs sm:text-sm font-semibold text-gray-200">Rich Telemetry</span>
+        </div>
+        <div class="flex items-center justify-center gap-2.5 p-3 rounded-xl bg-white/[0.02] border border-white/5">
+          <i class="fa-solid fa-brain text-xs text-[#725CFF]"></i>
+          <span class="text-xs sm:text-sm font-semibold text-gray-200">AI-Powered</span>
+        </div>
+        <div class="flex items-center justify-center gap-2.5 p-3 rounded-xl bg-white/[0.02] border border-white/5">
+          <i class="fa-solid fa-user-shield text-xs text-[#725CFF]"></i>
+          <span class="text-xs sm:text-sm font-semibold text-gray-200">Privacy-Focused</span>
+        </div>
+      </div>
+
+      <!-- Social Proof Banner -->
+      <div class="mt-12 flex items-center justify-center gap-3">
+        <div class="flex -space-x-2">
+          <img class="w-8 h-8 rounded-full border-2 border-[#0B0D17]" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=80&q=80" alt="user">
+          <img class="w-8 h-8 rounded-full border-2 border-[#0B0D17]" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=80&q=80" alt="user">
+          <img class="w-8 h-8 rounded-full border-2 border-[#0B0D17]" src="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=80&q=80" alt="user">
+          <img class="w-8 h-8 rounded-full border-2 border-[#0B0D17]" src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=80&q=80" alt="user">
+        </div>
+        <div class="text-xs text-left">
+          <span class="font-extrabold text-white">50,000+ users</span>
+          <span class="text-gray-400 block">view stories & media anonymously</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Comprehensive Anonymous Toolkit Capabilities -->
+  <section class="py-16 bg-[#0F1221]/50 border-y border-white/5">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center max-w-2xl mx-auto mb-12">
+        <span class="badge badge-purple text-xs mb-2">Platform Capabilities</span>
+        <h3 class="text-2xl sm:text-3xl font-extrabold text-white font-display">
+          Complete Anonymous Instagram Telemetry & Utilities
+        </h3>
+        <p class="text-xs sm:text-sm text-gray-400 mt-2">
+          All features work without logging into Instagram or connecting your profile. 100% private, anonymous, and instant.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        
+        <!-- Tool 1: Story Viewer -->
+        <div class="glass-panel p-6 flex flex-col justify-between group hover:border-[#EC4899]/50 transition duration-300 relative overflow-hidden">
+          <div class="absolute -right-10 -top-10 w-32 h-32 bg-[#EC4899]/10 rounded-full blur-2xl pointer-events-none"></div>
+          <div>
+            <div class="w-12 h-12 rounded-2xl bg-[#EC4899]/15 text-[#EC4899] flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition duration-300">
+              <i class="fa-solid fa-circle-play"></i>
+            </div>
+            <span class="badge badge-rose text-[9px] uppercase font-bold mb-2 inline-block">Bypass Viewers List</span>
+            <h4 class="text-base font-bold text-white mb-2 font-display">Anonymous Story Viewer</h4>
+            <p class="text-xs text-gray-400 leading-relaxed">
+              Watch active 24-hour stories and highlights with segmented progress bars. The profile owner will never know you viewed them.
+            </p>
+          </div>
+          <div class="pt-6 mt-4 border-t border-white/5">
+            <a href="/toolkit/story-viewer" class="text-xs font-bold text-[#EC4899] hover:underline flex items-center justify-between">
+              <span>Launch Story Player</span>
+              <i class="fa-solid fa-arrow-right text-xs"></i>
+            </a>
+          </div>
+        </div>
+
+        <!-- Tool 2: Reels Downloader -->
+        <div class="glass-panel p-6 flex flex-col justify-between group hover:border-[#00F0FF]/50 transition duration-300 relative overflow-hidden">
+          <div class="absolute -right-10 -top-10 w-32 h-32 bg-[#00F0FF]/10 rounded-full blur-2xl pointer-events-none"></div>
+          <div>
+            <div class="w-12 h-12 rounded-2xl bg-[#00F0FF]/15 text-[#00F0FF] flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition duration-300">
+              <i class="fa-solid fa-film"></i>
+            </div>
+            <span class="badge badge-cyan text-[9px] uppercase font-bold mb-2 inline-block">1080p MP4 & Audio</span>
+            <h4 class="text-base font-bold text-white mb-2 font-display">Reels & Post Downloader</h4>
+            <p class="text-xs text-gray-400 leading-relaxed">
+              Stream and download high-speed Instagram Reels, video carousels, and original audio in full HD without watermark.
+            </p>
+          </div>
+          <div class="pt-6 mt-4 border-t border-white/5">
+            <a href="/toolkit/post-viewer" class="text-xs font-bold text-[#00F0FF] hover:underline flex items-center justify-between">
+              <span>Inspect Reels & Posts</span>
+              <i class="fa-solid fa-arrow-right text-xs"></i>
+            </a>
+          </div>
+        </div>
+
+        <!-- Tool 3: Mutuals Checker -->
+        <div class="glass-panel p-6 flex flex-col justify-between group hover:border-[#725CFF]/50 transition duration-300 relative overflow-hidden">
+          <div class="absolute -right-10 -top-10 w-32 h-32 bg-[#725CFF]/10 rounded-full blur-2xl pointer-events-none"></div>
+          <div>
+            <div class="w-12 h-12 rounded-2xl bg-[#725CFF]/15 text-[#725CFF] flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition duration-300">
+              <i class="fa-solid fa-users-viewfinder"></i>
+            </div>
+            <span class="badge badge-purple text-[9px] uppercase font-bold mb-2 inline-block">Dual Cross-Comparator</span>
+            <h4 class="text-base font-bold text-white mb-2 font-display">Mutual Friends Finder</h4>
+            <p class="text-xs text-gray-400 leading-relaxed">
+              Compare two profiles side-by-side to uncover common followers, mutual following, direct reciprocity, and affinity scores.
+            </p>
+          </div>
+          <div class="pt-6 mt-4 border-t border-white/5">
+            <a href="/toolkit/mutual-checker" class="text-xs font-bold text-[#725CFF] hover:underline flex items-center justify-between">
+              <span>Compare 2 Profiles</span>
+              <i class="fa-solid fa-arrow-right text-xs"></i>
+            </a>
+          </div>
+        </div>
+
+        <!-- Tool 4: Deep Telemetry -->
+        <div class="glass-panel p-6 flex flex-col justify-between group hover:border-emerald-500/50 transition duration-300 relative overflow-hidden">
+          <div class="absolute -right-10 -top-10 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none"></div>
+          <div>
+            <div class="w-12 h-12 rounded-2xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition duration-300">
+              <i class="fa-solid fa-chart-line"></i>
+            </div>
+            <span class="badge badge-emerald text-[9px] uppercase font-bold mb-2 inline-block">24/7 Monitoring</span>
+            <h4 class="text-base font-bold text-white mb-2 font-display">Activity Telemetry</h4>
+            <p class="text-xs text-gray-400 leading-relaxed">
+              Monitor follower growth, unfollowers, active hours heatmaps, tagged collaborators, and export detailed CSV reports.
+            </p>
+          </div>
+          <div class="pt-6 mt-4 border-t border-white/5">
+            <a href="/sample-report" class="text-xs font-bold text-emerald-400 hover:underline flex items-center justify-between">
+              <span>View Live Sample Report</span>
+              <i class="fa-solid fa-arrow-right text-xs"></i>
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Use Cases: Marketing vs Individuals -->
+  <section class="py-20 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center max-w-2xl mx-auto mb-16">
+      <h2 class="text-3xl sm:text-4xl font-extrabold text-white mb-4 font-display">
+        DolphinRadar Meets All Your Needs
+      </h2>
+      <p class="text-sm text-gray-400">
+        Whether analyzing brand competitors or satisfying personal curiosity, DolphinRadar delivers unmatched depth.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      
+      <!-- For Marketing Card -->
+      <div class="glass-panel p-8 relative overflow-hidden group">
+        <div class="absolute -right-8 -top-8 w-40 h-40 bg-[#725CFF]/15 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-[#725CFF]/20 text-[#C4B5FD] border border-[#725CFF]/30 mb-6">
+          FOR AGENCIES & MARKETERS
+        </div>
+        <h3 class="text-2xl font-bold text-white mb-3 font-display">Analyze Influencers & Competitor Insights</h3>
+        <p class="text-sm text-gray-300 leading-relaxed mb-6">
+          Inspect public profiles, compare mutual connections in real-time, view full-resolution stories without leaving a trace, and verify audience insights effortlessly.
+        </p>
+        <ul class="space-y-3 text-xs text-gray-300 mb-8">
+          <li class="flex items-center gap-2.5">
+            <i class="fa-solid fa-circle-check text-[#725CFF]"></i>
+            <span>Find mutual followers and overlap between any two accounts</span>
+          </li>
+          <li class="flex items-center gap-2.5">
+            <i class="fa-solid fa-circle-check text-[#725CFF]"></i>
+            <span>Export follower and following lists to clean CSV</span>
+          </li>
+          <li class="flex items-center gap-2.5">
+            <i class="fa-solid fa-circle-check text-[#725CFF]"></i>
+            <span>Inspect high-res carousels, captions, and engagement rates</span>
+          </li>
+        </ul>
+        <a href="/report/cristiano" class="btn-secondary text-xs w-full sm:w-auto">
+          <span>View Live Analytics</span>
+          <i class="fa-solid fa-arrow-right text-xs"></i>
+        </a>
+      </div>
+
+      <!-- For Individuals Card -->
+      <div class="glass-panel p-8 relative overflow-hidden group">
+        <div class="absolute -right-8 -top-8 w-40 h-40 bg-[#00F0FF]/15 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-[#00F0FF]/20 text-[#00F0FF] border border-[#00F0FF]/30 mb-6">
+          FOR CREATORS & INDIVIDUALS
+        </div>
+        <h3 class="text-2xl font-bold text-white mb-3 font-display">Inspect Media, Reels & High-Res Content</h3>
+        <p class="text-sm text-gray-300 leading-relaxed mb-6">
+          Want to view and download full-resolution posts, high-speed reels with video thumbnails, and carousels anonymously without logging into Instagram? IGAnony brings you instant media access.
+        </p>
+        <ul class="space-y-3 text-xs text-gray-300 mb-8">
+          <li class="flex items-center gap-2.5">
+            <i class="fa-solid fa-circle-check text-[#00F0FF]"></i>
+            <span>Fast Reels Engine: instant video thumbnails & HTML5 player</span>
+          </li>
+          <li class="flex items-center gap-2.5">
+            <i class="fa-solid fa-circle-check text-[#00F0FF]"></i>
+            <span>Full-resolution post carousels and tagged media downloads</span>
+          </li>
+          <li class="flex items-center gap-2.5">
+            <i class="fa-solid fa-circle-check text-[#00F0FF]"></i>
+            <span>Developer Media API (`/api/media/[username]`) for JSON feeds</span>
+          </li>
+        </ul>
+        <a href="/report/cristiano" class="btn-secondary text-xs w-full sm:w-auto">
+          <span>Explore Media Telemetry</span>
+          <i class="fa-solid fa-arrow-right text-xs"></i>
+        </a>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 3 Steps Section -->
+  <section class="py-20 bg-[#0F1221]/40 border-t border-white/5">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <h2 class="text-3xl sm:text-4xl font-extrabold text-white mb-4 font-display">
+        How IGAnony Works
+      </h2>
+      <p class="text-sm text-gray-400 max-w-xl mx-auto mb-16">
+        Search and browse anonymously in 3 effortless steps — no app installation, no password, 100% private.
+      </p>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="glass-panel p-8 text-left relative">
+          <div class="w-12 h-12 rounded-2xl bg-[#725CFF]/20 flex items-center justify-center text-[#725CFF] text-xl font-black mb-6">
+            1
+          </div>
+          <h4 class="text-lg font-bold text-white mb-2 font-display">Enter Instagram Username</h4>
+          <p class="text-xs text-gray-400 leading-relaxed">
+            Simply paste any public Instagram username or link into the search box. No Instagram login required.
+          </p>
+        </div>
+
+        <div class="glass-panel p-8 text-left relative">
+          <div class="w-12 h-12 rounded-2xl bg-[#00F0FF]/20 flex items-center justify-center text-[#00F0FF] text-xl font-black mb-6">
+            2
+          </div>
+          <h4 class="text-lg font-bold text-white mb-2 font-display">Instant Media & Story Engine</h4>
+          <p class="text-xs text-gray-400 leading-relaxed">
+            Our platform instantly fetches complete feeds, reels with previews, carousels, and stories into high-speed local cache.
+          </p>
+        </div>
+
+        <div class="glass-panel p-8 text-left relative">
+          <div class="w-12 h-12 rounded-2xl bg-[#EC4899]/20 flex items-center justify-center text-[#EC4899] text-xl font-black mb-6">
+            3
+          </div>
+          <h4 class="text-lg font-bold text-white mb-2 font-display">100% Anonymous & Secure</h4>
+          <p class="text-xs text-gray-400 leading-relaxed">
+            Watch active stories, reels, posts, and compare mutual followers completely invisibly without notifying the profile owner.
+          </p>
+        </div>
+      </div>
+
+      <div class="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4">
+        <a href="/stories" class="w-full sm:w-auto btn-primary py-3.5 px-8 text-sm bg-gradient-to-r from-[#EC4899] to-[#725CFF] border-none shadow-xl shadow-[#EC4899]/20 flex items-center justify-center gap-2">
+          <i class="fa-solid fa-circle-play text-sm"></i>
+          <span>Watch Stories Anonymously &rarr;</span>
+        </a>
+        <a href="/toolkit/post-viewer" class="w-full sm:w-auto btn-secondary py-3.5 px-8 text-sm flex items-center justify-center gap-2">
+          <i class="fa-solid fa-film text-sm text-[#00F0FF]"></i>
+          <span>Download Reels & Posts</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Customer Reviews Section -->
+  <section class="py-20 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center max-w-2xl mx-auto mb-16">
+      <h2 class="text-3xl sm:text-4xl font-extrabold text-white mb-4 font-display">
+        What Our Customers Say
+      </h2>
+      <p class="text-xs text-gray-400">
+        To ensure the protection of our users' privacy, certain personal details have been redacted.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="glass-panel p-6">
+        <div class="flex items-center gap-1 text-[#F59E0B] text-xs mb-3">
+          <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+        </div>
+        <p class="text-xs text-gray-300 leading-relaxed mb-4">
+          "As a mom, I love DolphinRadar. It gives me all the info I need to ensure my kids are safe on Instagram without intruding. The detailed reports are invaluable."
+        </p>
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-full bg-[#725CFF]/20 flex items-center justify-center font-bold text-[#C4B5FD] text-xs">S</div>
+          <div>
+            <span class="text-xs font-bold text-white block">Sarah M.***</span>
+            <span class="text-[10px] text-gray-500">Verified Subscriber</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="glass-panel p-6">
+        <div class="flex items-center gap-1 text-[#F59E0B] text-xs mb-3">
+          <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+        </div>
+        <p class="text-xs text-gray-300 leading-relaxed mb-4">
+          "As a digital marketer, IGAnony helps me view competitors' stories and creator reels anonymously in full HD. It's my secret weapon for staying ahead!"
+        </p>
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-full bg-[#00F0FF]/20 flex items-center justify-center font-bold text-[#00F0FF] text-xs">M</div>
+          <div>
+            <span class="text-xs font-bold text-white block">Marcus T.***</span>
+            <span class="text-[10px] text-gray-500">Marketing Director</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="glass-panel p-6">
+        <div class="flex items-center gap-1 text-[#F59E0B] text-xs mb-3">
+          <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+        </div>
+        <p class="text-xs text-gray-300 leading-relaxed mb-4">
+          "I use IGAnony to watch stories and check mutual followers without creating dummy accounts. The interface is lightning fast and 100% private."
+        </p>
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-full bg-[#EC4899]/20 flex items-center justify-center font-bold text-[#EC4899] text-xs">E</div>
+          <div>
+            <span class="text-xs font-bold text-white block">Ethan K.***</span>
+            <span class="text-[10px] text-gray-500">Verified User</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ Accordion -->
+  <section id="faq" class="py-20 bg-[#0F1221]/50 border-t border-white/5">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl font-extrabold text-white mb-3 font-display">Frequently Asked Questions</h2>
+        <p class="text-xs text-gray-400">Everything you need to know about anonymous viewing and privacy</p>
+      </div>
+
+      <div class="space-y-4">
+        <details class="glass-panel p-5 rounded-2xl group cursor-pointer">
+          <summary class="font-semibold text-sm text-white flex items-center justify-between">
+            <span>Does IGAnony notify the person when viewing their profile or stories?</span>
+            <i class="fa-solid fa-chevron-down text-xs group-open:rotate-180 transition"></i>
+          </summary>
+          <p class="text-xs text-gray-400 mt-3 leading-relaxed">
+            No, never. IGAnony operates completely anonymously without using your Instagram account. The profile owner will never see your username in their story viewers list.
+          </p>
+        </details>
+
+        <details class="glass-panel p-5 rounded-2xl group cursor-pointer">
+          <summary class="font-semibold text-sm text-white flex items-center justify-between">
+            <span>Can IGAnony view private accounts?</span>
+            <i class="fa-solid fa-chevron-down text-xs group-open:rotate-180 transition"></i>
+          </summary>
+          <p class="text-xs text-gray-400 mt-3 leading-relaxed">
+            No. IGAnony strictly respects privacy guidelines and Instagram's infrastructure. Only publicly accessible Instagram profiles, stories, reels, and posts can be viewed.
+          </p>
+        </details>
+
+        <details class="glass-panel p-5 rounded-2xl group cursor-pointer">
+          <summary class="font-semibold text-sm text-white flex items-center justify-between">
+            <span>How does the fast Reels and Posts fetcher work?</span>
+            <i class="fa-solid fa-chevron-down text-xs group-open:rotate-180 transition"></i>
+          </summary>
+          <p class="text-xs text-gray-400 mt-3 leading-relaxed">
+            Our platform queries live public endpoints and mirrors, caching video thumbnails and carousel media in our local proxy layer. This ensures blazing fast load times and guarantees reel previews render properly without hotlink blocks.
+          </p>
+        </details>
+
+        <details class="glass-panel p-5 rounded-2xl group cursor-pointer">
+          <summary class="font-semibold text-sm text-white flex items-center justify-between">
+            <span>Can I download Instagram Stories, Reels, and Posts anonymously?</span>
+            <i class="fa-solid fa-chevron-down text-xs group-open:rotate-180 transition"></i>
+          </summary>
+          <p class="text-xs text-gray-400 mt-3 leading-relaxed">
+            Yes! All stories, reels, videos, and photo carousels can be viewed anonymously in high definition and downloaded directly to your phone or computer with a single tap.
+          </p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <script is:inline>
+    function selectSearchMode(mode) {
+      const form = document.getElementById('hero-search-form');
+      const input = document.getElementById('hero-username-input');
+      const btnText = document.getElementById('hero-search-btn-text');
+      const icon = document.getElementById('hero-search-icon');
+      const btn = document.getElementById('hero-search-btn');
+
+      document.querySelectorAll('.hero-mode-tab').forEach((t) => {
+        t.className = 'hero-mode-tab px-4 py-2 rounded-xl font-bold bg-white/[0.04] text-gray-300 hover:text-white hover:bg-white/[0.08] flex items-center gap-1.5 transition';
+      });
+
+      if (mode === 'stories') {
+        const tabStories = document.getElementById('tab-mode-stories');
+        if (tabStories) tabStories.className = 'hero-mode-tab px-4 py-2 rounded-xl font-bold bg-[#EC4899] text-white flex items-center gap-1.5 transition shadow-lg shadow-[#EC4899]/20';
+        if (form) {
+          form.action = '/stories';
+          form.method = 'GET';
+          form.onsubmit = null;
+        }
+        if (input) {
+          input.name = 'username';
+          input.placeholder = 'Enter username to view stories anonymously (e.g. cristiano)';
+        }
+        if (btnText) btnText.innerText = 'Watch Stories';
+        if (icon) icon.innerHTML = '<i class="fa-solid fa-circle-play text-[#EC4899]"></i>';
+        if (btn) btn.className = 'w-full sm:w-auto btn-primary py-3 px-8 text-sm sm:text-base whitespace-nowrap shrink-0 bg-gradient-to-r from-[#EC4899] to-[#725CFF] border-none shadow-lg shadow-[#EC4899]/20';
+      } else if (mode === 'reels') {
+        const tabReels = document.getElementById('tab-mode-reels');
+        if (tabReels) tabReels.className = 'hero-mode-tab px-4 py-2 rounded-xl font-bold bg-[#00F0FF] text-black flex items-center gap-1.5 transition shadow-lg shadow-[#00F0FF]/20';
+        if (form) {
+          form.action = '/toolkit/post-viewer';
+          form.method = 'GET';
+          form.onsubmit = null;
+        }
+        if (input) {
+          input.name = 'username';
+          input.placeholder = 'Enter username to download Reels & Posts (e.g. leomessi)';
+        }
+        if (btnText) btnText.innerText = 'Fetch Media';
+        if (icon) icon.innerHTML = '<i class="fa-solid fa-film text-[#00F0FF]"></i>';
+        if (btn) btn.className = 'w-full sm:w-auto btn-primary py-3 px-8 text-sm sm:text-base whitespace-nowrap shrink-0 bg-gradient-to-r from-[#00F0FF] to-[#725CFF] text-black border-none shadow-lg shadow-[#00F0FF]/20';
+      } else if (mode === 'mutuals') {
+        const tabMutuals = document.getElementById('tab-mode-mutuals');
+        if (tabMutuals) tabMutuals.className = 'hero-mode-tab px-4 py-2 rounded-xl font-bold bg-[#725CFF] text-white flex items-center gap-1.5 transition shadow-lg shadow-[#725CFF]/20';
+        if (form) {
+          form.action = '/toolkit/mutual-checker';
+          form.method = 'GET';
+          form.onsubmit = null;
+        }
+        if (input) {
+          input.placeholder = 'Enter first username to compare mutuals (e.g. cristiano)';
+          input.name = 'user1';
+        }
+        if (btnText) btnText.innerText = 'Compare Mutuals';
+        if (icon) icon.innerHTML = '<i class="fa-solid fa-users-viewfinder text-[#725CFF]"></i>';
+        if (btn) btn.className = 'w-full sm:w-auto btn-primary py-3 px-8 text-sm sm:text-base whitespace-nowrap shrink-0 bg-[#725CFF] border-none shadow-lg shadow-[#725CFF]/20';
+      } else {
+        const tabProfile = document.getElementById('tab-mode-profile');
+        if (tabProfile) tabProfile.className = 'hero-mode-tab px-4 py-2 rounded-xl font-bold bg-[#10B981] text-white flex items-center gap-1.5 transition shadow-lg shadow-[#10B981]/20';
+        if (form) {
+          form.action = '/report';
+          form.method = 'GET';
+          form.onsubmit = function(e) {
+            e.preventDefault();
+            const val = input ? input.value.trim().replace(/^@/, '') : '';
+            if (val) window.location.href = '/report/' + encodeURIComponent(val);
+          };
+        }
+        if (input) {
+          input.name = 'username';
+          input.placeholder = 'Enter username to view profile anonymously (e.g. zendaya)';
+        }
+        if (btnText) btnText.innerText = 'View Profile';
+        if (icon) icon.innerHTML = '<i class="fa-solid fa-user text-[#10B981]"></i>';
+        if (btn) btn.className = 'w-full sm:w-auto btn-primary py-3 px-8 text-sm sm:text-base whitespace-nowrap shrink-0 bg-gradient-to-r from-[#10B981] to-[#725CFF] border-none shadow-lg shadow-[#10B981]/20';
+      }
+    }
+  </script>
+</Layout>
+

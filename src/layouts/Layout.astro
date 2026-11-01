@@ -1,0 +1,432 @@
+---
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = 'IGAnony Pro - Anonymous Instagram Story Viewer & Downloader',
+  description = 'View and download Instagram stories, reels, posts, and compare mutual followers 100% anonymously. No account or login required.',
+} = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <meta name="referrer" content="no-referrer">
+  <title>{title}</title>
+  <meta name="description" content={description}>
+
+  <!-- Favicon & App Icons with user icon.svg -->
+  <link rel="icon" type="image/svg+xml" href="/images/icon.svg">
+  <link rel="apple-touch-icon" href="/images/icon.svg">
+  <link rel="shortcut icon" href="/images/icon.svg">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Tailwind CSS CDN -->
+  <script is:inline src="https://cdn.tailwindcss.com"></script>
+  <script is:inline>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: '#725CFF',
+            'primary-dark': '#5842ED',
+            'primary-light': '#8A77FF',
+            dark: '#0B0D17',
+            'card-dark': '#131627',
+            'card-darker': '#0F1221',
+            cyan: '#00F0FF',
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Outfit', 'sans-serif'],
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="bg-[#0B0D17] text-white min-h-screen flex flex-col font-sans selection:bg-[#725CFF] selection:text-white pb-20 md:pb-0">
+
+  <!-- Top Announcement Bar -->
+  <div class="bg-gradient-to-r from-[#EC4899]/85 via-[#725CFF]/90 to-[#00F0FF]/85 py-2 px-3 sm:px-4 text-center text-[11px] sm:text-xs font-medium tracking-wide flex items-center justify-center gap-1.5 sm:gap-2 backdrop-blur-md sticky top-0 z-50 border-b border-white/10">
+    <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-white/20 text-white backdrop-blur-sm animate-pulse">
+      FREE
+    </span>
+    <span class="truncate">Anonymous Instagram Story Viewer & Downloader — 100% Invisible</span>
+    <a href="/stories/cristiano" class="underline font-semibold ml-1 sm:ml-2 hover:text-white/80 transition shrink-0 hidden xs:inline">Try Now &rarr;</a>
+  </div>
+
+  <!-- Main Navigation Header -->
+  <header class="border-b border-white/5 bg-[#0B0D17]/90 backdrop-blur-xl sticky top-[33px] sm:top-[37px] z-40 transition-all">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-4">
+      
+      <!-- Logo with user-provided icon.svg -->
+      <a href="/" class="flex items-center gap-2.5 sm:gap-3 group shrink-0">
+        <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-tr from-[#EC4899] via-[#725CFF] to-[#00F0FF] p-[2px] shadow-lg shadow-[#725CFF]/30 group-hover:shadow-[#EC4899]/50 transition duration-300 shrink-0">
+          <div class="w-full h-full bg-[#0B0D17] rounded-[14px] flex items-center justify-center overflow-hidden p-1 sm:p-1.5">
+            <img src="/images/icon.svg" alt="IGAnony Pro Icon" class="w-full h-full object-contain group-hover:scale-110 transition duration-300">
+          </div>
+        </div>
+        <div class="flex flex-col">
+          <span class="font-display font-extrabold text-lg sm:text-xl tracking-tight text-white flex items-center gap-1.5">
+            IGAnony<span class="text-[#725CFF]">Pro</span>
+          </span>
+          <span class="text-[9px] sm:text-[10px] text-gray-400 tracking-wider uppercase -mt-0.5">Anonymous Instagram Viewer</span>
+        </div>
+      </a>
+
+      <!-- Desktop Navigation Menu -->
+      <nav class="hidden md:flex items-center gap-6 lg:gap-8 text-sm font-medium">
+        <a href="/" class="text-gray-300 hover:text-white transition flex items-center gap-1.5">
+          Home
+        </a>
+        <a href="/stories" class="text-gray-300 hover:text-[#EC4899] transition flex items-center gap-1.5 group font-semibold">
+          <i class="fa-solid fa-circle-play text-xs text-[#EC4899] group-hover:scale-110 transition"></i>
+          <span>Story Viewer</span>
+          <span class="badge badge-rose text-[9px] py-0 px-1.5 ml-0.5">FREE</span>
+        </a>
+        <a href="/toolkit/post-viewer" class="text-gray-300 hover:text-[#00F0FF] transition flex items-center gap-1.5 font-semibold">
+          <i class="fa-solid fa-film text-xs text-[#00F0FF]"></i>
+          <span>Reels & Posts</span>
+        </a>
+        <a href="/toolkit/mutual-checker" class="text-gray-300 hover:text-[#725CFF] transition flex items-center gap-1.5 font-semibold">
+          <i class="fa-solid fa-users-viewfinder text-xs text-[#725CFF]"></i>
+          <span>Mutuals</span>
+        </a>
+        <a href="/sample-report" class="text-gray-300 hover:text-white transition flex items-center gap-1.5">
+          <i class="fa-solid fa-chart-pie text-xs text-gray-400"></i>
+          <span>Analytics</span>
+        </a>
+        <a href="/plan" class="text-gray-300 hover:text-white transition">
+          Pricing
+        </a>
+      </nav>
+
+      <!-- Header Actions -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        <button type="button" onclick="openQuickSearchModal()" 
+                class="hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-gray-400 hover:text-white border border-white/5 text-xs transition">
+          <i class="fa-solid fa-magnifying-glass text-xs"></i>
+          <span>Search username...</span>
+        </button>
+
+        <a href="/stories" class="btn-primary text-xs sm:text-sm py-2 px-3.5 sm:px-4 shadow-lg bg-gradient-to-r from-[#EC4899] to-[#725CFF] border-none flex items-center gap-1.5 whitespace-nowrap">
+          <i class="fa-solid fa-circle-play text-xs"></i>
+          <span>Watch Stories</span>
+        </a>
+
+        <!-- Mobile Hamburger Toggle Button -->
+        <button id="mobile-menu-toggle" type="button" onclick="toggleMobileMenu()" aria-label="Toggle mobile menu"
+                class="md:hidden w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-gray-300 hover:text-white transition shrink-0">
+          <i id="mobile-menu-icon" class="fa-solid fa-bars text-base"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile Drawer Menu (Expandable) -->
+    <div id="mobile-nav-drawer" class="md:hidden hidden border-b border-white/10 bg-[#0B0D17]/98 backdrop-blur-2xl px-4 py-4 space-y-3.5">
+      <!-- Mobile Quick Search Bar -->
+      <form action="/stories" method="GET" class="relative">
+        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-500 font-bold text-sm">@</span>
+        <input type="text" name="username" placeholder="Search any username for stories..." required
+               class="w-full bg-[#131627] border border-white/10 rounded-xl pl-9 pr-24 py-3 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-[#EC4899]">
+        <button type="submit" class="absolute right-1.5 top-1.5 bottom-1.5 btn-primary py-1 px-3 text-[11px] bg-gradient-to-r from-[#EC4899] to-[#725CFF] border-none">
+          Watch
+        </button>
+      </form>
+
+      <nav class="grid grid-cols-2 gap-2 text-xs font-semibold">
+        <a href="/" class="p-3 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] text-white flex items-center gap-2.5 transition">
+          <i class="fa-solid fa-house text-[#725CFF]"></i>
+          <span>Home</span>
+        </a>
+        <a href="/stories" class="p-3 rounded-xl bg-[#EC4899]/10 border border-[#EC4899]/30 text-white flex items-center gap-2 transition">
+          <i class="fa-solid fa-circle-play text-[#EC4899]"></i>
+          <span>Stories</span>
+          <span class="badge badge-rose text-[8px] py-0 px-1 ml-auto">FREE</span>
+        </a>
+        <a href="/toolkit/post-viewer" class="p-3 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] text-white flex items-center gap-2.5 transition">
+          <i class="fa-solid fa-film text-[#00F0FF]"></i>
+          <span>Reels & Posts</span>
+        </a>
+        <a href="/toolkit/mutual-checker" class="p-3 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] text-white flex items-center gap-2.5 transition">
+          <i class="fa-solid fa-users-viewfinder text-[#725CFF]"></i>
+          <span>Mutuals</span>
+        </a>
+        <a href="/sample-report" class="p-3 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] text-white flex items-center gap-2.5 transition">
+          <i class="fa-solid fa-chart-pie text-emerald-400"></i>
+          <span>Sample Report</span>
+        </a>
+        <a href="/plan" class="p-3 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] text-white flex items-center gap-2.5 transition">
+          <i class="fa-solid fa-gem text-amber-400"></i>
+          <span>Pricing</span>
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Dynamic Content -->
+  <main class="flex-grow">
+    <slot />
+  </main>
+
+  <!-- Mobile Sticky Bottom Navigation Bar (md:hidden) -->
+  <nav class="md:hidden fixed bottom-0 inset-x-0 z-40 mobile-bottom-nav px-2 py-1.5 flex items-center justify-around text-[10px] font-medium safe-area-pb select-none">
+    <a href="/" class="flex flex-col items-center gap-1 py-1 px-3 text-gray-400 hover:text-white transition">
+      <i class="fa-solid fa-house text-sm"></i>
+      <span>Home</span>
+    </a>
+    <a href="/stories" class="flex flex-col items-center gap-1 py-1 px-3 text-[#EC4899] transition font-bold">
+      <i class="fa-solid fa-circle-play text-sm"></i>
+      <span>Stories</span>
+    </a>
+    <a href="/toolkit/post-viewer" class="flex flex-col items-center gap-1 py-1 px-3 text-gray-400 hover:text-[#00F0FF] transition">
+      <i class="fa-solid fa-film text-sm"></i>
+      <span>Reels</span>
+    </a>
+    <a href="/toolkit/mutual-checker" class="flex flex-col items-center gap-1 py-1 px-3 text-gray-400 hover:text-[#725CFF] transition">
+      <i class="fa-solid fa-users-viewfinder text-sm"></i>
+      <span>Mutuals</span>
+    </a>
+    <button type="button" onclick="openQuickSearchModal()" class="flex flex-col items-center gap-1 py-1 px-3 text-gray-400 hover:text-white transition">
+      <i class="fa-solid fa-magnifying-glass text-sm"></i>
+      <span>Search</span>
+    </button>
+  </nav>
+
+  <!-- Global Quick Search Modal -->
+  <div id="modal-quick-search" class="modal-container fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden items-center justify-center p-4">
+    <div class="bg-[#131627] border border-white/10 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+      <button onclick="closeQuickSearchModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white text-xl">&times;</button>
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#EC4899] to-[#725CFF] p-[2px] shrink-0">
+          <div class="w-full h-full bg-[#0B0D17] rounded-[10px] flex items-center justify-center p-1">
+            <img src="/images/icon.svg" alt="IGAnony" class="w-full h-full object-contain">
+          </div>
+        </div>
+        <div>
+          <h3 class="text-base sm:text-lg font-bold text-white">Anonymous Instagram Lookup</h3>
+          <p class="text-xs text-gray-400">View stories, reels, or profiles without logging in</p>
+        </div>
+      </div>
+
+      <form id="quick-search-form" action="/stories" method="GET" class="space-y-4">
+        <div>
+          <label class="block text-xs font-medium text-gray-300 mb-1.5">Instagram Username or Profile Link</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-500 font-bold text-sm">@</span>
+            <input type="text" id="quick-search-input" name="username" placeholder="e.g. cristiano, leomessi, zendaya" required
+                   class="w-full bg-[#0B0D17] border border-white/10 rounded-xl pl-9 pr-4 py-3 text-sm text-white focus:outline-none focus:border-[#EC4899]">
+          </div>
+        </div>
+
+        <!-- Tool Choice Buttons -->
+        <div class="grid grid-cols-3 gap-2 text-xs">
+          <button type="button" onclick="setQuickSearchTarget('stories')" id="qs-target-stories" 
+                  class="p-2.5 rounded-xl border border-[#EC4899] bg-[#EC4899]/15 text-white font-bold flex flex-col items-center gap-1 transition">
+            <i class="fa-solid fa-circle-play text-sm text-[#EC4899]"></i>
+            <span class="text-[11px]">Stories</span>
+          </button>
+          <button type="button" onclick="setQuickSearchTarget('reels')" id="qs-target-reels" 
+                  class="p-2.5 rounded-xl border border-white/10 bg-white/[0.03] text-gray-300 hover:text-white font-semibold flex flex-col items-center gap-1 transition">
+            <i class="fa-solid fa-film text-sm text-[#00F0FF]"></i>
+            <span class="text-[11px]">Reels/Posts</span>
+          </button>
+          <button type="button" onclick="setQuickSearchTarget('profile')" id="qs-target-profile" 
+                  class="p-2.5 rounded-xl border border-white/10 bg-white/[0.03] text-gray-300 hover:text-white font-semibold flex flex-col items-center gap-1 transition">
+            <i class="fa-solid fa-user text-sm text-[#725CFF]"></i>
+            <span class="text-[11px]">Profile</span>
+          </button>
+        </div>
+
+        <div class="bg-white/5 rounded-xl p-3 border border-white/5 text-[11px] text-gray-400 flex items-start gap-2">
+          <i class="fa-solid fa-user-secret text-[#EC4899] mt-0.5"></i>
+          <span>100% Invisible. Profile owners will never know you viewed their stories or content.</span>
+        </div>
+
+        <button type="submit" id="quick-search-submit-btn" class="w-full btn-primary py-3 text-xs sm:text-sm font-bold bg-gradient-to-r from-[#EC4899] to-[#725CFF] border-none shadow-lg">
+          <i class="fa-solid fa-eye"></i>
+          <span id="quick-search-btn-text">Watch Stories Anonymously</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Global Toast Container -->
+  <div id="toast-container" class="fixed bottom-20 md:bottom-6 right-4 sm:right-6 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-auto"></div>
+
+  <!-- Footer -->
+  <footer class="border-t border-white/5 bg-[#0B0D17] pt-14 pb-12 text-sm text-gray-400">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8 sm:gap-10 mb-12">
+        
+        <div class="space-y-4 md:col-span-1">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#EC4899] via-[#725CFF] to-[#00F0FF] p-[1.5px] shrink-0">
+              <div class="w-full h-full bg-[#0B0D17] rounded-[10px] flex items-center justify-center overflow-hidden p-1">
+                <img src="/images/icon.svg" alt="IGAnony Pro" class="w-full h-full object-contain">
+              </div>
+            </div>
+            <span class="font-display font-bold text-lg text-white">IGAnony<span class="text-[#725CFF]">Pro</span></span>
+          </div>
+          <p class="text-xs text-gray-400 leading-relaxed">
+            The web's premier anonymous viewer and downloader for Instagram stories, reels, posts, and mutual connections. 100% private and platform-compliant.
+          </p>
+          <div class="flex items-center gap-3 pt-2">
+            <a href="https://x.com" target="_blank" class="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center hover:bg-[#725CFF]/20 hover:text-white transition">
+              <i class="fa-brands fa-x-twitter text-xs"></i>
+            </a>
+            <a href="https://youtube.com" target="_blank" class="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center hover:bg-[#725CFF]/20 hover:text-white transition">
+              <i class="fa-brands fa-youtube text-xs"></i>
+            </a>
+          </div>
+        </div>
+
+        <div>
+          <h4 class="text-white font-semibold text-sm mb-4 tracking-wider uppercase">Anonymous Tools</h4>
+          <ul class="space-y-2.5 text-xs">
+            <li><a href="/stories" class="hover:text-white transition text-[#EC4899]">Anonymous Story Viewer</a></li>
+            <li><a href="/toolkit/post-viewer" class="hover:text-white transition">Reels & Post Downloader</a></li>
+            <li><a href="/toolkit/mutual-checker" class="hover:text-white transition">Mutual Connections Checker</a></li>
+            <li><a href="/sample-report" class="hover:text-white transition">Sample Celebrity Analytics</a></li>
+            <li><a href="/plan" class="hover:text-white transition">Pro Subscription Plans</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="text-white font-semibold text-sm mb-4 tracking-wider uppercase">Free Utilities</h4>
+          <ul class="space-y-2.5 text-xs">
+            <li><a href="/toolkit/story-viewer?username=cristiano" class="hover:text-white transition">Cristiano Ronaldo Stories</a></li>
+            <li><a href="/toolkit/story-viewer?username=leomessi" class="hover:text-white transition">Leo Messi Stories</a></li>
+            <li><a href="/toolkit/post-viewer?username=natgeo" class="hover:text-white transition">NatGeo HD Reels Downloader</a></li>
+            <li><a href="/toolkit/mutual-checker" class="hover:text-white transition">Mutual Followers & Following</a></li>
+            <li><a href="/#faq" class="hover:text-white transition">Frequently Asked Questions</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="text-white font-semibold text-sm mb-4 tracking-wider uppercase">Privacy & Safety</h4>
+          <div class="space-y-3 text-xs text-gray-500">
+            <p class="leading-relaxed">
+              No Instagram login or credentials required. We never store personal data or notify account owners of viewed media.
+            </p>
+            <div class="flex items-center gap-2 text-gray-400">
+              <i class="fa-solid fa-user-shield text-[#10B981] text-base"></i>
+              <span>100% Anonymous Viewing Guarantee</span>
+            </div>
+            <p class="text-[11px] leading-relaxed">
+              IGAnony Pro is an independent web viewer and is not affiliated with or endorsed by Instagram™ or Meta.
+            </p>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="border-t border-white/5 pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-gray-500 gap-4">
+        <div>&copy; 2026 IGAnony Pro. All rights reserved. Built for Privacy & Speed.</div>
+        <div class="flex items-center gap-6">
+          <a href="/#privacy" class="hover:text-gray-400 transition">Privacy Policy</a>
+          <a href="/#terms" class="hover:text-gray-400 transition">Terms of Service</a>
+          <a href="/#contact" class="hover:text-gray-400 transition">Support</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Global Client Scripts -->
+  <script is:inline>
+    function toggleMobileMenu() {
+      const drawer = document.getElementById('mobile-nav-drawer');
+      const icon = document.getElementById('mobile-menu-icon');
+      if (drawer) {
+        const isHidden = drawer.classList.contains('hidden');
+        if (isHidden) {
+          drawer.classList.remove('hidden');
+          if (icon) icon.className = 'fa-solid fa-xmark text-base';
+        } else {
+          drawer.classList.add('hidden');
+          if (icon) icon.className = 'fa-solid fa-bars text-base';
+        }
+      }
+    }
+
+    function openQuickSearchModal() {
+      const modal = document.getElementById('modal-quick-search');
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        setTimeout(() => {
+          const input = document.getElementById('quick-search-input');
+          if (input) input.focus();
+        }, 100);
+      }
+    }
+
+    function closeQuickSearchModal() {
+      const modal = document.getElementById('modal-quick-search');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    }
+
+    function setQuickSearchTarget(target) {
+      const form = document.getElementById('quick-search-form');
+      const input = document.getElementById('quick-search-input');
+      const btnText = document.getElementById('quick-search-btn-text');
+      
+      const elStories = document.getElementById('qs-target-stories');
+      const elReels = document.getElementById('qs-target-reels');
+      const elProfile = document.getElementById('qs-target-profile');
+
+      if (elStories) elStories.className = 'p-2.5 rounded-xl border border-white/10 bg-white/[0.03] text-gray-300 font-semibold flex flex-col items-center gap-1 transition';
+      if (elReels) elReels.className = 'p-2.5 rounded-xl border border-white/10 bg-white/[0.03] text-gray-300 font-semibold flex flex-col items-center gap-1 transition';
+      if (elProfile) elProfile.className = 'p-2.5 rounded-xl border border-white/10 bg-white/[0.03] text-gray-300 font-semibold flex flex-col items-center gap-1 transition';
+
+      if (target === 'stories') {
+        if (elStories) elStories.className = 'p-2.5 rounded-xl border border-[#EC4899] bg-[#EC4899]/15 text-white font-bold flex flex-col items-center gap-1 transition';
+        if (form) {
+          form.action = '/stories';
+          form.onsubmit = null;
+        }
+        if (btnText) btnText.innerText = 'Watch Stories Anonymously';
+      } else if (target === 'reels') {
+        if (elReels) elReels.className = 'p-2.5 rounded-xl border border-[#00F0FF] bg-[#00F0FF]/15 text-white font-bold flex flex-col items-center gap-1 transition';
+        if (form) {
+          form.action = '/toolkit/post-viewer';
+          form.onsubmit = null;
+        }
+        if (btnText) btnText.innerText = 'View Reels & Posts';
+      } else {
+        if (elProfile) elProfile.className = 'p-2.5 rounded-xl border border-[#725CFF] bg-[#725CFF]/15 text-white font-bold flex flex-col items-center gap-1 transition';
+        if (form) {
+          form.action = '/report';
+          form.onsubmit = function(e) {
+            e.preventDefault();
+            const val = input ? input.value.trim().replace(/^@/, '') : '';
+            if (val) window.location.href = '/report/' + encodeURIComponent(val);
+          };
+        }
+        if (btnText) btnText.innerText = 'View Full Profile';
+      }
+    }
+  </script>
+  <script is:inline src="/js/app.js"></script>
+</body>
+</html>
+
