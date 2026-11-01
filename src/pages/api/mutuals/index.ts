@@ -63,7 +63,7 @@ async function handleMutuals(request: Request, pUserA?: string, pUserB?: string)
     const data = await mutualService.findMutualConnections(
       userA,
       userB,
-      forceFresh || hasLists,
+      true,
       hasLists ? customLists : undefined
     );
 

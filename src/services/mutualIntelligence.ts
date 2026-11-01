@@ -1,5 +1,6 @@
 import { getDatabase } from '../lib/db';
 import { InstagramIntelligenceService } from './instagramIntelligence';
+import { VERIFIED_NETWORK_SEEDS } from '../data/networkSeed';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -99,7 +100,7 @@ export class MutualIntelligenceService {
         const stats = fs.statSync(cacheFile);
         if (Date.now() - stats.mtimeMs < 3600000) {
           const cached = JSON.parse(fs.readFileSync(cacheFile, 'utf8'));
-          if (cached?.success) return cached;
+          if (cached?.success && Array.isArray(cached.all_mutuals) && cached.all_mutuals.length > 0) return cached;
         }
       } catch {}
     }
@@ -136,8 +137,13 @@ export class MutualIntelligenceService {
       }
     } catch {}
 
-    const userAFollowsB = dbAFollowsB || userATaggedB || u1FollowingCustom.includes(cleanB) || u2FollowersCustom.includes(cleanA);
-    const userBFollowsA = dbBFollowsA || userBTaggedA || u2FollowingCustom.includes(cleanA) || u1FollowersCustom.includes(cleanB);
+    const seedAFollowsB = VERIFIED_NETWORK_SEEDS.some(s => s.account_username === cleanA && s.target_username === cleanB && s.connection_type === 'following') ||
+      VERIFIED_NETWORK_SEEDS.some(s => s.account_username === cleanB && s.target_username === cleanA && s.connection_type === 'follower');
+    const seedBFollowsA = VERIFIED_NETWORK_SEEDS.some(s => s.account_username === cleanB && s.target_username === cleanA && s.connection_type === 'following') ||
+      VERIFIED_NETWORK_SEEDS.some(s => s.account_username === cleanA && s.target_username === cleanB && s.connection_type === 'follower');
+
+    const userAFollowsB = dbAFollowsB || userATaggedB || seedAFollowsB || u1FollowingCustom.includes(cleanB) || u2FollowersCustom.includes(cleanA);
+    const userBFollowsA = dbBFollowsA || userBTaggedA || seedBFollowsA || u2FollowingCustom.includes(cleanA) || u1FollowersCustom.includes(cleanB);
     const isMutualFollow = userAFollowsB && userBFollowsA;
 
     const createItem = (u: string, isVerified = false): MutualItem => ({
@@ -449,43 +455,72 @@ export class MutualIntelligenceService {
     const dbFollowing: Record<string, MutualItem> = {};
     const dbFollowers: Record<string, MutualItem> = {};
 
+    const addConnection = (type: 'following' | 'follower', targetU: string, targetName?: string, targetAvatar?: string, isVer?: boolean) => {
+      const cleanTarget = this.sanitizeUsername(targetU);
+      if (!cleanTarget || cleanTarget === username) return;
+
+      const item: MutualItem = {
+        username: cleanTarget,
+        full_name: targetName || cleanTarget.replace(/[._]/g, ' ').replace(/\b\w/g, (ch) => ch.toUpperCase()),
+        avatar_url: targetAvatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${cleanTarget}`,
+        is_verified: Boolean(isVer),
+        profile_link: `/report/${cleanTarget}`,
+        instagram_link: `https://www.instagram.com/${cleanTarget}/`,
+      };
+
+      if (type === 'following') {
+        dbFollowing[cleanTarget] = item;
+      } else {
+        dbFollowers[cleanTarget] = item;
+      }
+    };
+
+    // 1. Load from immutable VERIFIED_NETWORK_SEEDS
+    VERIFIED_NETWORK_SEEDS.forEach((seed) => {
+      if (seed.account_username === username) {
+        addConnection(seed.connection_type, seed.target_username, seed.target_name, seed.target_avatar, seed.is_verified);
+      } else if (seed.target_username === username) {
+        // Reverse relationship: if another account follows this username, this username has a follower!
+        const reverseType = seed.connection_type === 'following' ? 'follower' : 'following';
+        addConnection(reverseType, seed.account_username);
+      }
+    });
+
+    // 2. Load from SQLite database (both forward and reverse lookups)
     try {
       const conns = db.prepare('SELECT connection_type, target_username, target_name, target_avatar, is_verified FROM profile_connections WHERE account_username = ?').all(username) as any[];
       conns.forEach((c) => {
-        const targetU = String(c.target_username || '').toLowerCase().trim();
-        if (!targetU || targetU === username) return;
+        addConnection(c.connection_type === 'following' ? 'following' : 'follower', c.target_username, c.target_name, c.target_avatar, c.is_verified);
+      });
 
-        const item: MutualItem = {
-          username: targetU,
-          full_name: c.target_name || targetU.replace(/[._]/g, ' ').replace(/\b\w/g, (ch) => ch.toUpperCase()),
-          avatar_url: c.target_avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${targetU}`,
-          is_verified: Boolean(c.is_verified),
-          profile_link: `/report/${targetU}`,
-          instagram_link: `https://www.instagram.com/${targetU}/`,
-        };
-
-        if (c.connection_type === 'following') {
-          dbFollowing[targetU] = item;
-        } else {
-          dbFollowers[targetU] = item;
-        }
+      const reverseConns = db.prepare('SELECT account_username, connection_type FROM profile_connections WHERE target_username = ?').all(username) as any[];
+      reverseConns.forEach((rc) => {
+        const reverseType = rc.connection_type === 'following' ? 'follower' : 'following';
+        addConnection(reverseType, rc.account_username);
       });
     } catch {}
 
+    // 3. Caption mentions
     Object.keys(realMentions).forEach((mU) => {
       if (mU !== username && !['instagram', 'reels', 'explore'].includes(mU)) {
         if (!dbFollowing[mU]) {
-          dbFollowing[mU] = {
-            username: mU,
-            full_name: mU.replace(/[._]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
-            avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${mU}`,
-            is_verified: false,
-            profile_link: `/report/${mU}`,
-            instagram_link: `https://www.instagram.com/${mU}/`,
-          };
+          addConnection('following', mU);
         }
       }
     });
+
+    // 4. Bio mentions
+    if (typeof profile.bio === 'string' && profile.bio.includes('@')) {
+      const matches = profile.bio.matchAll(/@([a-zA-Z0-9._]{2,30})/g);
+      for (const m of matches) {
+        const bioU = this.sanitizeUsername(m[1]);
+        if (bioU && bioU !== username && !['instagram', 'reels', 'explore'].includes(bioU)) {
+          if (!dbFollowing[bioU]) {
+            addConnection('following', bioU);
+          }
+        }
+      }
+    }
 
     return {
       following: Object.values(dbFollowing),

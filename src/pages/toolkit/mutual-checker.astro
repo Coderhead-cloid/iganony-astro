@@ -22,7 +22,7 @@ if (hasSSRSubmit) {
     ssrMutuals = await mutualService.findMutualConnections(
       initialUserA,
       initialUserB,
-      hasLists,
+      true,
       hasLists ? {
         user1_following: initialU1Following,
         user1_followers: initialU1Followers,
@@ -499,6 +499,7 @@ if (hasSSRSubmit) {
             user2: userB,
             user1_following: listA,
             user2_following: listB,
+            refresh: true,
           })
         });
 
