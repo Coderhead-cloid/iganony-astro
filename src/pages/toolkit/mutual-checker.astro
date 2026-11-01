@@ -209,9 +209,9 @@ if (hasSSRSubmit) {
               </div>
               <p id="res-name-a" class="text-xs text-gray-300 truncate">{ssrMutuals?.profile1?.full_name || 'Profile A'}</p>
               <div class="flex items-center gap-3 mt-2 text-[11px] text-gray-400">
-                <span id="res-following-a-count"><strong class="text-white">0</strong> following</span>
+                <span id="res-following-a-count"><strong class="text-white">{(ssrMutuals?.profile1?.following_count ?? 0).toLocaleString()}</strong> following</span>
                 <span>•</span>
-                <span id="res-followers-a-count"><strong class="text-white">0</strong> followers</span>
+                <span id="res-followers-a-count"><strong class="text-white">{(ssrMutuals?.profile1?.followers_count ?? 0).toLocaleString()}</strong> followers</span>
               </div>
             </div>
           </div>
@@ -242,9 +242,9 @@ if (hasSSRSubmit) {
               </div>
               <p id="res-name-b" class="text-xs text-gray-300 truncate">{ssrMutuals?.profile2?.full_name || 'Profile B'}</p>
               <div class="flex items-center gap-3 mt-2 text-[11px] text-gray-400">
-                <span id="res-following-b-count"><strong class="text-white">0</strong> following</span>
+                <span id="res-following-b-count"><strong class="text-white">{(ssrMutuals?.profile2?.following_count ?? 0).toLocaleString()}</strong> following</span>
                 <span>•</span>
-                <span id="res-followers-b-count"><strong class="text-white">0</strong> followers</span>
+                <span id="res-followers-b-count"><strong class="text-white">{(ssrMutuals?.profile2?.followers_count ?? 0).toLocaleString()}</strong> followers</span>
               </div>
             </div>
           </div>

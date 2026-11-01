@@ -178,15 +178,8 @@ export class MutualIntelligenceService {
     const seedBFollowsA = VERIFIED_NETWORK_SEEDS.some(s => s.account_username === cleanB && s.target_username === cleanA && s.connection_type === 'following') ||
       VERIFIED_NETWORK_SEEDS.some(s => s.account_username === cleanA && s.target_username === cleanB && s.connection_type === 'follower');
 
-    const deterministicFollow = (strA: string, strB: string): boolean => {
-      let h = 0;
-      const combined = strA + '->' + strB;
-      for (let i = 0; i < combined.length; i++) h = ((h << 5) - h + combined.charCodeAt(i)) | 0;
-      return Math.abs(h) % 10 < 7; // 70% chance of direct connection
-    };
-
-    const userAFollowsB = dbAFollowsB || userATaggedB || seedAFollowsB || u1FollowingCustom.includes(cleanB) || u2FollowersCustom.includes(cleanA) || deterministicFollow(cleanA, cleanB);
-    const userBFollowsA = dbBFollowsA || userBTaggedA || seedBFollowsA || u2FollowingCustom.includes(cleanA) || u1FollowersCustom.includes(cleanB) || deterministicFollow(cleanB, cleanA);
+    const userAFollowsB = dbAFollowsB || userATaggedB || seedAFollowsB || u1FollowingCustom.includes(cleanB) || u2FollowersCustom.includes(cleanA);
+    const userBFollowsA = dbBFollowsA || userBTaggedA || seedBFollowsA || u2FollowingCustom.includes(cleanA) || u1FollowersCustom.includes(cleanB);
     const isMutualFollow = userAFollowsB && userBFollowsA;
 
     const createItem = (u: string, isVerified = false, customAvatar?: string): MutualItem => {
@@ -213,72 +206,15 @@ export class MutualIntelligenceService {
     u2FollowingCustom.forEach(u => { if (!networkB.following.some(i => i.username === u) && u !== cleanB) networkB.following.push(createItem(u)); });
     u2FollowersCustom.forEach(u => { if (!networkB.followers.some(i => i.username === u) && u !== cleanB) networkB.followers.push(createItem(u)); });
 
-    // 3. Rich realistic mutual connections pool (Indian creators, tech, lifestyle, global icons)
-    const REAL_COMMUNITY_POOL: { u: string; name: string; avatar?: string; verified?: boolean }[] = [
-      { u: 'gswebit', name: 'GS Web IT - Web Solutions', avatar: 'https://res-back.pumpsoul.com/ins_avatar/9f5309e2-966a-4eda-b4c6-8cf5ba3fcd56.jpg', verified: false },
-      { u: 'i__am._.rishi', name: 'Rishi Sharma', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=i__am._.rishi', verified: false },
-      { u: 'priya.patel', name: 'Priya Patel', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80', verified: false },
-      { u: 'arjun_mehta', name: 'Arjun Mehta', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80', verified: false },
-      { u: 'sneha.singh', name: 'Sneha Singh', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=150&q=80', verified: false },
-      { u: 'rohit.kumar91', name: 'Rohit Kumar', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&q=80', verified: false },
-      { u: 'karan.malhotra', name: 'Karan Malhotra', avatar: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&w=150&q=80', verified: false },
-      { u: 'neha.kapoor', name: 'Neha Kapoor', avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=150&q=80', verified: false },
-      { u: 'siddharth_rao', name: 'Siddharth Rao', avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=150&q=80', verified: false },
-      { u: 'anjali.mishra', name: 'Anjali Mishra', avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=150&q=80', verified: false },
-      { u: 'vikram.nair', name: 'Vikram Nair', avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=150&q=80', verified: false },
-      { u: 'deepa_reddy', name: 'Deepa Reddy', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=150&q=80', verified: false },
-      { u: 'amit.joshi', name: 'Amit Joshi', avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=150&q=80', verified: false },
-      { u: 'pooja_gupta', name: 'Pooja Gupta', avatar: 'https://images.unsplash.com/photo-1517849845537-4d257902454a?auto=format&fit=crop&w=150&q=80', verified: false },
-      { u: 'nikhil.pandey', name: 'Nikhil Pandey', avatar: 'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?auto=format&fit=crop&w=150&q=80', verified: false },
-      { u: 'virat.kohli', name: 'Virat Kohli', avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80', verified: true },
-      { u: 'cristiano', name: 'Cristiano Ronaldo', avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=150&q=80', verified: true },
-      { u: 'leomessi', name: 'Leo Messi', avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80', verified: true },
-      { u: 'nike', name: 'Nike', avatar: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=150&q=80', verified: true },
-      { u: 'natgeo', name: 'National Geographic', avatar: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=150&q=80', verified: true },
-    ];
-
-    // Hash helper for stable deterministic results per pair
-    const getPairHash = (offset = 0) => {
-      const str = [cleanA, cleanB].sort().join('::') + offset;
-      let h = 5381;
-      for (let i = 0; i < str.length; i++) h = ((h << 5) + h + str.charCodeAt(i)) & 0xffffffff;
-      return Math.abs(h);
-    };
-
-    // Guarantee that both users have rich networks with genuine mutual friends
-    const pairSeed = getPairHash();
-    const mutualCount = 8 + (pairSeed % 7); // 8 to 14 shared mutual accounts guaranteed
-    const selectedMutuals: typeof REAL_COMMUNITY_POOL = [];
-
-    // Prioritize cluster seeds if present
-    if ((cleanA === 'gaurav_rathi83' && cleanB === '__naman.sharma__0.1') || (cleanA === '__naman.sharma__0.1' && cleanB === 'gaurav_rathi83')) {
-      const gswebit = REAL_COMMUNITY_POOL.find(p => p.u === 'gswebit');
-      if (gswebit) selectedMutuals.push(gswebit);
-      const rishi = REAL_COMMUNITY_POOL.find(p => p.u === 'i__am._.rishi');
-      if (rishi) selectedMutuals.push(rishi);
+    // 3. Add direct reciprocal connection between User A and User B
+    if (userAFollowsB) {
+      if (!networkA.following.some(i => i.username === cleanB)) networkA.following.push(createItem(cleanB));
+      if (!networkB.followers.some(i => i.username === cleanA)) networkB.followers.push(createItem(cleanA));
     }
-
-    for (let i = 0; i < REAL_COMMUNITY_POOL.length && selectedMutuals.length < mutualCount; i++) {
-      const candidateIdx = (pairSeed + i * 3) % REAL_COMMUNITY_POOL.length;
-      const candidate = REAL_COMMUNITY_POOL[candidateIdx];
-      if (candidate.u !== cleanA && candidate.u !== cleanB && !selectedMutuals.some(s => s.u === candidate.u)) {
-        selectedMutuals.push(candidate);
-      }
+    if (userBFollowsA) {
+      if (!networkB.following.some(i => i.username === cleanA)) networkB.following.push(createItem(cleanA));
+      if (!networkA.followers.some(i => i.username === cleanB)) networkA.followers.push(createItem(cleanB));
     }
-
-    // Distribute into networkA and networkB following and followers
-    selectedMutuals.forEach((m, idx) => {
-      const item = createItem(m.u, m.verified, m.avatar);
-      // Both follow
-      if (!networkA.following.some(i => i.username === m.u)) networkA.following.push(item);
-      if (!networkB.following.some(i => i.username === m.u)) networkB.following.push(item);
-
-      // 70% also follow both
-      if (idx % 3 !== 0) {
-        if (!networkA.followers.some(i => i.username === m.u)) networkA.followers.push(item);
-        if (!networkB.followers.some(i => i.username === m.u)) networkB.followers.push(item);
-      }
-    });
 
     // 4. Build lookup maps AFTER all network items are added
     const networkAFollowingMap = new Map(networkA.following.map((i) => [i.username, i]));
