@@ -514,3 +514,55 @@ html.light #toast-container .bg-\[\#131627\] {
     min-height: 52px;
   }
 }
+
+/* Light Mode Navigation and Buttons */
+html.light #mobile-menu-toggle {
+  background-color: #E2E8F0 !important;
+  border-color: #CBD5E1 !important;
+  color: #0F172A !important;
+}
+
+html.light .theme-toggle-btn {
+  background-color: #E2E8F0 !important;
+  border-color: #CBD5E1 !important;
+  color: #0F172A !important;
+}
+
+html.light #mobile-nav-drawer {
+  background-color: #FFFFFF !important;
+  border-bottom-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+html.light #mobile-nav-drawer a {
+  color: #0F172A !important;
+  background-color: #F1F5F9 !important;
+  border-color: #E2E8F0 !important;
+}
+
+html.light .mobile-bottom-nav {
+  background-color: rgba(255, 255, 255, 0.96) !important;
+  border-top-color: rgba(0, 0, 0, 0.1) !important;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08) !important;
+}
+
+html.light .mobile-bottom-nav a {
+  color: #64748B;
+}
+
+html.light header {
+  background-color: rgba(255, 255, 255, 0.94) !important;
+  border-bottom-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+html.light header a {
+  color: #0F172A;
+}
+
+/* Fluid responsive motion */
+html {
+  scroll-behavior: smooth;
+}
+
+button, a {
+  touch-action: manipulation;
+}

@@ -10,6 +10,9 @@
     "preview": "astro preview --port 8000",
     "serve": "node ./dist/server/entry.mjs"
   },
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "dependencies": {
     "@astrojs/node": "^11.1.9",
     "@astrojs/vercel": "^11.0.17",
