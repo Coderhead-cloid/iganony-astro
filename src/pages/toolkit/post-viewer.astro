@@ -70,6 +70,8 @@ const quickProfiles = ['natgeo', 'cristiano', 'leomessi', 'nike', 'arianagrande'
           <div class="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-5">
             <div class="relative group">
               <img id="view-profile-avatar" src={acc.avatar_url} alt="avatar" 
+                   referrerpolicy="no-referrer"
+                   onerror={`this.onerror=null; this.src='https://api.dicebear.com/7.x/avataaars/svg?seed=' + encodeURIComponent('${acc.username}');`}
                    class="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl object-cover border-2 border-white/10 shadow-2xl group-hover:scale-105 transition duration-300">
               <a href={`/api/download?url=${encodeURIComponent(acc.avatar_url)}&filename=${encodeURIComponent(`${acc.username}_avatar.jpg`)}`} 
                  title="Download HD Avatar"
@@ -89,6 +91,19 @@ const quickProfiles = ['natgeo', 'cristiano', 'leomessi', 'nike', 'arianagrande'
               </div>
               <p id="view-profile-fullname" class="text-sm font-medium text-gray-300 mb-2">{acc.full_name}</p>
               <p id="view-profile-bio" class="text-xs text-gray-400 max-w-xl leading-relaxed">{acc.bio}</p>
+              {tagged.length > 0 && (
+                <div class="mt-2.5 flex items-center gap-1.5 flex-wrap text-xs">
+                  <span class="text-gray-400 text-[11px] font-semibold flex items-center gap-1">
+                    <i class="fa-solid fa-user-tag text-[#725CFF]"></i> Tagged Collaborators:
+                  </span>
+                  {Array.from(new Set(tagged.flatMap((t: any) => t.tagged_users || []))).slice(0, 5).map((tu: any) => (
+                    <a href={`/toolkit/post-viewer?username=${encodeURIComponent(tu)}`} 
+                       class="px-2 py-0.5 rounded-lg bg-white/5 hover:bg-[#725CFF]/20 border border-white/10 hover:border-[#725CFF]/40 text-purple-300 hover:text-white text-[11px] font-semibold transition">
+                      @{tu}
+                    </a>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
@@ -211,7 +226,7 @@ const quickProfiles = ['natgeo', 'cristiano', 'leomessi', 'nike', 'arianagrande'
             </a>
           </div>
         ) : (
-          allMedia.map((item: any) => {
+          allMedia.map((item: any, itemIndex: number) => {
           const isVideo = (item.media_type === 'reel') || Boolean(item.video_url);
           const isCarousel = Array.isArray(item.carousel) && item.carousel.length > 1;
           const downloadUrl = isVideo && item.video_url ? item.video_url : (item.thumbnail_url || item.media_url);
@@ -236,13 +251,15 @@ const quickProfiles = ['natgeo', 'cristiano', 'leomessi', 'nike', 'arianagrande'
           const hasTags = Array.isArray(item.tagged_users) && item.tagged_users.length > 0;
 
           return (
-            <div class="glass-panel overflow-hidden flex flex-col justify-between group relative cursor-pointer hover:border-[#725CFF]/40 transition duration-300"
+            <div class={`media-card glass-panel overflow-hidden flex flex-col justify-between group relative cursor-pointer hover:border-[#725CFF]/40 transition duration-300 ${itemIndex >= 8 ? 'hidden paged-hidden' : ''}`}
                  data-modal={modalData}
+                 data-media-index={itemIndex}
                  data-has-tags={hasTags ? 'true' : 'false'}
                  onclick="openMediaModalFromEl(this)">
 
               <div class="relative h-72 overflow-hidden bg-black/60">
                 <img src={item.thumbnail_url || item.media_url} alt="Media preview" 
+                     loading="lazy" referrerpolicy="no-referrer"
                      class="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
                 
                 <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent opacity-80 group-hover:opacity-100 transition duration-300"></div>
@@ -302,14 +319,18 @@ const quickProfiles = ['natgeo', 'cristiano', 'leomessi', 'nike', 'arianagrande'
                     {item.caption || 'No caption provided.'}
                   </p>
                   {hasTags && (
-                    <div class="mt-2.5 flex items-center gap-1.5 flex-wrap">
-                      <span class="badge badge-purple text-[10px] font-bold py-0.5 px-2 flex items-center gap-1 shadow-sm">
-                        <i class="fa-solid fa-user-tag text-[9px] text-[#A78BFA]"></i>
-                        <span>Tagged: @{item.tagged_users[0]}</span>
-                        {item.tagged_users.length > 1 && (
-                          <span class="text-white/60">+{item.tagged_users.length - 1}</span>
-                        )}
-                      </span>
+                    <div class="mt-2.5 flex items-center gap-1.5 flex-wrap" onclick="event.stopPropagation()">
+                      {item.tagged_users.slice(0, 3).map((tu: string) => (
+                        <a href={`/toolkit/post-viewer?username=${encodeURIComponent(tu)}`}
+                           class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#725CFF]/15 hover:bg-[#725CFF]/30 border border-[#725CFF]/30 text-purple-300 hover:text-white text-[10px] font-semibold transition"
+                           title={`View @${tu}'s profile`}>
+                          <i class="fa-solid fa-user-tag text-[8px] text-[#A78BFA]"></i>
+                          <span>@{tu}</span>
+                        </a>
+                      ))}
+                      {item.tagged_users.length > 3 && (
+                        <span class="text-[10px] text-gray-400 font-semibold">+{item.tagged_users.length - 3}</span>
+                      )}
                     </div>
                   )}
                 </div>
@@ -330,6 +351,17 @@ const quickProfiles = ['natgeo', 'cristiano', 'leomessi', 'nike', 'arianagrande'
           );
         }))}
       </div>
+
+      <!-- Progressive "Load More" Pagination Button -->
+      {allMedia.length > 8 && (
+        <div id="load-more-section" class="mt-8 text-center">
+          <button type="button" id="btn-load-more" onclick="loadMoreMedia()"
+                  class="btn-secondary py-3.5 px-8 text-xs font-bold rounded-xl border border-white/10 hover:border-[#725CFF] text-white hover:bg-[#725CFF]/20 transition duration-200 inline-flex items-center gap-2 shadow-xl hover:scale-105 active:scale-95">
+            <i class="fa-solid fa-layer-group text-[#725CFF]"></i>
+            <span id="load-more-text">Load More Posts & Reels (<span id="load-more-count">{Math.min(8, allMedia.length - 8)} of {allMedia.length - 8} more</span>)</span>
+          </button>
+        </div>
+      )}
 
     </div>
 
@@ -365,7 +397,10 @@ const quickProfiles = ['natgeo', 'cristiano', 'leomessi', 'nike', 'arianagrande'
         <div>
           <!-- Author Header -->
           <div class="flex items-center gap-3 pb-4 border-b border-white/5 mb-4">
-            <img id="modal-author-avatar" src="" alt="author" class="w-10 h-10 rounded-xl object-cover border border-white/10" />
+            <img id="modal-author-avatar" src="" alt="author" 
+                 referrerpolicy="no-referrer"
+                 onerror="this.onerror=null; this.src='https://api.dicebear.com/7.x/avataaars/svg?seed=' + encodeURIComponent(currentModalMedia ? currentModalMedia.author : 'user');"
+                 class="w-10 h-10 rounded-xl object-cover border border-white/10" />
             <div>
               <span id="modal-author-handle" class="font-bold text-white text-sm block"></span>
               <span id="modal-media-date" class="text-[11px] text-gray-400"></span>
@@ -561,7 +596,67 @@ const quickProfiles = ['natgeo', 'cristiano', 'leomessi', 'nike', 'arianagrande'
       if (typeof showToast === 'function') showToast('Caption copied to clipboard!', 'success');
     };
 
+    let currentBatchLimit = 8;
+    const BATCH_SIZE = 8;
+    let activeMediaTab = 'all';
+
+    function getMatchingCards(tab) {
+      const allCards = Array.from(document.querySelectorAll('#media-grid-all > .media-card'));
+      return allCards.filter(card => {
+        if (tab === 'all') return true;
+        if (tab === 'posts') return card.querySelector('.fa-image') || card.querySelector('.fa-clone');
+        if (tab === 'reels') return card.querySelector('.fa-film');
+        if (tab === 'tagged') return card.getAttribute('data-has-tags') === 'true' || card.querySelector('.fa-user-tag');
+        return true;
+      });
+    }
+
+    function updateMediaPagination() {
+      const matchingCards = getMatchingCards(activeMediaTab);
+      const allCards = Array.from(document.querySelectorAll('#media-grid-all > .media-card'));
+
+      allCards.forEach(c => c.classList.add('hidden'));
+
+      matchingCards.forEach((card, idx) => {
+        if (idx < currentBatchLimit) {
+          card.classList.remove('hidden');
+        } else {
+          card.classList.add('hidden');
+        }
+      });
+
+      const remaining = Math.max(0, matchingCards.length - currentBatchLimit);
+      const loadMoreSec = document.getElementById('load-more-section');
+      const loadMoreBtn = document.getElementById('btn-load-more');
+      const loadMoreText = document.getElementById('load-more-text');
+
+      if (loadMoreSec) {
+        if (matchingCards.length <= BATCH_SIZE) {
+          loadMoreSec.classList.add('hidden');
+        } else if (remaining > 0) {
+          loadMoreSec.classList.remove('hidden');
+          if (loadMoreBtn) loadMoreBtn.disabled = false;
+          if (loadMoreText) {
+            loadMoreText.innerHTML = `Load More Posts & Reels (${Math.min(BATCH_SIZE, remaining)} of ${remaining} more)`;
+          }
+        } else {
+          loadMoreSec.classList.remove('hidden');
+          if (loadMoreBtn) loadMoreBtn.disabled = true;
+          if (loadMoreText) {
+            loadMoreText.innerHTML = `✓ All ${matchingCards.length} ${activeMediaTab === 'all' ? 'Items' : activeMediaTab} Loaded`;
+          }
+        }
+      }
+    }
+
+    window.loadMoreMedia = function() {
+      currentBatchLimit += BATCH_SIZE;
+      updateMediaPagination();
+    };
+
     window.switchMediaTab = function(tab) {
+      activeMediaTab = tab;
+      currentBatchLimit = BATCH_SIZE;
       document.querySelectorAll('.tab-btn').forEach((b) => {
         b.className = 'tab-btn px-4 py-2 rounded-xl text-xs font-bold text-gray-400 hover:text-white bg-white/[0.03] hover:bg-white/[0.08] flex items-center gap-2 transition';
       });
@@ -569,25 +664,12 @@ const quickProfiles = ['natgeo', 'cristiano', 'leomessi', 'nike', 'arianagrande'
       if (activeBtn) {
         activeBtn.className = 'tab-btn px-4 py-2 rounded-xl text-xs font-bold bg-[#725CFF] text-white flex items-center gap-2 transition';
       }
-      // Show/hide based on category filter
-      document.querySelectorAll('#media-grid-all > div').forEach((card) => {
-        if (tab === 'all') {
-          card.classList.remove('hidden');
-        } else if (tab === 'posts') {
-          const isPost = card.querySelector('.fa-image') || card.querySelector('.fa-clone');
-          if (isPost) card.classList.remove('hidden');
-          else card.classList.add('hidden');
-        } else if (tab === 'reels') {
-          const isReel = card.querySelector('.fa-film');
-          if (isReel) card.classList.remove('hidden');
-          else card.classList.add('hidden');
-        } else if (tab === 'tagged') {
-          const isTagged = card.getAttribute('data-has-tags') === 'true' || card.querySelector('.fa-user-tag') || card.querySelector('.fa-tag');
-          if (isTagged) card.classList.remove('hidden');
-          else card.classList.add('hidden');
-        }
-      });
+      updateMediaPagination();
     };
+
+    document.addEventListener('DOMContentLoaded', () => {
+      updateMediaPagination();
+    });
   </script>
 </Layout>
 

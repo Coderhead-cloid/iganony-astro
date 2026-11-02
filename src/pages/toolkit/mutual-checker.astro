@@ -200,6 +200,7 @@ if (hasSSRSubmit) {
           <div class="lg:col-span-3 flex items-center gap-4 bg-black/40 p-4 rounded-2xl border border-white/5">
             <img id="res-avatar-a" src={ssrMutuals?.profile1?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=userA`} 
                  alt="avatar A" referrerpolicy="no-referrer"
+                 onerror="this.onerror=null; this.src='https://api.dicebear.com/7.x/avataaars/svg?seed=' + encodeURIComponent(this.alt || 'userA');"
                  class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border-2 border-[#725CFF]/40 shadow-lg shrink-0 bg-white/5" />
             <div class="min-w-0 flex-grow">
               <div class="flex items-center gap-1.5 flex-wrap">
@@ -233,6 +234,7 @@ if (hasSSRSubmit) {
           <div class="lg:col-span-3 flex items-center gap-4 bg-black/40 p-4 rounded-2xl border border-white/5">
             <img id="res-avatar-b" src={ssrMutuals?.profile2?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=userB`} 
                  alt="avatar B" referrerpolicy="no-referrer"
+                 onerror="this.onerror=null; this.src='https://api.dicebear.com/7.x/avataaars/svg?seed=' + encodeURIComponent(this.alt || 'userB');"
                  class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border-2 border-[#00F0FF]/40 shadow-lg shrink-0 bg-white/5" />
             <div class="min-w-0 flex-grow">
               <div class="flex items-center gap-1.5 flex-wrap">
@@ -717,6 +719,7 @@ if (hasSSRSubmit) {
           <div>
             <div class="flex items-start gap-3 mb-3">
               <img src="${m.avatar_url}" alt="${m.username}" loading="lazy" referrerpolicy="no-referrer"
+                   onerror="this.onerror=null; this.src='https://api.dicebear.com/7.x/avataaars/svg?seed=' + encodeURIComponent('${m.username}');"
                    class="w-12 h-12 rounded-xl object-cover border border-white/10 group-hover:scale-105 transition duration-200 shrink-0 bg-white/5" />
               <div class="min-w-0 flex-grow">
                 <div class="flex items-center gap-1.5 truncate">

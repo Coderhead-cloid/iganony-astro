@@ -107,6 +107,7 @@ const popular = ['cristiano', 'leomessi', 'zendaya', 'natgeo', 'selenagomez', 't
                class="p-[3px] bg-gradient-to-tr from-[#F58529] via-[#DD2A7B] to-[#8134AF] rounded-3xl cursor-pointer hover:scale-105 transition duration-300 shadow-xl shadow-[#DD2A7B]/20 shrink-0 group">
             <img src={avatar} alt={username} 
                  referrerpolicy="no-referrer"
+                 onerror={`this.onerror=null; this.src='https://api.dicebear.com/7.x/avataaars/svg?seed=' + encodeURIComponent('${username}');`}
                  class="w-16 h-16 sm:w-20 sm:h-20 rounded-[22px] object-cover border-2 border-[#0B0D17]">
           </div>
 
@@ -327,6 +328,8 @@ const popular = ['cristiano', 'leomessi', 'zendaya', 'natgeo', 'selenagomez', 't
       <div class="flex items-center justify-between text-white">
         <div class="flex items-center gap-2.5">
           <img id="player-avatar" src={avatar} alt="avatar" 
+               referrerpolicy="no-referrer"
+               onerror={`this.onerror=null; this.src='https://api.dicebear.com/7.x/avataaars/svg?seed=' + encodeURIComponent('${username}');`}
                class="w-9 h-9 rounded-full object-cover border border-[#EC4899]">
           <div>
             <div class="flex items-center gap-1">

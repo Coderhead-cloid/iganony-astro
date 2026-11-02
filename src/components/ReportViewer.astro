@@ -53,6 +53,7 @@ const stData = report.storiesData || {};
           <div class="p-[3px] bg-gradient-to-tr from-[#F58529] via-[#DD2A7B] to-[#8134AF] rounded-3xl hover:scale-105 transition duration-300 shadow-xl shadow-[#DD2A7B]/20">
             <img src={acc.avatar_url} alt="avatar" 
                  loading="lazy" referrerpolicy="no-referrer"
+                 onerror={`this.onerror=null; this.src='https://api.dicebear.com/7.x/avataaars/svg?seed=' + encodeURIComponent('${acc.username}');`}
                  class="w-20 h-20 sm:w-24 sm:h-24 rounded-[22px] object-cover border-2 border-[#0B0D17]" />
           </div>
           <a href={`/stories/${encodeURIComponent(acc.username)}`} 
