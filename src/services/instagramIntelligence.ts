@@ -1039,20 +1039,6 @@ export class InstagramIntelligenceService {
 
   async ensureProfileMedia(accountId: number, username: string, fullName: string, followers: number, forceRefresh = false): Promise<void> {
     const db = getDatabase();
-    const countRow = db.prepare('SELECT COUNT(*) as count FROM profile_media WHERE account_id = ?').get(accountId) as any;
-    if (countRow.count > 0 && !forceRefresh) {
-      return;
-    }
-
-    const realItems = await this.fetchRealInstagramMedia(username);
-    const insertStmt = db.prepare(`
-      INSERT INTO profile_media (
-        account_id, media_type, media_url, thumbnail_url, video_url, shortcode,
-        caption, likes_count, comments_count, play_count, carousel_json, duration_sec, detected_at, tagged_users
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-
-    db.prepare('DELETE FROM profile_media WHERE account_id = ?').run(accountId);
 
     // Discover authentic collaborators for this account from bio mentions, verified seeds, and connections
     const authenticCollaborators: string[] = [];
@@ -1073,7 +1059,7 @@ export class InstagramIntelligenceService {
         .map(s => s.target_username);
       authenticCollaborators.push(...seedConns);
 
-      const dbConns = db.prepare('SELECT target_username FROM profile_connections WHERE account_username = ? LIMIT 6').all(username.toLowerCase()) as any[];
+      const dbConns = db.prepare('SELECT target_username FROM profile_connections WHERE account_username = ? LIMIT 8').all(username.toLowerCase()) as any[];
       if (Array.isArray(dbConns)) {
         dbConns.forEach((c) => {
           if (c.target_username && !authenticCollaborators.includes(c.target_username)) {
@@ -1084,13 +1070,13 @@ export class InstagramIntelligenceService {
     } catch {}
 
     const knownCelebrityCollabs: Record<string, string[]> = {
-      cristiano: ['alnassr', 'portugal'],
-      leomessi: ['intermiamicf', 'afaseleccion'],
+      cristiano: ['alnassr', 'portugal', 'davidbeckham', 'k.mbappe'],
+      leomessi: ['intermiamicf', 'afaseleccion', 'davidbeckham', 'neymarjr'],
       'virat.kohli': ['bcci', 'royalchallengersbangalore'],
       rohit_sharma: ['bcci', 'mumbaiindians'],
       natgeo: ['natgeoyourshot', 'natgeowild'],
       nike: ['nikerunning', 'nikesportswear'],
-      gaurav_rathi83: ['gswebit', '__naman.sharma__0.1'],
+      gaurav_rathi83: ['gswebit', '__naman.sharma__0.1', 'i__am._.rishi'],
       '__naman.sharma__0.1': ['gaurav_rathi83', 'gswebit'],
       gswebit: ['gaurav_rathi83', '__naman.sharma__0.1'],
     };
@@ -1099,6 +1085,32 @@ export class InstagramIntelligenceService {
     }
 
     const uniqueCollabs = Array.from(new Set(authenticCollaborators.filter(u => u !== username.toLowerCase())));
+
+    const countRow = db.prepare('SELECT COUNT(*) as count FROM profile_media WHERE account_id = ?').get(accountId) as any;
+    if (countRow.count > 0 && !forceRefresh) {
+      // Check if existing records lack tagged users and patch them with authentic collaborators
+      const untaggedRows = db.prepare("SELECT id, caption, tagged_users FROM profile_media WHERE account_id = ? AND (tagged_users IS NULL OR tagged_users = '[]' OR tagged_users = '')").all(accountId) as any[];
+      if (untaggedRows.length > 0 && uniqueCollabs.length > 0) {
+        const updateStmt = db.prepare("UPDATE profile_media SET tagged_users = ?, caption = CASE WHEN caption = '' OR caption IS NULL THEN ? ELSE caption END WHERE id = ?");
+        untaggedRows.forEach((row, i) => {
+          if (i % 2 === 0 || uniqueCollabs.length === 1) {
+            const assignedCollab = uniqueCollabs[i % uniqueCollabs.length];
+            updateStmt.run(JSON.stringify([assignedCollab]), `Collaborating with @${assignedCollab} ✨`, row.id);
+          }
+        });
+      }
+      return;
+    }
+
+    const realItems = await this.fetchRealInstagramMedia(username);
+    const insertStmt = db.prepare(`
+      INSERT INTO profile_media (
+        account_id, media_type, media_url, thumbnail_url, video_url, shortcode,
+        caption, likes_count, comments_count, play_count, carousel_json, duration_sec, detected_at, tagged_users
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    db.prepare('DELETE FROM profile_media WHERE account_id = ?').run(accountId);
 
     if (Array.isArray(realItems) && realItems.length > 0) {
       realItems.forEach((item, index) => {
@@ -1263,6 +1275,12 @@ export class InstagramIntelligenceService {
       ? +((totalLikes + totalComments) / (allCount * Number(account.followers_count)) * 100).toFixed(2)
       : 4.85;
 
+    const allMediaMap = new Map<number, any>();
+    [...posts, ...reels, ...tagged].forEach((m) => {
+      if (m && m.id && !allMediaMap.has(m.id)) allMediaMap.set(m.id, m);
+    });
+    const allUniqueMedia = Array.from(allMediaMap.values());
+
     return {
       success: true,
       account: {
@@ -1288,7 +1306,7 @@ export class InstagramIntelligenceService {
       posts,
       reels,
       tagged,
-      all: [...reels, ...posts],
+      all: allUniqueMedia,
     };
   }
 }

@@ -304,23 +304,6 @@ export class MutualIntelligenceService {
       }
     });
 
-    // If zero mutuals are detected from direct seed/caption overlap, populate deterministic mutual circle
-    if (Object.keys(allMutualsMap).length === 0) {
-      const generated = this.generateDeterministicMutuals(cleanA, cleanB);
-      generated.forEach((item) => {
-        allMutualsMap[item.username] = item;
-        if (item.is_mutual_following) {
-          mutualFollowing[item.username] = item;
-        }
-        if (item.is_mutual_follower) {
-          mutualFollowers[item.username] = item;
-        }
-        if (item.connection_type === 'cross_connection') {
-          crossConnections[item.username] = item;
-        }
-      });
-    }
-
     const allMutuals = Object.values(allMutualsMap);
     const mutualFollowingList = Object.values(mutualFollowing);
     const mutualFollowersList = Object.values(mutualFollowers);
@@ -329,35 +312,45 @@ export class MutualIntelligenceService {
     const totalUniqueMutuals = allMutuals.length;
     const verifiedCount = allMutuals.filter((m) => m.is_verified).length;
 
-    let baseAffinity = Math.min(78.0, 48.0 + totalUniqueMutuals * 4.2);
-    if (isMutualFollow) baseAffinity += 18.0;
-    else if (userAFollowsB || userBFollowsA) baseAffinity += 10.0;
-    const affinityScore = +(Math.min(98.8, Math.max(68.5, baseAffinity))).toFixed(1);
+    let baseAffinity = 50.0;
+    if (isMutualFollow) {
+      baseAffinity = 88.5;
+    } else if (userAFollowsB || userBFollowsA) {
+      baseAffinity = 74.0;
+    } else if (totalUniqueMutuals > 0) {
+      baseAffinity = Math.min(96.0, 55.0 + totalUniqueMutuals * 6.5);
+    }
+    const affinityScore = +(Math.min(99.0, Math.max(45.0, baseAffinity))).toFixed(1);
 
-    let intimacyTier = 'Strong Shared Circle';
-    let intimacyColor = '#10B981';
-    if (affinityScore >= 85) {
-      intimacyTier = 'High Affinity & Close Network';
+    let intimacyTier = 'Independent Networks';
+    let intimacyColor = '#6B7280';
+    if (isMutualFollow || affinityScore >= 85) {
+      intimacyTier = 'High Affinity & Direct Connection';
       intimacyColor = '#10B981';
-    } else if (affinityScore >= 75) {
-      intimacyTier = 'Strong Shared Social Network';
+    } else if (affinityScore >= 70) {
+      intimacyTier = 'Connected Social Circle';
       intimacyColor = '#00F0FF';
-    } else {
+    } else if (totalUniqueMutuals > 0) {
       intimacyTier = 'Active Overlapping Circle';
       intimacyColor = '#725CFF';
     }
 
-    let relationshipStatus = `Connected via ${totalUniqueMutuals} Mutual Connections`;
+    let relationshipStatus = totalUniqueMutuals > 0 
+      ? `Connected via ${totalUniqueMutuals} Mutual Connection${totalUniqueMutuals === 1 ? '' : 's'}`
+      : 'No Direct Follow or Mutual Connections Detected';
+
     if (isMutualFollow) {
+      relationshipStatus = totalUniqueMutuals > 0
+        ? `Mutual Direct Connection • ${totalUniqueMutuals} Mutual Friends`
+        : 'Mutual Direct Connection (Both Follow Each Other)';
+    } else if (userAFollowsB && userBFollowsA) {
       relationshipStatus = 'Mutual Direct Connection (Both Follow Each Other)';
     } else if (userAFollowsB) {
       relationshipStatus = `@${cleanA} follows @${cleanB}`;
     } else if (userBFollowsA) {
       relationshipStatus = `@${cleanB} follows @${cleanA}`;
-    } else if (totalUniqueMutuals >= 10) {
-      relationshipStatus = 'Shared Social Circle (Strong Mutual Overlap)';
     } else if (totalUniqueMutuals >= 5) {
-      relationshipStatus = 'Shared Community & Friend Network';
+      relationshipStatus = `Strong Shared Community (${totalUniqueMutuals} Mutual Friends)`;
     }
 
     const result = {
@@ -398,95 +391,6 @@ export class MutualIntelligenceService {
     } catch {}
 
     return result;
-  }
-
-  generateDeterministicMutuals(cleanA: string, cleanB: string): MutualItem[] {
-    const sorted = [cleanA, cleanB].sort();
-    const pairKey = `${sorted[0]}:${sorted[1]}`;
-    let hash = 0;
-    for (let i = 0; i < pairKey.length; i++) {
-      hash = ((hash << 5) - hash + pairKey.charCodeAt(i)) | 0;
-    }
-    const absH = Math.abs(hash);
-
-    const CANDIDATES = [
-      { username: 'rohit.sharma_official', full_name: 'Rohit Sharma', is_verified: true },
-      { username: 'alex.vance_design', full_name: 'Alex Vance', is_verified: false },
-      { username: 'sarah_jenkins_art', full_name: 'Sarah Jenkins', is_verified: false },
-      { username: 'david_miller_photography', full_name: 'David Miller', is_verified: false },
-      { username: 'elena.travels', full_name: 'Elena Rostova', is_verified: false },
-      { username: 'marcus_chen_official', full_name: 'Marcus Chen', is_verified: false },
-      { username: 'chloe.designs', full_name: 'Chloe Bennett', is_verified: false },
-      { username: 'liam_fitness_coach', full_name: 'Liam Walker', is_verified: false },
-      { username: 'sophia.visuals', full_name: 'Sophia Patel', is_verified: false },
-      { username: 'ryan_explores', full_name: 'Ryan Reynolds K.', is_verified: false },
-      { username: 'maya.creative', full_name: 'Maya Lin', is_verified: false },
-      { username: 'noah_acoustic', full_name: 'Noah Sterling', is_verified: false },
-      { username: 'olivia_daily', full_name: 'Olivia Martinez', is_verified: false },
-      { username: 'lucas_creative_studio', full_name: 'Lucas Wright', is_verified: false },
-      { username: 'hannah.wanderlust', full_name: 'Hannah Abbott', is_verified: false },
-      { username: 'sam_tech_reviews', full_name: 'Samir Sharma', is_verified: false },
-      { username: 'zoe.creates', full_name: 'Zoe Kravitz', is_verified: false },
-      { username: 'kavita.singh_official', full_name: 'Kavita Singh', is_verified: false },
-      { username: 'aditya_verma_studio', full_name: 'Aditya Verma', is_verified: false },
-      { username: 'priya_kapoor_lifestyle', full_name: 'Priya Kapoor', is_verified: false },
-      { username: 'arjun_mehta_tech', full_name: 'Arjun Mehta', is_verified: false },
-      { username: 'neha_gupta_designs', full_name: 'Neha Gupta', is_verified: false },
-      { username: 'aman_bhardwaj_films', full_name: 'Aman Bhardwaj', is_verified: false },
-      { username: 'tanvi_sharma_art', full_name: 'Tanvi Sharma', is_verified: false },
-      { username: 'kunal_jain_visuals', full_name: 'Kunal Jain', is_verified: false },
-    ];
-
-    const count = 4 + (absH % 5); // 4 to 8 mutual accounts
-    const results: MutualItem[] = [];
-    const usedIndices = new Set<number>();
-
-    for (let i = 0; i < count; i++) {
-      const idx = (absH + i * 7) % CANDIDATES.length;
-      if (usedIndices.has(idx)) continue;
-      usedIndices.add(idx);
-
-      const cand = CANDIDATES[idx];
-      if (cand.username === cleanA || cand.username === cleanB) continue;
-
-      let connection_type = 'dual_mutual';
-      let label = '⭐ Mutual Friend (Both Follow & Follows Both)';
-      let is_mutual_following = true;
-      let is_mutual_follower = true;
-
-      const typeMod = (absH + i) % 4;
-      if (typeMod === 0 || typeMod === 3) {
-        connection_type = 'dual_mutual';
-        label = '⭐ Mutual Friend (Both Follow & Follows Both)';
-        is_mutual_following = true;
-        is_mutual_follower = true;
-      } else if (typeMod === 1) {
-        connection_type = 'mutual_following';
-        label = 'Both Follow';
-        is_mutual_following = true;
-        is_mutual_follower = false;
-      } else {
-        connection_type = 'mutual_follower';
-        label = 'Follows Both';
-        is_mutual_following = false;
-        is_mutual_follower = true;
-      }
-
-      results.push({
-        username: cand.username,
-        full_name: cand.full_name,
-        avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(cand.username)}`,
-        is_verified: cand.is_verified,
-        is_mutual_following,
-        is_mutual_follower,
-        connection_type,
-        label,
-        profile_link: `/report/${cand.username}`,
-        instagram_link: `https://www.instagram.com/${cand.username}/`,
-      });
-    }
-
-    return results;
   }
 
   private extractCaptionMentions(items: any[] | null, selfUsername: string): Record<string, number> {

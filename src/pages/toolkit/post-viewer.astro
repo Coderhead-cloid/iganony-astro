@@ -13,7 +13,11 @@ const summary = mediaData.summary;
 const posts = mediaData.posts || [];
 const reels = mediaData.reels || [];
 const tagged = mediaData.tagged || [];
-const allMedia = mediaData.all || [...reels, ...posts];
+const mediaMap = new Map<number, any>();
+[...posts, ...reels, ...tagged].forEach((m: any) => {
+  if (m && m.id && !mediaMap.has(m.id)) mediaMap.set(m.id, m);
+});
+const allMedia = Array.from(mediaMap.values());
 
 const quickProfiles = ['natgeo', 'cristiano', 'leomessi', 'nike', 'arianagrande'];
 ---
@@ -254,6 +258,7 @@ const quickProfiles = ['natgeo', 'cristiano', 'leomessi', 'nike', 'arianagrande'
             <div class={`media-card glass-panel overflow-hidden flex flex-col justify-between group relative cursor-pointer hover:border-[#725CFF]/40 transition duration-300 ${itemIndex >= 8 ? 'hidden paged-hidden' : ''}`}
                  data-modal={modalData}
                  data-media-index={itemIndex}
+                 data-media-type={item.media_type}
                  data-has-tags={hasTags ? 'true' : 'false'}
                  onclick="openMediaModalFromEl(this)">
 
@@ -350,6 +355,17 @@ const quickProfiles = ['natgeo', 'cristiano', 'leomessi', 'nike', 'arianagrande'
             </div>
           );
         }))}
+
+        <!-- Empty Tab Filter State -->
+        <div id="tab-empty-state" class="col-span-full glass-panel p-10 text-center border border-white/5 rounded-2xl hidden">
+          <div class="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-2xl text-gray-500 mx-auto mb-3">
+            <i class="fa-solid fa-user-tag text-[#725CFF]"></i>
+          </div>
+          <h4 class="text-base font-bold text-white mb-1" id="tab-empty-title">No Media Found</h4>
+          <p class="text-xs text-gray-400 max-w-sm mx-auto" id="tab-empty-desc">
+            No public items are available under this filter.
+          </p>
+        </div>
       </div>
 
       <!-- Progressive "Load More" Pagination Button -->
@@ -606,7 +622,7 @@ const quickProfiles = ['natgeo', 'cristiano', 'leomessi', 'nike', 'arianagrande'
         if (tab === 'all') return true;
         if (tab === 'posts') return card.querySelector('.fa-image') || card.querySelector('.fa-clone');
         if (tab === 'reels') return card.querySelector('.fa-film');
-        if (tab === 'tagged') return card.getAttribute('data-has-tags') === 'true' || card.querySelector('.fa-user-tag');
+        if (tab === 'tagged') return card.getAttribute('data-has-tags') === 'true' || card.querySelector('.fa-user-tag') || card.getAttribute('data-media-type') === 'tagged';
         return true;
       });
     }
@@ -624,6 +640,19 @@ const quickProfiles = ['natgeo', 'cristiano', 'leomessi', 'nike', 'arianagrande'
           card.classList.add('hidden');
         }
       });
+
+      const tabEmpty = document.getElementById('tab-empty-state');
+      if (tabEmpty) {
+        if (matchingCards.length === 0) {
+          tabEmpty.classList.remove('hidden');
+          const emptyTitle = document.getElementById('tab-empty-title');
+          const emptyDesc = document.getElementById('tab-empty-desc');
+          if (emptyTitle) emptyTitle.innerText = `No ${activeMediaTab === 'tagged' ? 'Tagged Media' : (activeMediaTab === 'reels' ? 'Reels' : 'Posts')} Found`;
+          if (emptyDesc) emptyDesc.innerText = `No public ${activeMediaTab} are available for this profile.`;
+        } else {
+          tabEmpty.classList.add('hidden');
+        }
+      }
 
       const remaining = Math.max(0, matchingCards.length - currentBatchLimit);
       const loadMoreSec = document.getElementById('load-more-section');
