@@ -255,7 +255,7 @@ const quickProfiles = ['natgeo', 'cristiano', 'leomessi', 'nike', 'arianagrande'
           const hasTags = Array.isArray(item.tagged_users) && item.tagged_users.length > 0;
 
           return (
-            <div class={`media-card glass-panel overflow-hidden flex flex-col justify-between group relative cursor-pointer hover:border-[#725CFF]/40 transition duration-300 ${itemIndex >= 8 ? 'hidden paged-hidden' : ''}`}
+            <div class={`media-card glass-panel overflow-hidden flex flex-col justify-between group relative cursor-pointer hover:border-[#725CFF]/40 transition duration-300 ${itemIndex >= 12 ? 'hidden paged-hidden' : ''}`}
                  data-modal={modalData}
                  data-media-index={itemIndex}
                  data-media-type={item.media_type}
@@ -373,7 +373,7 @@ const quickProfiles = ['natgeo', 'cristiano', 'leomessi', 'nike', 'arianagrande'
         <button type="button" id="btn-load-more" onclick="loadMoreMedia()"
                 class="btn-secondary py-3.5 px-8 text-xs font-bold rounded-xl border border-white/10 hover:border-[#725CFF] text-white hover:bg-[#725CFF]/20 transition duration-200 inline-flex items-center gap-2 shadow-xl hover:scale-105 active:scale-95">
           <i class="fa-solid fa-layer-group text-[#725CFF]"></i>
-          <span id="load-more-text">Load More Posts & Reels (<span id="load-more-count">{Math.min(8, Math.max(0, allMedia.length - 8))} of {Math.max(0, allMedia.length - 8)} more</span>)</span>
+          <span id="load-more-text">Load More Posts & Reels (<span id="load-more-count">{Math.min(12, Math.max(0, allMedia.length - 12))} of {Math.max(0, allMedia.length - 12)} more</span>)</span>
         </button>
       </div>
 
@@ -610,8 +610,8 @@ const quickProfiles = ['natgeo', 'cristiano', 'leomessi', 'nike', 'arianagrande'
       if (typeof showToast === 'function') showToast('Caption copied to clipboard!', 'success');
     };
 
-    let currentBatchLimit = 8;
-    const BATCH_SIZE = 8;
+    let currentBatchLimit = 12;
+    const BATCH_SIZE = 12;
     let activeMediaTab = 'all';
 
     function getMatchingCards(tab) {
@@ -625,6 +625,138 @@ const quickProfiles = ['natgeo', 'cristiano', 'leomessi', 'nike', 'arianagrande'
       });
     }
 
+    function updateTabCounts() {
+      const allCards = Array.from(document.querySelectorAll('#media-grid-all > .media-card'));
+      const postsCount = allCards.filter(c => c.querySelector('.fa-image') || c.querySelector('.fa-clone')).length;
+      const reelsCount = allCards.filter(c => c.querySelector('.fa-film')).length;
+      const taggedCount = allCards.filter(c => c.getAttribute('data-has-tags') === 'true' || c.querySelector('.fa-user-tag') || c.getAttribute('data-media-type') === 'tagged').length;
+
+      const btnAll = document.querySelector('#btn-tab-all span');
+      const btnPosts = document.querySelector('#btn-tab-posts span');
+      const btnReels = document.querySelector('#btn-tab-reels span');
+      const btnTagged = document.querySelector('#btn-tab-tagged span');
+
+      if (btnAll) btnAll.innerText = `All Media (${allCards.length})`;
+      if (btnPosts) btnPosts.innerText = `Photos & Carousels (${postsCount})`;
+      if (btnReels) btnReels.innerText = `Reels & Videos (${reelsCount})`;
+      if (btnTagged) btnTagged.innerText = `Tagged (${taggedCount})`;
+    }
+
+    function appendMediaCards(items, author, avatar) {
+      const grid = document.getElementById('media-grid-all');
+      if (!grid || !Array.isArray(items)) return;
+
+      items.forEach((item) => {
+        const isVideo = item.media_type === 'reel' || Boolean(item.video_url);
+        const downloadUrl = (isVideo && item.video_url) ? item.video_url : (item.thumbnail_url || item.media_url);
+        const downloadFilename = `${author}_${isVideo ? 'reel_' : 'post_'}${item.shortcode || item.id}.${isVideo ? 'mp4' : 'jpg'}`;
+
+        const modalObj = {
+          type: isVideo ? 'reel' : 'post',
+          url: item.thumbnail_url || item.media_url,
+          videoUrl: item.video_url,
+          caption: item.caption,
+          likes: item.likes_count,
+          comments: item.comments_count,
+          plays: item.play_count,
+          shortcode: item.shortcode,
+          date: item.detected_at,
+          author: author,
+          authorAvatar: avatar,
+          carousel: item.carousel,
+          taggedUsers: item.tagged_users || [],
+        };
+
+        const hasTags = Array.isArray(item.tagged_users) && item.tagged_users.length > 0;
+        const card = document.createElement('div');
+        card.className = 'media-card glass-panel overflow-hidden flex flex-col justify-between group relative cursor-pointer hover:border-[#725CFF]/40 transition duration-300';
+        card.setAttribute('data-modal', encodeURIComponent(JSON.stringify(modalObj)));
+        card.setAttribute('data-media-type', item.media_type);
+        card.setAttribute('data-has-tags', hasTags ? 'true' : 'false');
+        card.onclick = function() { openMediaModalFromEl(card); };
+
+        let tagsHtml = '';
+        if (hasTags) {
+          tagsHtml = `
+            <div class="mt-2.5 flex items-center gap-1.5 flex-wrap" onclick="event.stopPropagation()">
+              ${item.tagged_users.slice(0, 3).map(tu => `
+                <a href="/toolkit/post-viewer?username=${encodeURIComponent(tu)}"
+                   class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#725CFF]/15 hover:bg-[#725CFF]/30 border border-[#725CFF]/30 text-purple-300 hover:text-white text-[10px] font-semibold transition">
+                  <i class="fa-solid fa-user-tag text-[8px] text-[#A78BFA]"></i>
+                  <span>@${tu}</span>
+                </a>
+              `).join('')}
+              ${item.tagged_users.length > 3 ? `<span class="text-[10px] text-gray-400 font-semibold">+${item.tagged_users.length - 3}</span>` : ''}
+            </div>
+          `;
+        }
+
+        card.innerHTML = `
+          <div class="relative h-72 overflow-hidden bg-black/60">
+            <img src="${item.thumbnail_url || item.media_url}" alt="Media preview"
+                 loading="lazy" referrerpolicy="no-referrer"
+                 onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=720&q=80';"
+                 class="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+            <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent opacity-80 group-hover:opacity-100 transition duration-300"></div>
+            <div class="absolute top-3 left-3 flex items-center gap-1.5">
+              ${isVideo ? `
+                <span class="badge badge-rose text-[10px] font-bold shadow-md">
+                  <i class="fa-solid fa-film"></i> REEL
+                </span>
+              ` : `
+                <span class="badge badge-purple text-[10px] font-bold shadow-md">
+                  <i class="fa-solid fa-image"></i> PHOTO
+                </span>
+              `}
+            </div>
+            ${isVideo ? `
+              <div class="absolute inset-0 flex items-center justify-center">
+                <div class="w-12 h-12 rounded-full bg-black/60 border border-white/20 backdrop-blur-md flex items-center justify-center text-white text-lg group-hover:scale-110 group-hover:bg-[#725CFF] transition duration-300 shadow-xl">
+                  <i class="fa-solid fa-play ml-0.5"></i>
+                </div>
+              </div>
+            ` : ''}
+            <a href="/api/download?url=${encodeURIComponent(downloadUrl)}&filename=${encodeURIComponent(downloadFilename)}"
+               onclick="event.stopPropagation(); if (typeof showToast === 'function') showToast('Downloading file...', 'success');"
+               title="Direct Download HD File"
+               class="absolute top-3 right-3 w-8 h-8 rounded-xl bg-black/70 hover:bg-[#725CFF] border border-white/10 backdrop-blur-md flex items-center justify-center text-white text-xs shadow-lg transition">
+              <i class="fa-solid fa-download"></i>
+            </a>
+            <div class="absolute bottom-3 inset-x-3 flex items-center justify-between text-xs text-white font-bold">
+              <div class="flex items-center gap-3">
+                <span><i class="fa-solid fa-heart text-[#EC4899] mr-1"></i> ${Number(item.likes_count || 0).toLocaleString()}</span>
+                <span><i class="fa-solid fa-comment text-[#00F0FF] mr-1"></i> ${Number(item.comments_count || 0).toLocaleString()}</span>
+              </div>
+              ${isVideo && Number(item.play_count) > 0 ? `
+                <span class="text-[11px] text-[#00F0FF] flex items-center gap-1 font-mono">
+                  <i class="fa-solid fa-play text-[9px]"></i> ${Number(item.play_count).toLocaleString()}
+                </span>
+              ` : ''}
+            </div>
+          </div>
+          <div class="p-4 flex-grow flex flex-col justify-between">
+            <div>
+              <p class="text-xs text-gray-300 line-clamp-2 leading-relaxed">
+                ${item.caption || 'No caption provided.'}
+              </p>
+              ${tagsHtml}
+            </div>
+            <div class="mt-3 pt-3 border-t border-white/5 flex items-center justify-between text-[11px] text-gray-500">
+              <span>${new Date(item.detected_at).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+              ${item.shortcode ? `
+                <a href="https://www.instagram.com/p/${item.shortcode}/" target="_blank" onclick="event.stopPropagation();"
+                   class="text-[#725CFF] hover:text-white flex items-center gap-1 transition font-mono">
+                  <span>#${item.shortcode}</span>
+                  <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+                </a>
+              ` : ''}
+            </div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
     function updateMediaPagination() {
       const matchingCards = getMatchingCards(activeMediaTab);
       const allCards = Array.from(document.querySelectorAll('#media-grid-all > .media-card'));
@@ -634,8 +766,10 @@ const quickProfiles = ['natgeo', 'cristiano', 'leomessi', 'nike', 'arianagrande'
       matchingCards.forEach((card, idx) => {
         if (idx < currentBatchLimit) {
           card.classList.remove('hidden');
+          card.classList.remove('paged-hidden');
         } else {
           card.classList.add('hidden');
+          card.classList.add('paged-hidden');
         }
       });
 
@@ -667,16 +801,16 @@ const quickProfiles = ['natgeo', 'cristiano', 'leomessi', 'nike', 'arianagrande'
             loadMoreBtn.className = 'btn-secondary py-3.5 px-8 text-xs font-bold rounded-xl border border-white/10 hover:border-[#725CFF] text-white hover:bg-[#725CFF]/20 transition duration-200 inline-flex items-center gap-2 shadow-xl hover:scale-105 active:scale-95';
           }
           if (loadMoreText) {
-            loadMoreText.innerHTML = `Load More Posts & Reels (${Math.min(BATCH_SIZE, remaining)} of ${remaining} more)`;
+            loadMoreText.innerHTML = `Load More Posts & Reels (${Math.min(BATCH_SIZE, remaining)} of ${remaining} more in current batch)`;
           }
         } else if (matchingCards.length < totalPosts && totalPosts > 0) {
           loadMoreSec.classList.remove('hidden');
           if (loadMoreBtn) {
             loadMoreBtn.disabled = false;
-            loadMoreBtn.className = 'btn-secondary py-3 px-6 text-xs font-semibold rounded-xl border border-white/10 text-gray-300 inline-flex items-center gap-2 shadow-md';
+            loadMoreBtn.className = 'btn-primary py-3.5 px-8 text-xs font-bold rounded-xl shadow-xl shadow-[#725CFF]/25 hover:shadow-[#725CFF]/45 inline-flex items-center gap-2 transition duration-200 hover:scale-105 active:scale-95';
           }
           if (loadMoreText) {
-            loadMoreText.innerHTML = `Showing all ${matchingCards.length} live scanned items (${totalPosts.toLocaleString()} total posts on @${viewerUser}) • <a href="/toolkit/post-viewer?username=${encodeURIComponent(viewerUser)}&refresh=1" class="text-[#00F0FF] hover:underline font-bold inline-flex items-center gap-1 ml-1"><i class="fa-solid fa-arrows-rotate text-[10px]"></i> Sync More from Instagram</a>`;
+            loadMoreText.innerHTML = `<i class="fa-solid fa-cloud-arrow-down text-base"></i> <span>Fetch Next 24 Reels & Posts (Showing ${matchingCards.length} of ${totalPosts.toLocaleString()})</span>`;
           }
         } else if (matchingCards.length > 0) {
           loadMoreSec.classList.remove('hidden');
@@ -685,7 +819,7 @@ const quickProfiles = ['natgeo', 'cristiano', 'leomessi', 'nike', 'arianagrande'
             loadMoreBtn.className = 'btn-secondary py-3 px-6 text-xs font-medium rounded-xl border border-white/5 text-gray-400 inline-flex items-center gap-2 cursor-default opacity-80';
           }
           if (loadMoreText) {
-            loadMoreText.innerHTML = `✓ All ${matchingCards.length} ${activeMediaTab === 'all' ? 'Live Items' : activeMediaTab} Loaded`;
+            loadMoreText.innerHTML = `✓ All ${matchingCards.length} ${activeMediaTab === 'all' ? 'Public Media' : activeMediaTab} Loaded`;
           }
         } else {
           loadMoreSec.classList.add('hidden');
@@ -693,9 +827,47 @@ const quickProfiles = ['natgeo', 'cristiano', 'leomessi', 'nike', 'arianagrande'
       }
     }
 
-    window.loadMoreMedia = function() {
-      currentBatchLimit += BATCH_SIZE;
-      updateMediaPagination();
+    window.loadMoreMedia = async function() {
+      const matchingCards = getMatchingCards(activeMediaTab);
+      const remaining = Math.max(0, matchingCards.length - currentBatchLimit);
+
+      if (remaining > 0) {
+        currentBatchLimit += BATCH_SIZE;
+        updateMediaPagination();
+        return;
+      }
+
+      const totalPosts = parseInt(document.getElementById('viewer-content')?.getAttribute('data-total-posts') || '0', 10);
+      const viewerUser = document.getElementById('viewer-content')?.getAttribute('data-username') || '';
+      const allCardsCount = document.querySelectorAll('#media-grid-all > .media-card').length;
+
+      if (allCardsCount < totalPosts && viewerUser) {
+        const loadMoreBtn = document.getElementById('btn-load-more');
+        const loadMoreText = document.getElementById('load-more-text');
+        if (loadMoreBtn) loadMoreBtn.disabled = true;
+        if (loadMoreText) {
+          loadMoreText.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-white"></i> <span>Streaming archive reels & posts from Instagram...</span>`;
+        }
+
+        try {
+          const res = await fetch(`/api/toolkit/posts?username=${encodeURIComponent(viewerUser)}&offset=${allCardsCount}&limit=24&type=${activeMediaTab}`);
+          const data = await res.json();
+          if (data.success && Array.isArray(data.items) && data.items.length > 0) {
+            const avatarEl = document.getElementById('view-profile-avatar');
+            const authorAvatar = avatarEl ? avatarEl.src : '';
+            appendMediaCards(data.items, viewerUser, authorAvatar);
+            currentBatchLimit += data.items.length;
+            updateTabCounts();
+            updateMediaPagination();
+          } else {
+            if (loadMoreBtn) loadMoreBtn.disabled = true;
+            if (loadMoreText) loadMoreText.innerHTML = `✓ All ${allCardsCount} ${activeMediaTab === 'all' ? 'Posts & Reels' : activeMediaTab} Loaded`;
+          }
+        } catch (e) {
+          if (loadMoreBtn) loadMoreBtn.disabled = false;
+          if (loadMoreText) loadMoreText.innerHTML = `<i class="fa-solid fa-rotate-right"></i> <span>Connection delayed. Click to retry stream.</span>`;
+        }
+      }
     };
 
     window.switchMediaTab = function(tab) {
