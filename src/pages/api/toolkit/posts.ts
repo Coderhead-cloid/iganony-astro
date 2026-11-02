@@ -45,20 +45,7 @@ async function handlePosts(request: Request) {
 
     const targetPosts = Math.max(12, Number(account.posts_count || 12));
     const currentCountRow = db.prepare('SELECT COUNT(*) as count FROM profile_media WHERE account_id = ?').get(accountId) as any;
-    let currentCount = Number(currentCountRow?.count || 0);
-
-    // If more items needed and profile has more posts, backfill on demand
-    const neededEnd = Math.min(targetPosts, offset + limit);
-    if (currentCount < neededEnd) {
-      intelService.backfillHistoricalMedia(
-        accountId,
-        clean,
-        Number(account.followers_count || 1000),
-        currentCount,
-        neededEnd
-      );
-      currentCount = neededEnd;
-    }
+    const currentCount = Number(currentCountRow?.count || 0);
 
     // Query the requested slice
     let query = "SELECT * FROM profile_media WHERE account_id = ? ";
@@ -114,7 +101,7 @@ async function handlePosts(request: Request) {
       limit,
       total_in_db: currentCount,
       total_on_profile: targetPosts,
-      has_more: offset + items.length < targetPosts,
+      has_more: offset + items.length < currentCount,
     }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },

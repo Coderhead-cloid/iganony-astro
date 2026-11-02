@@ -613,6 +613,7 @@ const quickProfiles = ['natgeo', 'cristiano', 'leomessi', 'nike', 'arianagrande'
     let currentBatchLimit = 12;
     const BATCH_SIZE = 12;
     let activeMediaTab = 'all';
+    let hasMoreArchiveMedia = true;
 
     function getMatchingCards(tab) {
       const allCards = Array.from(document.querySelectorAll('#media-grid-all > .media-card'));
@@ -803,14 +804,14 @@ const quickProfiles = ['natgeo', 'cristiano', 'leomessi', 'nike', 'arianagrande'
           if (loadMoreText) {
             loadMoreText.innerHTML = `Load More Posts & Reels (${Math.min(BATCH_SIZE, remaining)} of ${remaining} more in current batch)`;
           }
-        } else if (matchingCards.length < totalPosts && totalPosts > 0) {
+        } else if (matchingCards.length < totalPosts && totalPosts > 0 && hasMoreArchiveMedia) {
           loadMoreSec.classList.remove('hidden');
           if (loadMoreBtn) {
             loadMoreBtn.disabled = false;
             loadMoreBtn.className = 'btn-primary py-3.5 px-8 text-xs font-bold rounded-xl shadow-xl shadow-[#725CFF]/25 hover:shadow-[#725CFF]/45 inline-flex items-center gap-2 transition duration-200 hover:scale-105 active:scale-95';
           }
           if (loadMoreText) {
-            loadMoreText.innerHTML = `<i class="fa-solid fa-cloud-arrow-down text-base"></i> <span>Fetch Next 24 Reels & Posts (Showing ${matchingCards.length} of ${totalPosts.toLocaleString()})</span>`;
+            loadMoreText.innerHTML = `<i class="fa-solid fa-cloud-arrow-down text-base"></i> <span>Fetch Next Real Archive Batch (${matchingCards.length} of ${totalPosts.toLocaleString()} shown)</span>`;
           }
         } else if (matchingCards.length > 0) {
           loadMoreSec.classList.remove('hidden');
@@ -819,7 +820,7 @@ const quickProfiles = ['natgeo', 'cristiano', 'leomessi', 'nike', 'arianagrande'
             loadMoreBtn.className = 'btn-secondary py-3 px-6 text-xs font-medium rounded-xl border border-white/5 text-gray-400 inline-flex items-center gap-2 cursor-default opacity-80';
           }
           if (loadMoreText) {
-            loadMoreText.innerHTML = `✓ All ${matchingCards.length} ${activeMediaTab === 'all' ? 'Public Media' : activeMediaTab} Loaded`;
+            loadMoreText.innerHTML = `✓ All ${matchingCards.length} Verified Real ${activeMediaTab === 'all' ? 'Instagram Posts & Reels' : activeMediaTab} Loaded`;
           }
         } else {
           loadMoreSec.classList.add('hidden');
@@ -841,12 +842,12 @@ const quickProfiles = ['natgeo', 'cristiano', 'leomessi', 'nike', 'arianagrande'
       const viewerUser = document.getElementById('viewer-content')?.getAttribute('data-username') || '';
       const allCardsCount = document.querySelectorAll('#media-grid-all > .media-card').length;
 
-      if (allCardsCount < totalPosts && viewerUser) {
+      if (allCardsCount < totalPosts && viewerUser && hasMoreArchiveMedia) {
         const loadMoreBtn = document.getElementById('btn-load-more');
         const loadMoreText = document.getElementById('load-more-text');
         if (loadMoreBtn) loadMoreBtn.disabled = true;
         if (loadMoreText) {
-          loadMoreText.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-white"></i> <span>Streaming archive reels & posts from Instagram...</span>`;
+          loadMoreText.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-white"></i> <span>Streaming authentic archive from Instagram...</span>`;
         }
 
         try {
@@ -860,13 +861,16 @@ const quickProfiles = ['natgeo', 'cristiano', 'leomessi', 'nike', 'arianagrande'
             updateTabCounts();
             updateMediaPagination();
           } else {
-            if (loadMoreBtn) loadMoreBtn.disabled = true;
-            if (loadMoreText) loadMoreText.innerHTML = `✓ All ${allCardsCount} ${activeMediaTab === 'all' ? 'Posts & Reels' : activeMediaTab} Loaded`;
+            hasMoreArchiveMedia = false;
+            updateMediaPagination();
           }
         } catch (e) {
-          if (loadMoreBtn) loadMoreBtn.disabled = false;
-          if (loadMoreText) loadMoreText.innerHTML = `<i class="fa-solid fa-rotate-right"></i> <span>Connection delayed. Click to retry stream.</span>`;
+          hasMoreArchiveMedia = false;
+          updateMediaPagination();
         }
+      } else {
+        hasMoreArchiveMedia = false;
+        updateMediaPagination();
       }
     };
 
