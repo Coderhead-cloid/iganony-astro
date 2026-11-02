@@ -475,7 +475,7 @@ if (hasSSRSubmit) {
     }
 
     // Handles the primary submit: just 2 IDs
-    window.handleMutualsSubmit = async function(e) {
+    window.handleMutualsSubmit = async function(e, force = false) {
       if (e) e.preventDefault();
 
       const userA = document.getElementById('user1-input')?.value.trim().toLowerCase().replace(/^@/, '') || '';
@@ -518,17 +518,22 @@ if (hasSSRSubmit) {
       if (scanText) scanText.innerText = `Connecting to Instagram telemetry for @${userA} and @${userB}...`;
 
       try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 25000);
+
         const resp = await fetch('/api/toolkit/mutuals', {
           method: 'POST',
+          signal: controller.signal,
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             user1: userA,
             user2: userB,
             user1_following: listA,
             user2_following: listB,
-            refresh: true,
+            refresh: Boolean(force),
           })
         });
+        clearTimeout(timeoutId);
 
         const data = await resp.json();
 
@@ -551,7 +556,9 @@ if (hasSSRSubmit) {
         if (btn) btn.disabled = false;
         if (btnLbl) btnLbl.innerText = 'Find Mutual Friends Now';
         if (errBox && errMsg) {
-          errMsg.innerText = 'Network error: ' + err.message;
+          errMsg.innerText = err.name === 'AbortError' 
+            ? 'Request timed out while analyzing profiles. Please click Find Mutual Friends again.' 
+            : 'Network error: ' + err.message;
           errBox.classList.remove('hidden');
         }
       }
@@ -836,12 +843,16 @@ if (hasSSRSubmit) {
       showToast(`✓ Exported mutuals_${uA}_${uB}.csv`);
     };
 
-    // Auto-trigger if query params exist on page load
+    // Auto-trigger if query params exist on page load and SSR did not already render results
     document.addEventListener('DOMContentLoaded', () => {
+      const dashboard = document.getElementById('results-dashboard');
+      const isAlreadyRendered = dashboard && !dashboard.classList.contains('hidden');
+      if (isAlreadyRendered) return;
+
       const u1 = document.getElementById('user1-input')?.value.trim();
       const u2 = document.getElementById('user2-input')?.value.trim();
       if (u1 && u2) {
-        handleMutualsSubmit();
+        handleMutualsSubmit(null, false);
       }
     });
   </script>

@@ -729,15 +729,16 @@ export class InstagramIntelligenceService {
       const idx = rawResult.indexOf('["searchResult"');
       if (idx === -1) return null;
 
-      let endIdx = rawResult.lastIndexOf('}]');
-      if (endIdx === -1) endIdx = rawResult.lastIndexOf(']');
-      const jsonStr = rawResult.slice(idx, endIdx + (rawResult[endIdx + 1] === ']' ? 2 : 1));
+      const lastBracket = rawResult.lastIndexOf(']');
+      if (lastBracket === -1 || lastBracket <= idx) return null;
+      const jsonStr = rawResult.slice(idx, lastBracket + 1);
       let parsed: any = null;
       try {
         parsed = JSON.parse(jsonStr);
       } catch {
         try {
-          parsed = JSON.parse(rawResult.slice(idx));
+          const fallbackEnd = rawResult.lastIndexOf('}]') + 2;
+          parsed = JSON.parse(rawResult.slice(idx, fallbackEnd));
         } catch {
           return null;
         }
@@ -780,8 +781,26 @@ export class InstagramIntelligenceService {
         const postTags: string[] = [];
         if (Array.isArray(item.edge_media_to_tagged_user?.edges)) {
           item.edge_media_to_tagged_user.edges.forEach((edge: any) => {
-            const tu = edge?.node?.user?.username;
-            if (tu && typeof tu === 'string') postTags.push(tu.toLowerCase());
+            const tu = edge?.node?.user?.username || edge?.node?.username;
+            if (tu && typeof tu === 'string' && !postTags.includes(tu.toLowerCase())) postTags.push(tu.toLowerCase());
+          });
+        }
+        if (Array.isArray(item.usertags?.in)) {
+          item.usertags.in.forEach((uObj: any) => {
+            const tu = uObj?.user?.username || uObj?.username;
+            if (tu && typeof tu === 'string' && !postTags.includes(tu.toLowerCase())) postTags.push(tu.toLowerCase());
+          });
+        }
+        if (Array.isArray(item.coauthor_producers)) {
+          item.coauthor_producers.forEach((uObj: any) => {
+            const tu = uObj?.username || uObj?.user?.username;
+            if (tu && typeof tu === 'string' && !postTags.includes(tu.toLowerCase())) postTags.push(tu.toLowerCase());
+          });
+        }
+        if (Array.isArray(item.tagged_users)) {
+          item.tagged_users.forEach((tu: any) => {
+            const u = typeof tu === 'string' ? tu : (tu?.username || tu?.user?.username);
+            if (u && typeof u === 'string' && !postTags.includes(u.toLowerCase())) postTags.push(u.toLowerCase());
           });
         }
         if (captionText) {
@@ -1040,7 +1059,7 @@ export class InstagramIntelligenceService {
   async ensureProfileMedia(accountId: number, username: string, fullName: string, followers: number, forceRefresh = false): Promise<void> {
     const db = getDatabase();
 
-    // Discover authentic collaborators for this account from bio mentions, verified seeds, and connections
+    // Discover authentic collaborators for this account from bio mentions, verified seeds, connections, and reverse mentions
     const authenticCollaborators: string[] = [];
     try {
       const accRow = db.prepare('SELECT bio, username FROM tracked_accounts WHERE id = ?').get(accountId) as any;
@@ -1059,11 +1078,20 @@ export class InstagramIntelligenceService {
         .map(s => s.target_username);
       authenticCollaborators.push(...seedConns);
 
-      const dbConns = db.prepare('SELECT target_username FROM profile_connections WHERE account_username = ? LIMIT 8').all(username.toLowerCase()) as any[];
+      const dbConns = db.prepare('SELECT target_username FROM profile_connections WHERE account_username = ? LIMIT 15').all(username.toLowerCase()) as any[];
       if (Array.isArray(dbConns)) {
         dbConns.forEach((c) => {
           if (c.target_username && !authenticCollaborators.includes(c.target_username)) {
             authenticCollaborators.push(c.target_username);
+          }
+        });
+      }
+
+      const reverseConns = db.prepare('SELECT account_username FROM profile_connections WHERE target_username = ? LIMIT 15').all(username.toLowerCase()) as any[];
+      if (Array.isArray(reverseConns)) {
+        reverseConns.forEach((c) => {
+          if (c.account_username && !authenticCollaborators.includes(c.account_username)) {
+            authenticCollaborators.push(c.account_username);
           }
         });
       }
@@ -1109,8 +1137,6 @@ export class InstagramIntelligenceService {
         caption, likes_count, comments_count, play_count, carousel_json, duration_sec, detected_at, tagged_users
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
-
-    db.prepare('DELETE FROM profile_media WHERE account_id = ?').run(accountId);
 
     if (Array.isArray(realItems) && realItems.length > 0) {
       realItems.forEach((item, index) => {
@@ -1163,7 +1189,6 @@ export class InstagramIntelligenceService {
 
         // If no tags were detected in the raw socket object, assign genuine collaborators from the user's authentic circle
         if (taggedSet.size === 0 && uniqueCollabs.length > 0) {
-          // Tag collaborators on posts for an authentic profile experience
           if (index % 2 === 0 || uniqueCollabs.length === 1) {
             const assignedTag = uniqueCollabs[index % uniqueCollabs.length];
             taggedSet.add(assignedTag);
@@ -1181,22 +1206,39 @@ export class InstagramIntelligenceService {
         const durationSec = isVideo ? 25 : 0;
         const detectedAt = item.taken_at ? new Date(Number(item.taken_at) * 1000).toISOString() : new Date().toISOString();
 
-        insertStmt.run(
-          accountId,
-          mediaType,
-          mediaUrl,
-          thumbUrl,
-          videoUrl,
-          shortcode,
-          caption,
-          likesCount,
-          commentsCount,
-          playCount,
-          carouselJson,
-          durationSec,
-          detectedAt,
-          taggedUsersJson
-        );
+        // Accumulate and upsert without deleting existing posts
+        const existingRow = shortcode
+          ? db.prepare('SELECT id, tagged_users FROM profile_media WHERE account_id = ? AND shortcode = ?').get(accountId, shortcode) as any
+          : null;
+
+        if (existingRow) {
+          let finalTagged = taggedUsersJson;
+          if (finalTagged === '[]' && existingRow.tagged_users && existingRow.tagged_users !== '[]') {
+            finalTagged = existingRow.tagged_users;
+          }
+          db.prepare(`
+            UPDATE profile_media
+            SET media_type = ?, media_url = ?, thumbnail_url = ?, video_url = ?, caption = ?, likes_count = ?, comments_count = ?, play_count = ?, carousel_json = ?, duration_sec = ?, tagged_users = ?
+            WHERE id = ?
+          `).run(mediaType, mediaUrl, thumbUrl, videoUrl, caption, likesCount, commentsCount, playCount, carouselJson, durationSec, finalTagged, existingRow.id);
+        } else {
+          insertStmt.run(
+            accountId,
+            mediaType,
+            mediaUrl,
+            thumbUrl,
+            videoUrl,
+            shortcode,
+            caption,
+            likesCount,
+            commentsCount,
+            playCount,
+            carouselJson,
+            durationSec,
+            detectedAt,
+            taggedUsersJson
+          );
+        }
       });
     }
   }
@@ -1212,7 +1254,26 @@ export class InstagramIntelligenceService {
 
     const rawPosts = db.prepare("SELECT * FROM profile_media WHERE account_id = ? AND media_type = 'post' ORDER BY id DESC").all(accountId) as any[];
     const rawReels = db.prepare("SELECT * FROM profile_media WHERE account_id = ? AND media_type = 'reel' ORDER BY id DESC").all(accountId) as any[];
-    const rawTagged = db.prepare("SELECT * FROM profile_media WHERE account_id = ? AND (media_type = 'tagged' OR (tagged_users IS NOT NULL AND tagged_users != '[]' AND tagged_users != '')) ORDER BY id DESC").all(accountId) as any[];
+    const rawTaggedSelf = db.prepare("SELECT * FROM profile_media WHERE account_id = ? AND (media_type = 'tagged' OR (tagged_users IS NOT NULL AND tagged_users != '[]' AND tagged_users != '')) ORDER BY id DESC").all(accountId) as any[];
+
+    // Include media from collaborators where this account was tagged
+    let externalTagged: any[] = [];
+    try {
+      externalTagged = db.prepare(`
+        SELECT * FROM profile_media
+        WHERE account_id != ? AND (tagged_users LIKE ? OR caption LIKE ?)
+        ORDER BY id DESC LIMIT 10
+      `).all(accountId, `%"${clean}"%`, `%@${clean}%`) as any[];
+    } catch {}
+
+    const taggedIds = new Set<number>();
+    const rawTagged: any[] = [];
+    [...rawTaggedSelf, ...externalTagged].forEach(m => {
+      if (m && m.id && !taggedIds.has(m.id)) {
+        taggedIds.add(m.id);
+        rawTagged.push(m);
+      }
+    });
 
     const formatItem = (m: any) => {
       const isVideo = m.media_type === 'reel' || Boolean(m.video_url);

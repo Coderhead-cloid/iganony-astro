@@ -105,25 +105,23 @@ export class MutualIntelligenceService {
       } catch {}
     }
 
-    // Parallel fast fetch with zero chance of timeout
+    // Parallel fast telemetry fetch with zero chance of timeout
     let profileA: any = null;
     let profileB: any = null;
     let realMediaA: any = null;
     let realMediaB: any = null;
 
     try {
-      const results = await Promise.allSettled([
-        this.getProfileData(cleanA),
-        this.getProfileData(cleanB),
-        this.intelService.fetchRealInstagramMedia(cleanA),
-        this.intelService.fetchRealInstagramMedia(cleanB),
+      const [telA, telB] = await Promise.all([
+        this.fetchUserTelemetry(cleanA, forceFresh),
+        this.fetchUserTelemetry(cleanB, forceFresh),
       ]);
-      profileA = results[0].status === 'fulfilled' ? results[0].value : null;
-      profileB = results[1].status === 'fulfilled' ? results[1].value : null;
-      realMediaA = results[2].status === 'fulfilled' ? results[2].value : null;
-      realMediaB = results[3].status === 'fulfilled' ? results[3].value : null;
+      profileA = telA.profile;
+      realMediaA = telA.media;
+      profileB = telB.profile;
+      realMediaB = telB.media;
     } catch {
-      // Fallback
+      // Clean fallback
     }
 
     if (!profileA) profileA = await this.getProfileData(cleanA);
@@ -455,43 +453,84 @@ export class MutualIntelligenceService {
     return mentions;
   }
 
+  async fetchUserTelemetry(username: string, forceFresh = false): Promise<{ profile: any; media: any[] }> {
+    const clean = this.sanitizeUsername(username);
+    const db = getDatabase();
+
+    // 1. If not forcing fresh, check SQLite first for fast 0.5ms resolution
+    if (!forceFresh) {
+      try {
+        const cached = db.prepare('SELECT * FROM tracked_accounts WHERE username = ?').get(clean) as any;
+        if (cached && (Number(cached.followers_count) > 0 || Number(cached.following_count) > 0)) {
+          const mediaRows = db.prepare('SELECT shortcode, thumbnail_url, media_url, video_url, caption, likes_count, comments_count, tagged_users FROM profile_media WHERE account_id = ?').all(cached.id) as any[];
+          return {
+            profile: {
+              username: cached.username,
+              full_name: cached.full_name || clean,
+              avatar_url: cached.avatar_url,
+              followers_count: Number(cached.followers_count || 0),
+              following_count: Number(cached.following_count || 0),
+              posts_count: Number(cached.posts_count || 0),
+              is_verified: Boolean(cached.is_verified),
+              is_private: Boolean(cached.is_private),
+              bio: cached.bio || '',
+            },
+            media: (mediaRows || []).map(m => ({
+              code: m.shortcode,
+              thumbnail_url: m.thumbnail_url,
+              media_url: m.media_url,
+              video_url: m.video_url,
+              caption: m.caption,
+              like_count: m.likes_count,
+              comment_count: m.comments_count,
+              tagged_users: m.tagged_users ? JSON.parse(m.tagged_users) : [],
+            })),
+          };
+        }
+      } catch {}
+    }
+
+    // 2. Fetch live data via fast single socket query with a 4s timeout (returns both profile + media together)
+    try {
+      const socketRes = await Promise.race([
+        this.intelService.queryLiveInstagramStoryNetwork(clean),
+        new Promise<null>((r) => setTimeout(() => r(null), 4000)),
+      ]);
+      if (socketRes?.user) {
+        const u = socketRes.user;
+        try {
+          const existing = db.prepare('SELECT id FROM tracked_accounts WHERE username = ?').get(clean) as any;
+          if (existing) {
+            db.prepare(`
+              UPDATE tracked_accounts
+              SET full_name = ?, avatar_url = ?, bio = ?, followers_count = ?, following_count = ?, posts_count = ?, is_verified = ?
+              WHERE id = ?
+            `).run(u.full_name, u.avatar_url, u.bio, u.followers_count, u.following_count, u.posts_count, u.is_verified ? 1 : 0, existing.id);
+          } else {
+            db.prepare(`
+              INSERT INTO tracked_accounts (username, full_name, avatar_url, bio, followers_count, following_count, posts_count, is_verified, is_private, status, last_scanned_at)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 'active', datetime('now'))
+            `).run(clean, u.full_name, u.avatar_url, u.bio, u.followers_count, u.following_count, u.posts_count, u.is_verified ? 1 : 0);
+          }
+        } catch {}
+
+        return {
+          profile: u,
+          media: socketRes.posts || [],
+        };
+      }
+    } catch {}
+
+    // 3. Fallback: check SQLite or fast profile fetcher
+    const prof = await this.getProfileData(clean);
+    return { profile: prof, media: [] };
+  }
+
   async getProfileData(username: string): Promise<any> {
     const clean = this.sanitizeUsername(username);
     const db = getDatabase();
 
-    // 1. Always prioritize authentic live Instagram data
-    const real = await this.intelService.fetchRealInstagramProfile(clean);
-    if (real && real.username) {
-      try {
-        const existing = db.prepare('SELECT id FROM tracked_accounts WHERE username = ?').get(clean) as any;
-        if (existing) {
-          db.prepare(`
-            UPDATE tracked_accounts
-            SET full_name = ?, avatar_url = ?, bio = ?, followers_count = ?, following_count = ?, posts_count = ?, is_verified = ?
-            WHERE id = ?
-          `).run(real.full_name, real.avatar_url, real.bio, real.followers_count, real.following_count, real.posts_count, real.is_verified, existing.id);
-        } else {
-          db.prepare(`
-            INSERT INTO tracked_accounts (username, full_name, avatar_url, bio, followers_count, following_count, posts_count, is_verified, is_private, status, last_scanned_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 'active', datetime('now'))
-          `).run(clean, real.full_name, real.avatar_url, real.bio, real.followers_count, real.following_count, real.posts_count, real.is_verified);
-        }
-      } catch {}
-
-      return {
-        username: real.username,
-        full_name: real.full_name,
-        avatar_url: real.avatar_url,
-        followers_count: real.followers_count,
-        following_count: real.following_count,
-        posts_count: real.posts_count,
-        is_verified: Boolean(real.is_verified),
-        is_private: Boolean(real.is_private),
-        bio: real.bio || '',
-      };
-    }
-
-    // 2. Fallback to cached if live network fetch is unreachable
+    // 1. Check cached SQLite first
     try {
       const cached = db.prepare('SELECT * FROM tracked_accounts WHERE username = ?').get(clean) as any;
       if (cached && (Number(cached.followers_count) > 0 || Number(cached.following_count) > 0)) {
@@ -505,6 +544,43 @@ export class MutualIntelligenceService {
           is_verified: Boolean(cached.is_verified),
           is_private: Boolean(cached.is_private),
           bio: cached.bio || '',
+        };
+      }
+    } catch {}
+
+    // 2. Fast live fetch with 3.5s timeout
+    try {
+      const real = await Promise.race([
+        this.intelService.fetchRealInstagramProfile(clean),
+        new Promise<null>((r) => setTimeout(() => r(null), 3500)),
+      ]);
+      if (real && real.username) {
+        try {
+          const existing = db.prepare('SELECT id FROM tracked_accounts WHERE username = ?').get(clean) as any;
+          if (existing) {
+            db.prepare(`
+              UPDATE tracked_accounts
+              SET full_name = ?, avatar_url = ?, bio = ?, followers_count = ?, following_count = ?, posts_count = ?, is_verified = ?
+              WHERE id = ?
+            `).run(real.full_name, real.avatar_url, real.bio, real.followers_count, real.following_count, real.posts_count, real.is_verified, existing.id);
+          } else {
+            db.prepare(`
+              INSERT INTO tracked_accounts (username, full_name, avatar_url, bio, followers_count, following_count, posts_count, is_verified, is_private, status, last_scanned_at)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 'active', datetime('now'))
+            `).run(clean, real.full_name, real.avatar_url, real.bio, real.followers_count, real.following_count, real.posts_count, real.is_verified);
+          }
+        } catch {}
+
+        return {
+          username: real.username,
+          full_name: real.full_name,
+          avatar_url: real.avatar_url,
+          followers_count: real.followers_count,
+          following_count: real.following_count,
+          posts_count: real.posts_count,
+          is_verified: Boolean(real.is_verified),
+          is_private: Boolean(real.is_private),
+          bio: real.bio || '',
         };
       }
     } catch {}

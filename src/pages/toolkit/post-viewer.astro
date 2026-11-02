@@ -65,7 +65,7 @@ const quickProfiles = ['natgeo', 'cristiano', 'leomessi', 'nike', 'arianagrande'
       </div>
     </div>
 
-    <div id="viewer-content">
+    <div id="viewer-content" data-total-posts={acc.posts_count} data-username={acc.username}>
       <!-- Profile Telemetry Card -->
       <div class="glass-panel p-6 sm:p-8 mb-8 relative overflow-hidden">
         <div class="absolute -right-20 -bottom-20 w-80 h-80 bg-[#725CFF]/10 rounded-full blur-3xl pointer-events-none"></div>
@@ -151,7 +151,7 @@ const quickProfiles = ['natgeo', 'cristiano', 'leomessi', 'nike', 'arianagrande'
           </div>
           <div>
             <span class="text-[10px] uppercase text-gray-400 block font-bold">Fetched Media</span>
-            <span class="text-lg font-extrabold text-white">{allMedia.length} Items</span>
+            <span class="text-lg font-extrabold text-white">{allMedia.length} of {acc.posts_count > 0 ? acc.posts_count.toLocaleString() : allMedia.length} Items</span>
           </div>
         </div>
 
@@ -368,16 +368,14 @@ const quickProfiles = ['natgeo', 'cristiano', 'leomessi', 'nike', 'arianagrande'
         </div>
       </div>
 
-      <!-- Progressive "Load More" Pagination Button -->
-      {allMedia.length > 8 && (
-        <div id="load-more-section" class="mt-8 text-center">
-          <button type="button" id="btn-load-more" onclick="loadMoreMedia()"
-                  class="btn-secondary py-3.5 px-8 text-xs font-bold rounded-xl border border-white/10 hover:border-[#725CFF] text-white hover:bg-[#725CFF]/20 transition duration-200 inline-flex items-center gap-2 shadow-xl hover:scale-105 active:scale-95">
-            <i class="fa-solid fa-layer-group text-[#725CFF]"></i>
-            <span id="load-more-text">Load More Posts & Reels (<span id="load-more-count">{Math.min(8, allMedia.length - 8)} of {allMedia.length - 8} more</span>)</span>
-          </button>
-        </div>
-      )}
+      <!-- Progressive "Load More" Pagination Button & Sync Banner -->
+      <div id="load-more-section" class={`mt-8 text-center ${allMedia.length === 0 ? 'hidden' : ''}`}>
+        <button type="button" id="btn-load-more" onclick="loadMoreMedia()"
+                class="btn-secondary py-3.5 px-8 text-xs font-bold rounded-xl border border-white/10 hover:border-[#725CFF] text-white hover:bg-[#725CFF]/20 transition duration-200 inline-flex items-center gap-2 shadow-xl hover:scale-105 active:scale-95">
+          <i class="fa-solid fa-layer-group text-[#725CFF]"></i>
+          <span id="load-more-text">Load More Posts & Reels (<span id="load-more-count">{Math.min(8, Math.max(0, allMedia.length - 8))} of {Math.max(0, allMedia.length - 8)} more</span>)</span>
+        </button>
+      </div>
 
     </div>
 
@@ -658,22 +656,39 @@ const quickProfiles = ['natgeo', 'cristiano', 'leomessi', 'nike', 'arianagrande'
       const loadMoreSec = document.getElementById('load-more-section');
       const loadMoreBtn = document.getElementById('btn-load-more');
       const loadMoreText = document.getElementById('load-more-text');
+      const totalPosts = parseInt(document.getElementById('viewer-content')?.getAttribute('data-total-posts') || '0', 10);
+      const viewerUser = document.getElementById('viewer-content')?.getAttribute('data-username') || '';
 
       if (loadMoreSec) {
-        if (matchingCards.length <= BATCH_SIZE) {
-          loadMoreSec.classList.add('hidden');
-        } else if (remaining > 0) {
+        if (remaining > 0) {
           loadMoreSec.classList.remove('hidden');
-          if (loadMoreBtn) loadMoreBtn.disabled = false;
+          if (loadMoreBtn) {
+            loadMoreBtn.disabled = false;
+            loadMoreBtn.className = 'btn-secondary py-3.5 px-8 text-xs font-bold rounded-xl border border-white/10 hover:border-[#725CFF] text-white hover:bg-[#725CFF]/20 transition duration-200 inline-flex items-center gap-2 shadow-xl hover:scale-105 active:scale-95';
+          }
           if (loadMoreText) {
             loadMoreText.innerHTML = `Load More Posts & Reels (${Math.min(BATCH_SIZE, remaining)} of ${remaining} more)`;
           }
-        } else {
+        } else if (matchingCards.length < totalPosts && totalPosts > 0) {
           loadMoreSec.classList.remove('hidden');
-          if (loadMoreBtn) loadMoreBtn.disabled = true;
-          if (loadMoreText) {
-            loadMoreText.innerHTML = `✓ All ${matchingCards.length} ${activeMediaTab === 'all' ? 'Items' : activeMediaTab} Loaded`;
+          if (loadMoreBtn) {
+            loadMoreBtn.disabled = false;
+            loadMoreBtn.className = 'btn-secondary py-3 px-6 text-xs font-semibold rounded-xl border border-white/10 text-gray-300 inline-flex items-center gap-2 shadow-md';
           }
+          if (loadMoreText) {
+            loadMoreText.innerHTML = `Showing all ${matchingCards.length} live scanned items (${totalPosts.toLocaleString()} total posts on @${viewerUser}) • <a href="/toolkit/post-viewer?username=${encodeURIComponent(viewerUser)}&refresh=1" class="text-[#00F0FF] hover:underline font-bold inline-flex items-center gap-1 ml-1"><i class="fa-solid fa-arrows-rotate text-[10px]"></i> Sync More from Instagram</a>`;
+          }
+        } else if (matchingCards.length > 0) {
+          loadMoreSec.classList.remove('hidden');
+          if (loadMoreBtn) {
+            loadMoreBtn.disabled = true;
+            loadMoreBtn.className = 'btn-secondary py-3 px-6 text-xs font-medium rounded-xl border border-white/5 text-gray-400 inline-flex items-center gap-2 cursor-default opacity-80';
+          }
+          if (loadMoreText) {
+            loadMoreText.innerHTML = `✓ All ${matchingCards.length} ${activeMediaTab === 'all' ? 'Live Items' : activeMediaTab} Loaded`;
+          }
+        } else {
+          loadMoreSec.classList.add('hidden');
         }
       }
     }
